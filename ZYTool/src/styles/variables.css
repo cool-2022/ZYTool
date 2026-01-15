@@ -1,0 +1,93 @@
+/* 主题变量定义 */
+:root {
+  /* 浅色模式 - 主题色 */
+  --primary-color: #63d2d2;
+  --primary-dark: #4fb8b8;
+  --primary-darker: #3a9e9e;
+  --primary-light: #7de3e3;
+  --primary-lighter: #a8ecec;
+
+  /* 浅色模式 - 背景色 */
+  --bg-primary: #ffffff;
+  --bg-secondary: #f8f9fa;
+  --bg-tertiary: #e9ecef;
+  --bg-hover: #f0f0f0;
+
+  /* 浅色模式 - 文字色 */
+  --text-primary: #212529;
+  --text-secondary: #6c757d;
+  --text-tertiary: #adb5bd;
+  --text-inverse: #ffffff;
+
+  /* 浅色模式 - 边框色 */
+  --border-color: #dee2e6;
+  --border-light: #e9ecef;
+  --border-dark: #ced4da;
+
+  /* 浅色模式 - 阴影 */
+  --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.08);
+  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.1);
+  --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.12);
+  --shadow-primary: 0 4px 12px rgba(99, 210, 210, 0.25);
+  --shadow-primary-hover: 0 6px 20px rgba(99, 210, 210, 0.35);
+
+  /* 渐变背景 */
+  --gradient-primary: linear-gradient(135deg, #63d2d2 0%, #4fb8b8 100%);
+  --gradient-bg: linear-gradient(180deg, #f8f9fa 0%, #e9ecef 100%);
+  --gradient-card: linear-gradient(
+    135deg,
+    rgba(255, 255, 255, 0.9) 0%,
+    rgba(248, 249, 250, 0.9) 100%
+  );
+
+  /* 其他 */
+  --border-radius: 8px;
+  --border-radius-lg: 12px;
+  --border-radius-xl: 16px;
+  --transition-speed: 0.3s;
+}
+
+/* 深色模式 */
+@media (prefers-color-scheme: dark) {
+  :root {
+    /* 深色模式 - 主题色 */
+    --primary-color: #63d2d2;
+    --primary-dark: #4fb8b8;
+    --primary-darker: #7de3e3;
+    --primary-light: #a8ecec;
+    --primary-lighter: #c5f3f3;
+
+    /* 深色模式 - 背景色 (使用黑色系) */
+    --bg-primary: #000000;
+    --bg-secondary: #0a0a0a;
+    --bg-tertiary: #1a1a1a;
+    --bg-hover: #2a2a2a;
+
+    /* 深色模式 - 文字色 */
+    --text-primary: #ffffff;
+    --text-secondary: #d0d0d0;
+    --text-tertiary: #a0a0a0;
+    --text-inverse: #000000;
+
+    /* 深色模式 - 边框色 */
+    --border-color: #2a2a2a;
+    --border-light: #1a1a1a;
+    --border-dark: #404040;
+
+    /* 深色模式 - 阴影 */
+    --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.4);
+    --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.5);
+    --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.6);
+    --shadow-primary: 0 4px 12px rgba(99, 210, 210, 0.3);
+    --shadow-primary-hover: 0 6px 20px rgba(99, 210, 210, 0.4);
+
+    /* 深色模式 - 渐变背景 */
+    --gradient-primary: linear-gradient(135deg, #4fb8b8 0%, #3a9e9e 100%);
+    --gradient-bg: linear-gradient(180deg, #0a0a0a 0%, #1a1a1a 100%);
+    --gradient-card: linear-gradient(
+      135deg,
+      rgba(26, 26, 26, 0.9) 0%,
+      rgba(42, 42, 42, 0.9) 100%
+    );
+  }
+}
