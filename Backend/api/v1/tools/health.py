@@ -1,16 +1,16 @@
 from fastapi import APIRouter
 from datetime import datetime
 import sys
-import os
 
-from schemas import HealthCheckResponse
-from core import settings
+from schemas import HealthCheckResponse, HealthInfoResponse
+from core.config import settings
 
 router = APIRouter(prefix="/health", tags=["health"])
 
 
 @router.get("", response_model=HealthCheckResponse)
 async def health_check():
+    """基础健康检查"""
     return HealthCheckResponse(
         status="healthy",
         version=settings.app_version,
@@ -18,13 +18,14 @@ async def health_check():
     )
 
 
-@router.get("/info")
+@router.get("/info", response_model=HealthInfoResponse)
 async def health_info():
-    return {
-        "status": "healthy",
-        "version": settings.app_version,
-        "name": settings.app_name,
-        "description": settings.app_description,
-        "python_version": sys.version,
-        "timestamp": datetime.now().isoformat()
-    }
+    """详细健康信息"""
+    return HealthInfoResponse(
+        status="healthy",
+        version=settings.app_version,
+        name=settings.app_name,
+        description=settings.app_description,
+        python_version=sys.version,
+        timestamp=datetime.now().isoformat()
+    )

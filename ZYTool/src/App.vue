@@ -11,9 +11,9 @@
           ZYTool
         </router-link>
         <div class="nav-menu">
-          <router-link to="/" class="nav-link">首页</router-link>
+          <router-link to="/home" class="nav-link">首页</router-link>
           <router-link to="/tools" class="nav-link">工具</router-link>
-          <router-link to="/login" class="nav-link">登陆</router-link>
+          <router-link to="/" class="nav-link">登陆</router-link>
         </div>
       </div>
     </nav>

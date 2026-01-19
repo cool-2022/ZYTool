@@ -124,6 +124,7 @@ const openTool = async (tool: any) => {
         '时间戳转换': '/tools/timestamp',
         '文本对比': '/tools/diff',
         'Sql合理性检查': '/tools/sql',
+        '地图导航': '/tools/map',
     }
 
     // 前端工具直接跳转，不需要检查后端

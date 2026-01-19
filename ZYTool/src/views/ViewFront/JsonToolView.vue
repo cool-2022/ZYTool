@@ -90,7 +90,7 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 import { message } from 'ant-design-vue'
-import { formatJSON, minifyJSON } from '../services/frontendTools'
+import { formatJSON, minifyJSON } from '../../services/frontendTools'
 
 // 响应式数据
 const inputText = ref('')

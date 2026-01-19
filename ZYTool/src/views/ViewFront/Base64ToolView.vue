@@ -63,7 +63,7 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 import { message } from 'ant-design-vue'
-import { base64Encode, base64Decode } from '../services/frontendTools'
+import { base64Encode, base64Decode } from '../../services/frontendTools'
 
 const inputText = ref('')
 const result = ref('')

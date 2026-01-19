@@ -1,75 +1,93 @@
 import { createRouter, createWebHistory } from 'vue-router'
+import { isAuthenticated } from '@/utils/auth'
 import ToolView from '@/views/ToolView.vue'
 import HomeView from '@/views/HomeView.vue'
-// import JsonToolView from '@/views/JsonToolView.vue'
-// import Base64ToolView from '@/views/Base64ToolView.vue'
-// import UrlToolView from '@/views/UrlToolView.vue'
-// import ColorPickerView from '@/views/ColorPickerView.vue'
-// import TimestampToolView from '@/views/TimestampToolView.vue'
-// import DiffToolView from '@/views/DiffToolView.vue'
-
 
 const router = createRouter({
     history: createWebHistory(import.meta.env.BASE_URL),
     routes: [
         {
-            path: '/',
+            path: '/home',
             name: 'home',
-            component: HomeView
+            component: HomeView,
+            meta: { requiresAuth: false } // 首页不需要登录
+        },
+        {
+            path: '/',
+            name: 'login',
+            component: () => import('@/views/LoginView.vue'),
+            meta: { requiresAuth: false }
         },
         {
             path: '/tools',
             name: 'tools',
-            component: ToolView
+            component: ToolView,
+            meta: { requiresAuth: false } // 根据需求设置是否需要登录
         },
         {
             path: '/tools/json',
             name: 'json-tool',
-            // component: JsonToolView
-            component: () => import('@/views/JsonToolView.vue')
+            component: () => import('@/views/ViewFront/JsonToolView.vue'),
+            meta: { requiresAuth: false }
         },
         {
             path: '/tools/base64',
             name: 'base64-tool',
-            // component: Base64ToolView
-            component: () => import('@/views/Base64ToolView.vue')
+            component: () => import('@/views/ViewFront/Base64ToolView.vue'),
+            meta: { requiresAuth: false }
         },
         {
             path: '/tools/url',
             name: 'url-tool',
-            // component: UrlToolView
-            component: () => import('@/views/UrlToolView.vue')
+            component: () => import('@/views/ViewFront/UrlToolView.vue'),
+            meta: { requiresAuth: false }
         },
         {
             path: '/tools/color',
             name: 'color-picker',
-            // component: ColorPickerView
-            component: () => import('@/views/ColorPickerView.vue')
+            component: () => import('@/views/ViewFront/ColorPickerView.vue'),
+            meta: { requiresAuth: false }
         },
         {
             path: '/tools/timestamp',
             name: 'timestamp-tool',
-            // component: TimestampToolView
-            component: () => import('@/views/TimestampToolView.vue')
+            component: () => import('@/views/ViewFront/TimestampToolView.vue'),
+            meta: { requiresAuth: false }
         },
         {
             path: '/tools/diff',
             name: 'diff-tool',
-            // component: DiffToolView
-            component: () => import('@/views/DiffToolView.vue')
+            component: () => import('@/views/ViewBack/DiffToolView.vue'),
+            meta: { requiresAuth: false }
         },
         {
             path: '/tools/sql',
             name: 'sql-tool',
-            component: () => import('@/views/SqlRationality.vue')
-
+            component: () => import('@/views/ViewBack/SqlRationality.vue'),
+            meta: { requiresAuth: false }
         },
         {
-            path:'/Login',
-            name: 'login',
-            component:()=> import('@/views/Login.vue')
+            path: '/tools/map',
+            name: 'map-location',
+            component: () => import('@/views/ViewBack/MapLocationView.vue'),
+            meta: { requiresAuth: false }
         }
     ]
+})
+
+// 路由守卫 - 控制页面访问权限
+router.beforeEach((to, from, next) => {
+    // 检查路由是否需要认证
+    if (to.meta.requiresAuth && !isAuthenticated()) {
+        // 需要登录但未登录，跳转到登录页
+        next({
+            name: 'login',
+            query: { redirect: to.fullPath } // 保存目标路由，登录后跳转
+        })
+    } else {
+        // 正常访问
+        next()
+    }
 })
 
 export default router

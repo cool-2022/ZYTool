@@ -3,7 +3,7 @@ from typing import Dict, Any
 
 from schemas.request.text import TextProcessRequest, TextCompareRequest
 from schemas.response.text import TextProcessResponse, TextCompareResponse
-from services.text_service import TextService
+from services.Tools.text_service import TextService
 from core.exceptions import ValidationException
 
 router = APIRouter(prefix="/text", tags=["text"])

@@ -106,7 +106,7 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue'
 import { message } from 'ant-design-vue'
-import { rgbToHex, hexToRgb } from '../services/frontendTools'
+import { rgbToHex, hexToRgb } from '../../services/frontendTools'
 
 const hexColor = ref('#63d2d2')
 const rgbColor = ref({ r: 99, g: 210, b: 210 })

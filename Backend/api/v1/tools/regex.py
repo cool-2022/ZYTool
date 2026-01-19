@@ -4,7 +4,7 @@ import re
 
 from schemas.request.regex import RegexTestRequest
 from schemas.response.regex import RegexTestResponse
-from services.regex_service import RegexService
+from services.Tools.regex_service import RegexService
 from core.exceptions import ValidationException
 
 router = APIRouter(prefix="/regex", tags=["regex"])

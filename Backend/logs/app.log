@@ -136,3 +136,301 @@
 2026-01-13 16:43:33 - core.middleware - INFO - Request completed: GET /api/v1/health - Status: 404 - Time: 0.0020s
 2026-01-13 16:46:28 - core.middleware - INFO - Request started: GET /health
 2026-01-13 16:46:28 - core.middleware - INFO - Request completed: GET /health - Status: 200 - Time: 0.0011s
+2026-01-15 14:24:59 - watchfiles.main - INFO - 1 change detected
+2026-01-15 14:25:00 - watchfiles.main - INFO - 1 change detected
+2026-01-15 14:25:50 - core.middleware - INFO - Request started: GET /api/v1/health
+2026-01-15 14:25:50 - core.middleware - INFO - Request completed: GET /api/v1/health - Status: 200 - Time: 0.0098s
+2026-01-15 14:25:50 - core.middleware - INFO - Request started: GET /favicon.ico
+2026-01-15 14:25:50 - core.exceptions - ERROR - HTTPException: Not Found
+2026-01-15 14:25:50 - core.middleware - INFO - Request completed: GET /favicon.ico - Status: 404 - Time: 0.0018s
+2026-01-15 14:26:11 - core.middleware - INFO - Request started: GET /api/v1/categories
+2026-01-15 14:26:11 - core.exceptions - ERROR - HTTPException: Not Found
+2026-01-15 14:26:11 - core.middleware - INFO - Request completed: GET /api/v1/categories - Status: 404 - Time: 0.0048s
+2026-01-15 14:26:17 - core.middleware - INFO - Request started: GET /api/v1/tools/categories
+2026-01-15 14:26:17 - core.middleware - INFO - Request completed: GET /api/v1/tools/categories - Status: 200 - Time: 0.0028s
+2026-01-15 14:27:15 - watchfiles.main - INFO - 1 change detected
+2026-01-15 14:27:54 - watchfiles.main - INFO - 1 change detected
+2026-01-15 14:28:06 - watchfiles.main - INFO - 1 change detected
+2026-01-15 14:28:10 - watchfiles.main - INFO - 1 change detected
+2026-01-15 14:28:21 - watchfiles.main - INFO - 1 change detected
+2026-01-15 14:28:28 - watchfiles.main - INFO - 1 change detected
+2026-01-15 14:28:30 - watchfiles.main - INFO - 1 change detected
+2026-01-15 14:28:33 - watchfiles.main - INFO - 1 change detected
+2026-01-15 14:28:47 - watchfiles.main - INFO - 1 change detected
+2026-01-15 14:29:23 - watchfiles.main - INFO - 1 change detected
+2026-01-15 14:29:24 - watchfiles.main - INFO - 1 change detected
+2026-01-15 14:29:29 - watchfiles.main - INFO - 1 change detected
+2026-01-15 14:29:40 - watchfiles.main - INFO - 1 change detected
+2026-01-15 14:29:45 - watchfiles.main - INFO - 1 change detected
+2026-01-15 14:32:33 - core.middleware - INFO - Request started: GET /api/v1/health
+2026-01-15 14:32:33 - core.middleware - INFO - Request completed: GET /api/v1/health - Status: 200 - Time: 0.0058s
+2026-01-15 14:34:58 - core.middleware - INFO - Request started: GET /health
+2026-01-15 14:34:58 - core.middleware - INFO - Request completed: GET /health - Status: 200 - Time: 0.0051s
+2026-01-15 14:35:11 - watchfiles.main - INFO - 1 change detected
+2026-01-15 14:35:12 - watchfiles.main - INFO - 1 change detected
+2026-01-15 14:35:24 - core.middleware - INFO - Request started: GET /api/v1/health/info
+2026-01-15 14:35:24 - core.middleware - INFO - Request completed: GET /api/v1/health/info - Status: 200 - Time: 0.0024s
+2026-01-15 14:36:30 - watchfiles.main - INFO - 1 change detected
+2026-01-15 14:36:31 - watchfiles.main - INFO - 1 change detected
+2026-01-15 14:36:51 - watchfiles.main - INFO - 1 change detected
+2026-01-15 14:37:00 - watchfiles.main - INFO - 1 change detected
+2026-01-15 14:37:17 - watchfiles.main - INFO - 1 change detected
+2026-01-15 14:37:20 - watchfiles.main - INFO - 1 change detected
+2026-01-15 14:37:35 - watchfiles.main - INFO - 1 change detected
+2026-01-15 14:37:58 - watchfiles.main - INFO - 1 change detected
+2026-01-15 14:38:03 - watchfiles.main - INFO - 1 change detected
+2026-01-15 14:38:08 - watchfiles.main - INFO - 1 change detected
+2026-01-15 14:38:15 - watchfiles.main - INFO - 1 change detected
+2026-01-15 14:41:07 - watchfiles.main - INFO - 1 change detected
+2026-01-15 14:41:13 - core.middleware - INFO - Request started: GET /api/v1/health/info
+2026-01-15 14:41:13 - core.exceptions - ERROR - HTTPException: Not Found
+2026-01-15 14:41:13 - core.middleware - INFO - Request completed: GET /api/v1/health/info - Status: 404 - Time: 0.0033s
+2026-01-15 14:41:19 - core.middleware - INFO - Request started: GET /api/v1/tools/health/info
+2026-01-15 14:41:19 - core.middleware - INFO - Request completed: GET /api/v1/tools/health/info - Status: 200 - Time: 0.0031s
+2026-01-15 14:41:25 - watchfiles.main - INFO - 1 change detected
+2026-01-15 14:41:26 - watchfiles.main - INFO - 1 change detected
+2026-01-15 14:41:29 - core.middleware - INFO - Request started: GET /api/v1/tools/health/info
+2026-01-15 14:41:29 - core.middleware - INFO - Request completed: GET /api/v1/tools/health/info - Status: 200 - Time: 0.0027s
+2026-01-15 14:41:32 - core.middleware - INFO - Request started: GET /api/v1/health/info
+2026-01-15 14:41:32 - core.middleware - INFO - Request completed: GET /api/v1/health/info - Status: 200 - Time: 0.0018s
+2026-01-15 14:47:15 - core.middleware - INFO - Request started: GET /api/v1/tools/categories
+2026-01-15 14:47:15 - core.middleware - INFO - Request completed: GET /api/v1/tools/categories - Status: 200 - Time: 0.0079s
+2026-01-15 14:47:32 - core.middleware - INFO - Request started: GET /api/v1/tools/categories
+2026-01-15 14:47:32 - core.middleware - INFO - Request completed: GET /api/v1/tools/categories - Status: 200 - Time: 0.0193s
+2026-01-15 14:50:22 - core.middleware - INFO - Request started: GET /api/v1/tools/categories
+2026-01-15 14:50:22 - core.middleware - INFO - Request completed: GET /api/v1/tools/categories - Status: 200 - Time: 0.0180s
+2026-01-15 14:50:47 - core.middleware - INFO - Request started: GET /api/v1/tools/categories
+2026-01-15 14:50:47 - core.middleware - INFO - Request completed: GET /api/v1/tools/categories - Status: 200 - Time: 0.0150s
+2026-01-15 14:50:58 - core.middleware - INFO - Request started: GET /api/v1/tools/categories
+2026-01-15 14:50:58 - core.middleware - INFO - Request completed: GET /api/v1/tools/categories - Status: 200 - Time: 0.0030s
+2026-01-15 14:51:11 - core.middleware - INFO - Request started: GET /api/v1/tools/categories
+2026-01-15 14:51:11 - core.middleware - INFO - Request completed: GET /api/v1/tools/categories - Status: 200 - Time: 0.0181s
+2026-01-15 14:51:14 - core.middleware - INFO - Request started: GET /api/v1/tools/categories
+2026-01-15 14:51:14 - core.middleware - INFO - Request completed: GET /api/v1/tools/categories - Status: 200 - Time: 0.0042s
+2026-01-15 14:51:18 - core.middleware - INFO - Request started: GET /api/v1/tools/health
+2026-01-15 14:51:18 - core.middleware - INFO - Request completed: GET /api/v1/tools/health - Status: 200 - Time: 0.0067s
+2026-01-15 14:51:19 - core.middleware - INFO - Request started: GET /api/v1/tools/health
+2026-01-15 14:51:19 - core.middleware - INFO - Request completed: GET /api/v1/tools/health - Status: 200 - Time: 0.0020s
+2026-01-15 15:04:33 - watchfiles.main - INFO - 1 change detected
+2026-01-15 15:04:40 - watchfiles.main - INFO - 10 changes detected
+2026-01-15 15:04:41 - watchfiles.main - INFO - 1 change detected
+2026-01-15 15:04:52 - watchfiles.main - INFO - 1 change detected
+2026-01-15 15:04:58 - watchfiles.main - INFO - 2 changes detected
+2026-01-15 15:04:59 - watchfiles.main - INFO - 1 change detected
+2026-01-15 15:05:58 - watchfiles.main - INFO - 1 change detected
+2026-01-15 15:06:22 - watchfiles.main - INFO - 1 change detected
+2026-01-15 15:06:39 - watchfiles.main - INFO - 1 change detected
+2026-01-15 15:06:40 - watchfiles.main - INFO - 1 change detected
+2026-01-15 15:06:56 - watchfiles.main - INFO - 1 change detected
+2026-01-15 15:07:00 - watchfiles.main - INFO - 1 change detected
+2026-01-15 15:08:51 - watchfiles.main - INFO - 2 changes detected
+2026-01-15 15:11:48 - watchfiles.main - INFO - 1 change detected
+2026-01-15 15:11:59 - watchfiles.main - INFO - 1 change detected
+2026-01-15 15:12:25 - watchfiles.main - INFO - 1 change detected
+2026-01-15 15:12:35 - watchfiles.main - INFO - 1 change detected
+2026-01-15 15:13:05 - watchfiles.main - INFO - 1 change detected
+2026-01-15 15:13:14 - watchfiles.main - INFO - 1 change detected
+2026-01-15 15:13:19 - watchfiles.main - INFO - 1 change detected
+2026-01-15 15:13:27 - watchfiles.main - INFO - 1 change detected
+2026-01-15 15:13:32 - watchfiles.main - INFO - 1 change detected
+2026-01-15 15:13:53 - watchfiles.main - INFO - 1 change detected
+2026-01-15 15:14:01 - watchfiles.main - INFO - 1 change detected
+2026-01-15 15:14:33 - watchfiles.main - INFO - 1 change detected
+2026-01-15 15:14:57 - watchfiles.main - INFO - 1 change detected
+2026-01-15 15:15:05 - watchfiles.main - INFO - 1 change detected
+2026-01-15 15:15:13 - watchfiles.main - INFO - 1 change detected
+2026-01-15 15:15:29 - watchfiles.main - INFO - 1 change detected
+2026-01-15 15:22:14 - watchfiles.main - INFO - 1 change detected
+2026-01-15 15:22:22 - core.middleware - INFO - Request started: GET /api/v1/tools/categories
+2026-01-15 15:22:22 - core.middleware - INFO - Request completed: GET /api/v1/tools/categories - Status: 200 - Time: 0.0052s
+2026-01-15 15:22:37 - core.middleware - INFO - Request started: POST /api/v1/auth/login
+2026-01-15 15:22:37 - api.v1.auth - INFO - Login attempt for user: admin
+2026-01-15 15:22:37 - core.auth - INFO - Created access token for: admin
+2026-01-15 15:22:37 - api.v1.auth - INFO - Login successful: admin
+2026-01-15 15:22:37 - core.middleware - INFO - Request completed: POST /api/v1/auth/login - Status: 200 - Time: 0.2743s
+2026-01-15 15:22:37 - core.middleware - INFO - Request started: GET /api/v1/auth/me
+2026-01-15 15:22:37 - core.middleware - INFO - Request completed: GET /api/v1/auth/me - Status: 200 - Time: 0.0012s
+2026-01-15 15:22:37 - core.middleware - INFO - Request started: GET /api/v1/tools/categories
+2026-01-15 15:22:37 - core.middleware - INFO - Request completed: GET /api/v1/tools/categories - Status: 200 - Time: 0.0015s
+2026-01-15 15:23:18 - core.middleware - INFO - Request started: GET /api/v1/tools/categories
+2026-01-15 15:23:18 - core.middleware - INFO - Request completed: GET /api/v1/tools/categories - Status: 200 - Time: 0.0078s
+2026-01-15 15:25:40 - core.middleware - INFO - Request started: GET /api/v1/tools/categories
+2026-01-15 15:25:40 - core.middleware - INFO - Request completed: GET /api/v1/tools/categories - Status: 200 - Time: 0.0205s
+2026-01-15 15:25:40 - core.middleware - INFO - Request started: GET /api/v1/tools/categories
+2026-01-15 15:25:40 - core.middleware - INFO - Request completed: GET /api/v1/tools/categories - Status: 200 - Time: 0.0024s
+2026-01-15 15:29:11 - core.middleware - INFO - Request started: GET /api/v1/tools/categories
+2026-01-15 15:29:11 - core.middleware - INFO - Request completed: GET /api/v1/tools/categories - Status: 200 - Time: 0.0185s
+2026-01-15 15:29:15 - core.middleware - INFO - Request started: POST /api/v1/auth/login
+2026-01-15 15:29:15 - api.v1.auth - INFO - Login attempt for user: admin
+2026-01-15 15:29:15 - core.auth - INFO - Created access token for: admin
+2026-01-15 15:29:15 - api.v1.auth - INFO - Login successful: admin
+2026-01-15 15:29:15 - core.middleware - INFO - Request completed: POST /api/v1/auth/login - Status: 200 - Time: 0.3402s
+2026-01-15 15:29:15 - core.middleware - INFO - Request started: GET /api/v1/auth/me
+2026-01-15 15:29:15 - core.middleware - INFO - Request completed: GET /api/v1/auth/me - Status: 200 - Time: 0.0011s
+2026-01-15 15:29:15 - core.middleware - INFO - Request started: GET /api/v1/tools/categories
+2026-01-15 15:29:15 - core.middleware - INFO - Request completed: GET /api/v1/tools/categories - Status: 200 - Time: 0.0038s
+2026-01-15 15:29:18 - core.middleware - INFO - Request started: POST /api/v1/auth/login
+2026-01-15 15:29:18 - api.v1.auth - INFO - Login attempt for user: admin
+2026-01-15 15:29:19 - core.auth - INFO - Created access token for: admin
+2026-01-15 15:29:19 - api.v1.auth - INFO - Login successful: admin
+2026-01-15 15:29:19 - core.middleware - INFO - Request completed: POST /api/v1/auth/login - Status: 200 - Time: 0.3949s
+2026-01-15 15:29:19 - core.middleware - INFO - Request started: GET /api/v1/auth/me
+2026-01-15 15:29:19 - core.middleware - INFO - Request completed: GET /api/v1/auth/me - Status: 200 - Time: 0.0031s
+2026-01-15 15:29:19 - core.middleware - INFO - Request started: GET /api/v1/tools/categories
+2026-01-15 15:29:19 - core.middleware - INFO - Request completed: GET /api/v1/tools/categories - Status: 200 - Time: 0.0055s
+2026-01-15 15:29:39 - core.middleware - INFO - Request started: GET /api/v1/tools/categories
+2026-01-15 15:29:39 - core.middleware - INFO - Request completed: GET /api/v1/tools/categories - Status: 200 - Time: 0.0167s
+2026-01-15 15:29:50 - core.middleware - INFO - Request started: GET /api/v1/tools/categories
+2026-01-15 15:29:50 - core.middleware - INFO - Request completed: GET /api/v1/tools/categories - Status: 200 - Time: 0.0132s
+2026-01-15 15:34:17 - core.middleware - INFO - Request started: GET /api/v1/tools/categories
+2026-01-15 15:34:17 - core.middleware - INFO - Request completed: GET /api/v1/tools/categories - Status: 200 - Time: 0.0057s
+2026-01-15 15:34:46 - core.middleware - INFO - Request started: GET /api/v1/tools/categories
+2026-01-15 15:34:46 - core.middleware - INFO - Request completed: GET /api/v1/tools/categories - Status: 200 - Time: 0.0012s
+2026-01-15 15:34:49 - core.middleware - INFO - Request started: GET /api/v1/tools/categories
+2026-01-15 15:34:49 - core.middleware - INFO - Request completed: GET /api/v1/tools/categories - Status: 200 - Time: 0.0060s
+2026-01-15 15:34:53 - core.middleware - INFO - Request started: GET /api/v1/tools/categories
+2026-01-15 15:34:53 - core.middleware - INFO - Request completed: GET /api/v1/tools/categories - Status: 200 - Time: 0.0020s
+2026-01-15 15:34:53 - core.middleware - INFO - Request started: GET /api/v1/tools/categories
+2026-01-15 15:34:53 - core.middleware - INFO - Request completed: GET /api/v1/tools/categories - Status: 200 - Time: 0.0045s
+2026-01-15 15:34:54 - core.middleware - INFO - Request started: GET /api/v1/tools/categories
+2026-01-15 15:34:54 - core.middleware - INFO - Request completed: GET /api/v1/tools/categories - Status: 200 - Time: 0.0037s
+2026-01-15 15:34:54 - core.middleware - INFO - Request started: GET /api/v1/tools/categories
+2026-01-15 15:34:54 - core.middleware - INFO - Request completed: GET /api/v1/tools/categories - Status: 200 - Time: 0.0027s
+2026-01-15 15:35:34 - core.middleware - INFO - Request started: GET /api/v1/tools/categories
+2026-01-15 15:35:34 - core.middleware - INFO - Request completed: GET /api/v1/tools/categories - Status: 200 - Time: 0.0140s
+2026-01-15 15:35:49 - core.middleware - INFO - Request started: GET /api/v1/tools/categories
+2026-01-15 15:35:49 - core.middleware - INFO - Request completed: GET /api/v1/tools/categories - Status: 200 - Time: 0.0034s
+2026-01-15 15:35:53 - core.middleware - INFO - Request started: GET /api/v1/tools/categories
+2026-01-15 15:35:53 - core.middleware - INFO - Request completed: GET /api/v1/tools/categories - Status: 200 - Time: 0.0027s
+2026-01-15 15:35:56 - core.middleware - INFO - Request started: GET /api/v1/tools/categories
+2026-01-15 15:35:56 - core.middleware - INFO - Request completed: GET /api/v1/tools/categories - Status: 200 - Time: 0.0033s
+2026-01-15 15:38:20 - core.middleware - INFO - Request started: GET /api/v1/tools/categories
+2026-01-15 15:38:20 - core.middleware - INFO - Request completed: GET /api/v1/tools/categories - Status: 200 - Time: 0.0177s
+2026-01-15 15:38:23 - core.middleware - INFO - Request started: GET /api/v1/tools/categories
+2026-01-15 15:38:23 - core.middleware - INFO - Request completed: GET /api/v1/tools/categories - Status: 200 - Time: 0.0074s
+2026-01-15 15:41:03 - core.middleware - INFO - Request started: GET /api/v1/tools/categories
+2026-01-15 15:41:03 - core.middleware - INFO - Request completed: GET /api/v1/tools/categories - Status: 200 - Time: 0.0490s
+2026-01-15 15:41:13 - core.middleware - INFO - Request started: GET /api/v1/tools/categories
+2026-01-15 15:41:14 - core.middleware - INFO - Request completed: GET /api/v1/tools/categories - Status: 200 - Time: 0.0257s
+2026-01-15 15:41:53 - core.middleware - INFO - Request started: GET /api/v1/tools/categories
+2026-01-15 15:41:53 - core.middleware - INFO - Request completed: GET /api/v1/tools/categories - Status: 200 - Time: 0.0073s
+2026-01-15 15:41:54 - core.middleware - INFO - Request started: GET /api/v1/tools/categories
+2026-01-15 15:41:54 - core.middleware - INFO - Request completed: GET /api/v1/tools/categories - Status: 200 - Time: 0.0439s
+2026-01-15 15:41:59 - core.middleware - INFO - Request started: GET /api/v1/tools/categories
+2026-01-15 15:41:59 - core.middleware - INFO - Request completed: GET /api/v1/tools/categories - Status: 200 - Time: 0.0129s
+2026-01-15 15:42:04 - core.middleware - INFO - Request started: GET /api/v1/tools/categories
+2026-01-15 15:42:04 - core.middleware - INFO - Request completed: GET /api/v1/tools/categories - Status: 200 - Time: 0.0120s
+2026-01-15 15:43:08 - core.middleware - INFO - Request started: GET /api/v1/tools/categories
+2026-01-15 15:43:08 - core.middleware - INFO - Request completed: GET /api/v1/tools/categories - Status: 200 - Time: 0.0623s
+2026-01-15 15:43:12 - core.middleware - INFO - Request started: GET /api/v1/tools/categories
+2026-01-15 15:43:12 - core.middleware - INFO - Request completed: GET /api/v1/tools/categories - Status: 200 - Time: 0.0213s
+2026-01-15 15:43:39 - core.middleware - INFO - Request started: GET /api/v1/tools/categories
+2026-01-15 15:43:39 - core.middleware - INFO - Request completed: GET /api/v1/tools/categories - Status: 200 - Time: 0.0611s
+2026-01-15 15:43:41 - core.middleware - INFO - Request started: GET /api/v1/tools/categories
+2026-01-15 15:43:41 - core.middleware - INFO - Request completed: GET /api/v1/tools/categories - Status: 200 - Time: 0.0392s
+2026-01-15 15:44:39 - core.middleware - INFO - Request started: POST /api/v1/auth/login
+2026-01-15 15:44:39 - api.v1.auth - INFO - Login attempt for user: admin
+2026-01-15 15:44:39 - core.auth - INFO - Created access token for: admin
+2026-01-15 15:44:39 - api.v1.auth - INFO - Login successful: admin
+2026-01-15 15:44:39 - core.middleware - INFO - Request completed: POST /api/v1/auth/login - Status: 200 - Time: 0.3477s
+2026-01-15 15:44:39 - core.middleware - INFO - Request started: GET /api/v1/auth/me
+2026-01-15 15:44:39 - core.middleware - INFO - Request completed: GET /api/v1/auth/me - Status: 200 - Time: 0.0014s
+2026-01-15 15:44:39 - core.middleware - INFO - Request started: GET /api/v1/tools/categories
+2026-01-15 15:44:39 - core.middleware - INFO - Request completed: GET /api/v1/tools/categories - Status: 200 - Time: 0.0024s
+2026-01-15 15:45:08 - core.middleware - INFO - Request started: GET /api/v1/tools/categories
+2026-01-15 15:45:08 - core.middleware - INFO - Request completed: GET /api/v1/tools/categories - Status: 200 - Time: 0.0018s
+2026-01-15 15:45:12 - core.middleware - INFO - Request started: POST /api/v1/auth/login
+2026-01-15 15:45:12 - api.v1.auth - INFO - Login attempt for user: admin
+2026-01-15 15:45:12 - core.auth - INFO - Created access token for: admin
+2026-01-15 15:45:12 - api.v1.auth - INFO - Login successful: admin
+2026-01-15 15:45:12 - core.middleware - INFO - Request completed: POST /api/v1/auth/login - Status: 200 - Time: 0.3457s
+2026-01-15 15:45:12 - core.middleware - INFO - Request started: GET /api/v1/auth/me
+2026-01-15 15:45:12 - core.middleware - INFO - Request completed: GET /api/v1/auth/me - Status: 200 - Time: 0.0012s
+2026-01-15 15:45:12 - core.middleware - INFO - Request started: GET /api/v1/tools/categories
+2026-01-15 15:45:12 - core.middleware - INFO - Request completed: GET /api/v1/tools/categories - Status: 200 - Time: 0.0016s
+2026-01-15 15:45:44 - core.middleware - INFO - Request started: POST /api/v1/auth/login
+2026-01-15 15:45:44 - api.v1.auth - INFO - Login attempt for user: admin
+2026-01-15 15:45:44 - core.auth - INFO - Created access token for: admin
+2026-01-15 15:45:44 - api.v1.auth - INFO - Login successful: admin
+2026-01-15 15:45:44 - core.middleware - INFO - Request completed: POST /api/v1/auth/login - Status: 200 - Time: 0.3619s
+2026-01-15 15:45:44 - core.middleware - INFO - Request started: GET /api/v1/auth/me
+2026-01-15 15:45:44 - core.middleware - INFO - Request completed: GET /api/v1/auth/me - Status: 200 - Time: 0.0013s
+2026-01-15 15:45:44 - core.middleware - INFO - Request started: GET /api/v1/tools/categories
+2026-01-15 15:45:44 - core.middleware - INFO - Request completed: GET /api/v1/tools/categories - Status: 200 - Time: 0.0037s
+2026-01-15 15:46:32 - watchfiles.main - INFO - 1 change detected
+2026-01-15 15:46:36 - watchfiles.main - INFO - 2 changes detected
+2026-01-15 15:46:37 - watchfiles.main - INFO - 1 change detected
+2026-01-15 15:46:40 - watchfiles.main - INFO - 2 changes detected
+2026-01-15 15:47:22 - watchfiles.main - INFO - 1 change detected
+2026-01-15 15:47:28 - watchfiles.main - INFO - 1 change detected
+2026-01-15 15:48:42 - core.middleware - INFO - Request started: POST /api/v1/auth/login
+2026-01-15 15:48:42 - api.v1.auth.auth - INFO - Login attempt for user: admin
+2026-01-15 15:48:42 - core.auth - INFO - Created access token for: admin
+2026-01-15 15:48:42 - api.v1.auth.auth - INFO - Login successful: admin
+2026-01-15 15:48:42 - core.middleware - INFO - Request completed: POST /api/v1/auth/login - Status: 200 - Time: 0.4866s
+2026-01-15 15:48:42 - core.middleware - INFO - Request started: GET /api/v1/auth/me
+2026-01-15 15:48:42 - core.middleware - INFO - Request completed: GET /api/v1/auth/me - Status: 200 - Time: 0.0026s
+2026-01-15 15:48:42 - core.middleware - INFO - Request started: GET /api/v1/tools/categories
+2026-01-15 15:48:42 - core.middleware - INFO - Request completed: GET /api/v1/tools/categories - Status: 200 - Time: 0.0108s
+2026-01-15 15:49:36 - watchfiles.main - INFO - 1 change detected
+2026-01-15 15:49:36 - watchfiles.main - INFO - 1 change detected
+2026-01-15 15:50:34 - core.middleware - INFO - Request started: POST /api/v1/auth/login
+2026-01-15 15:50:34 - core.exceptions - ERROR - HTTPException: Not Found
+2026-01-15 15:50:34 - core.middleware - INFO - Request completed: POST /api/v1/auth/login - Status: 404 - Time: 0.0059s
+2026-01-15 15:51:00 - watchfiles.main - INFO - 1 change detected
+2026-01-15 15:51:00 - watchfiles.main - INFO - 1 change detected
+2026-01-15 15:51:32 - watchfiles.main - INFO - 1 change detected
+2026-01-15 15:51:34 - core.middleware - INFO - Request started: POST /api/v1/auth/login
+2026-01-15 15:51:34 - api.v1.auth.auth - INFO - Login attempt for user: admin
+2026-01-15 15:51:34 - core.auth - INFO - Created access token for: admin
+2026-01-15 15:51:34 - api.v1.auth.auth - INFO - Login successful: admin
+2026-01-15 15:51:34 - core.middleware - INFO - Request completed: POST /api/v1/auth/login - Status: 200 - Time: 0.3760s
+2026-01-15 15:51:34 - core.middleware - INFO - Request started: GET /api/v1/auth/me
+2026-01-15 15:51:34 - core.middleware - INFO - Request completed: GET /api/v1/auth/me - Status: 200 - Time: 0.0013s
+2026-01-15 15:51:34 - core.middleware - INFO - Request started: GET /api/v1/tools/categories
+2026-01-15 15:51:34 - core.middleware - INFO - Request completed: GET /api/v1/tools/categories - Status: 200 - Time: 0.0044s
+2026-01-15 15:58:16 - core.middleware - INFO - Request started: GET /api/v1/tools/categories
+2026-01-15 15:58:16 - core.middleware - INFO - Request completed: GET /api/v1/tools/categories - Status: 200 - Time: 0.0071s
+2026-01-15 15:58:18 - core.middleware - INFO - Request started: GET /api/v1/tools/categories
+2026-01-15 15:58:18 - core.middleware - INFO - Request completed: GET /api/v1/tools/categories - Status: 200 - Time: 0.0039s
+2026-01-15 15:58:19 - core.middleware - INFO - Request started: GET /api/v1/tools/categories
+2026-01-15 15:58:19 - core.middleware - INFO - Request completed: GET /api/v1/tools/categories - Status: 200 - Time: 0.0030s
+2026-01-15 15:58:21 - core.middleware - INFO - Request started: GET /api/v1/tools/categories
+2026-01-15 15:58:21 - core.middleware - INFO - Request completed: GET /api/v1/tools/categories - Status: 200 - Time: 0.0021s
+2026-01-15 15:58:24 - core.middleware - INFO - Request started: GET /api/v1/tools/categories
+2026-01-15 15:58:24 - core.middleware - INFO - Request completed: GET /api/v1/tools/categories - Status: 200 - Time: 0.0043s
+2026-01-15 15:58:25 - core.middleware - INFO - Request started: GET /api/v1/tools/categories
+2026-01-15 15:58:25 - core.middleware - INFO - Request completed: GET /api/v1/tools/categories - Status: 200 - Time: 0.0024s
+2026-01-15 15:58:25 - core.middleware - INFO - Request started: GET /api/v1/tools/categories
+2026-01-15 15:58:25 - core.middleware - INFO - Request completed: GET /api/v1/tools/categories - Status: 200 - Time: 0.0029s
+2026-01-15 15:58:29 - core.middleware - INFO - Request started: GET /api/v1/tools/categories
+2026-01-15 15:58:29 - core.middleware - INFO - Request completed: GET /api/v1/tools/categories - Status: 200 - Time: 0.0051s
+2026-01-15 15:58:31 - core.middleware - INFO - Request started: GET /api/v1/tools/categories
+2026-01-15 15:58:31 - core.middleware - INFO - Request completed: GET /api/v1/tools/categories - Status: 200 - Time: 0.0029s
+2026-01-15 15:59:03 - core.middleware - INFO - Request started: POST /api/v1/auth/login
+2026-01-15 15:59:03 - api.v1.auth.auth - INFO - Login attempt for user: admin
+2026-01-15 15:59:04 - core.auth - INFO - Created access token for: admin
+2026-01-15 15:59:04 - api.v1.auth.auth - INFO - Login successful: admin
+2026-01-15 15:59:04 - core.middleware - INFO - Request completed: POST /api/v1/auth/login - Status: 200 - Time: 0.3015s
+2026-01-15 15:59:04 - core.middleware - INFO - Request started: GET /api/v1/auth/me
+2026-01-15 15:59:04 - core.middleware - INFO - Request completed: GET /api/v1/auth/me - Status: 200 - Time: 0.0009s
+2026-01-15 15:59:04 - core.middleware - INFO - Request started: GET /api/v1/tools/categories
+2026-01-15 15:59:04 - core.middleware - INFO - Request completed: GET /api/v1/tools/categories - Status: 200 - Time: 0.0030s
+2026-01-15 15:59:08 - core.middleware - INFO - Request started: GET /api/v1/tools/categories
+2026-01-15 15:59:08 - core.middleware - INFO - Request completed: GET /api/v1/tools/categories - Status: 200 - Time: 0.0035s
+2026-01-15 15:59:09 - core.middleware - INFO - Request started: GET /api/v1/tools/categories
+2026-01-15 15:59:09 - core.middleware - INFO - Request completed: GET /api/v1/tools/categories - Status: 200 - Time: 0.0028s
+2026-01-15 15:59:10 - core.middleware - INFO - Request started: GET /api/v1/tools/categories
+2026-01-15 15:59:10 - core.middleware - INFO - Request completed: GET /api/v1/tools/categories - Status: 200 - Time: 0.0027s
+2026-01-15 15:59:12 - core.middleware - INFO - Request started: GET /api/v1/tools/categories
+2026-01-15 15:59:12 - core.middleware - INFO - Request completed: GET /api/v1/tools/categories - Status: 200 - Time: 0.0042s
+2026-01-15 16:04:28 - core.middleware - INFO - Request started: GET /api/v1/tools/categories
+2026-01-15 16:04:28 - core.middleware - INFO - Request completed: GET /api/v1/tools/categories - Status: 200 - Time: 0.0502s
+2026-01-15 16:04:28 - core.middleware - INFO - Request started: GET /api/v1/tools/categories
+2026-01-15 16:04:28 - core.middleware - INFO - Request completed: GET /api/v1/tools/categories - Status: 200 - Time: 0.0038s
+2026-01-15 16:04:31 - core.middleware - INFO - Request started: GET /api/v1/tools/categories
+2026-01-15 16:04:31 - core.middleware - INFO - Request completed: GET /api/v1/tools/categories - Status: 200 - Time: 0.0017s
+2026-01-15 16:07:59 - core.middleware - INFO - Request started: GET /api/v1/tools/categories
+2026-01-15 16:07:59 - core.middleware - INFO - Request completed: GET /api/v1/tools/categories - Status: 200 - Time: 0.0376s
+2026-01-15 16:10:00 - core.middleware - INFO - Request started: GET /api/v1/tools/categories
+2026-01-15 16:10:00 - core.middleware - INFO - Request completed: GET /api/v1/tools/categories - Status: 200 - Time: 0.0126s

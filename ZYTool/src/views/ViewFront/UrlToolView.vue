@@ -66,7 +66,7 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 import { message } from 'ant-design-vue'
-import { urlEncode, urlDecode } from '../services/frontendTools'
+import { urlEncode, urlDecode } from '../../services/frontendTools'
 
 const inputText = ref('')
 const result = ref('')

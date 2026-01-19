@@ -115,8 +115,8 @@ import { ref } from 'vue'
 import { message } from 'ant-design-vue'
 import { InboxOutlined, FileTextOutlined } from '@ant-design/icons-vue'
 import type { UploadProps } from 'ant-design-vue'
-import type { DiffLine, FileDiffResult, FolderDiffResult, DiffResult } from '../services/api'
-import { ApiService } from '../services/api'
+import type { DiffLine, FileDiffResult, FolderDiffResult, DiffResult } from '../../services/api'
+import { ApiService } from '../../services/api'
 
 const fileListA = ref<any[]>([])
 const fileListB = ref<any[]>([])

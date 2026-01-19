@@ -5,7 +5,7 @@ import string
 
 from schemas.request.password import PasswordGenerateRequest
 from schemas.response.password import PasswordGenerateResponse
-from services.password_service import PasswordService
+from services.Tools.password_service import PasswordService
 from core.exceptions import ValidationException
 
 router = APIRouter(prefix="/password", tags=["password"])
