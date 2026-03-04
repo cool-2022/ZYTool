@@ -434,3 +434,23 @@
 2026-01-15 16:07:59 - core.middleware - INFO - Request completed: GET /api/v1/tools/categories - Status: 200 - Time: 0.0376s
 2026-01-15 16:10:00 - core.middleware - INFO - Request started: GET /api/v1/tools/categories
 2026-01-15 16:10:00 - core.middleware - INFO - Request completed: GET /api/v1/tools/categories - Status: 200 - Time: 0.0126s
+2026-01-19 16:35:19 - core.middleware - INFO - Request started: POST /api/v1/auth/login
+2026-01-19 16:35:19 - api.v1.auth.auth - INFO - Login attempt for user: admin
+2026-01-19 16:35:19 - core.auth - INFO - Created access token for: admin
+2026-01-19 16:35:19 - api.v1.auth.auth - INFO - Login successful: admin
+2026-01-19 16:35:19 - core.middleware - INFO - Request completed: POST /api/v1/auth/login - Status: 200 - Time: 0.2644s
+2026-01-19 16:35:19 - core.middleware - INFO - Request started: GET /api/v1/auth/me
+2026-01-19 16:35:19 - core.middleware - INFO - Request completed: GET /api/v1/auth/me - Status: 200 - Time: 0.0010s
+2026-01-19 16:35:19 - core.middleware - INFO - Request started: GET /api/v1/tools/categories
+2026-01-19 16:35:19 - core.middleware - INFO - Request completed: GET /api/v1/tools/categories - Status: 200 - Time: 0.0018s
+2026-01-20 09:44:06 - core.middleware - INFO - Request started: GET /api/v1/tools/categories
+2026-01-20 09:44:06 - core.middleware - INFO - Request completed: GET /api/v1/tools/categories - Status: 200 - Time: 0.0037s
+2026-01-20 14:38:26 - core.middleware - INFO - Request started: POST /api/v1/auth/login
+2026-01-20 14:38:26 - api.v1.auth.auth - INFO - Login attempt for user: admin
+2026-01-20 14:38:27 - core.auth - INFO - Created access token for: admin
+2026-01-20 14:38:27 - api.v1.auth.auth - INFO - Login successful: admin
+2026-01-20 14:38:27 - core.middleware - INFO - Request completed: POST /api/v1/auth/login - Status: 200 - Time: 0.2575s
+2026-01-20 14:38:27 - core.middleware - INFO - Request started: GET /api/v1/auth/me
+2026-01-20 14:38:27 - core.middleware - INFO - Request completed: GET /api/v1/auth/me - Status: 200 - Time: 0.0008s
+2026-01-20 14:38:27 - core.middleware - INFO - Request started: GET /api/v1/tools/categories
+2026-01-20 14:38:27 - core.middleware - INFO - Request completed: GET /api/v1/tools/categories - Status: 200 - Time: 0.0018s

@@ -14,13 +14,13 @@ const api = axios.create({
 api.interceptors.request.use(
     (config) => {
         if (import.meta.env.DEV) console.log('发送请求:', config.method?.toUpperCase(), config.url)
-        
+
         // 从 localStorage 获取 token 并添加到请求头
         const token = getToken()
         if (token) {
             config.headers.Authorization = `Bearer ${token}`
         }
-        
+
         return config
     },
     (error) => {
@@ -37,14 +37,14 @@ api.interceptors.response.use(
     },
     (error) => {
         if (import.meta.env.DEV) console.error('响应错误:', error.response?.status, error.response?.data)
-        
+
         // 处理 401 未授权错误（token 过期或无效）
         if (error.response?.status === 401) {
             clearAuth()
             // 可以在这里跳转到登录页
             // window.location.href = '/login'
         }
-        
+
         return Promise.reject(error)
     }
 )
@@ -114,7 +114,7 @@ export type DiffResult = FileDiffResult | FolderDiffResult
 // API服务类
 export class ApiService {
     // ========== 认证相关 ==========
-    
+
     /**
      * 用户登录
      */
@@ -176,7 +176,7 @@ export class ApiService {
     }
 
     // ========== 工具相关 ==========
-    
+
     // 获取工具分类
     static async getCategories(): Promise<{ categories: Category[] }> {
         const response = await api.get('/tools/categories')
@@ -256,6 +256,12 @@ export class ApiService {
     // 健康检查
     static async healthCheck(): Promise<{ status: string; message: string }> {
         const response = await api.get('/health')
+        return response.data
+    }
+
+    // 路径规划
+    static async getRoute(request: any): Promise<any> {
+        const response = await api.post('/tools/map/route', request)
         return response.data
     }
 }

@@ -38,8 +38,10 @@ async def get_categories():
                         "description": '生成安全密码', "type": 'backend'},
                     {"id": 13, "name": '地图导航', "icon": '🗺',
                         "description": '显示当前位置地图', "type": 'backend'},
+                    {"id": 15, "name": '地图导航', "icon": '🦌',
+                     "description": '显示路径', "type": 'backend'},
                     {"id": 14, "name": 'Sql合理性检查', "icon": '🔍',
-                        "description": '比对输入的语句是否合理', "type": 'backend'}
+                     "description": '比对输入的语句是否合理', "type": 'backend'}
             ]
         },
         {

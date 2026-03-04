@@ -69,7 +69,19 @@ const router = createRouter({
         {
             path: '/tools/map',
             name: 'map-location',
-            component: () => import('@/views/ViewBack/MapLocationView.vue'),
+            component: () => import('@/views/ViewBack/RouteMapView.vue'),
+            meta: { requiresAuth: false }
+        },
+        {
+            path: '/mes/gcpm-rule',
+            name: 'gcpm-rule',
+            component: () => import('@/views/MES/GCPMRuleView.vue'),
+            meta: { requiresAuth: false }
+        },
+        {
+            path: '/agents/chat',
+            name: 'agents-chat',
+            component: () => import('@/views/Agents/ChatView.vue'),
             meta: { requiresAuth: false }
         }
     ]
