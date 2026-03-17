@@ -1,6 +1,7 @@
 import { ref, nextTick } from 'vue'
 import { message } from 'ant-design-vue'
 import { chatSessions as mockChatSessions, type ChatMessage, type ChatSession } from '@/Mock/ChatData'
+import { ApiService } from '@/services/api'
 
 export type { ChatMessage, ChatSession }
 
@@ -19,6 +20,9 @@ export function useChatView() {
 
     // 是否正在发送
     const isSending = ref(false)
+
+    // 流式响应内容
+    const streamingContent = ref('')
 
     // 侧边栏是否折叠
     const sidebarCollapsed = ref(false)
@@ -70,32 +74,47 @@ export function useChatView() {
         const inputContent = userInput.value
         userInput.value = ''
         isSending.value = true
+        streamingContent.value = ''
 
+        // 创建空的助手消息用于流式显示
+        const assistantMessage: ChatMessage = {
+            id: (Date.now() + 1).toString(),
+            role: 'assistant',
+            content: '',
+            timestamp: new Date()
+        }
+        messages.value.push(assistantMessage)
+        
         // 滚动到底部
         await nextTick()
         scrollToBottom()
 
-        // 模拟 AI 回复
-        setTimeout(() => {
-            const assistantMessage: ChatMessage = {
-                id: (Date.now() + 1).toString(),
-                role: 'assistant',
-                content: `这是对"${inputContent}"的回复。我是一个 AI 助手，可以帮助你解答问题。`,
-                timestamp: new Date()
+        // 调用后端流式 API
+        try {
+            for await (const chunk of ApiService.chatStream(inputContent, currentSession.value?.id)) {
+                streamingContent.value += chunk
+                assistantMessage.content = streamingContent.value
+                
+                // 滚动到底部
+                await nextTick()
+                scrollToBottom()
             }
-            messages.value.push(assistantMessage)
             
             if (currentSession.value) {
                 currentSession.value.messages = [...messages.value]
             }
-            
+            streamingContent.value = ''
+        } catch (error: any) {
+            assistantMessage.content = `错误: ${error?.message || '发送消息失败'}`
+            console.error('Chat error:', error)
+        } finally {
             isSending.value = false
             
             // 滚动到底部
             nextTick(() => {
                 scrollToBottom()
             })
-        }, 1000)
+        }
     }
 
     // 滚动到底部
@@ -139,6 +158,7 @@ export function useChatView() {
         messages,
         userInput,
         isSending,
+        streamingContent,
         sidebarCollapsed,
         selectSession,
         createNewSession,

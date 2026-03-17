@@ -25,8 +25,19 @@
                                 @click.stop="deleteSession(session.id)">
                                 <DeleteOutlined />
                             </a-button>
-                        </div>
+                </div>
+
+                <!-- 流式显示 AI 回复 -->
+                <div v-if="streamingContent" class="message-item">
+                    <div class="message-avatar assistant">
+                        <RobotOutlined />
                     </div>
+                    <div class="message-content">
+                        <div class="message-role">AI 助手</div>
+                        <div class="message-text">{{ streamingContent }}</div>
+                    </div>
+                </div>
+            </div>
                 </template>
             </div>
         </div>
@@ -67,18 +78,6 @@
                         <div class="message-role">{{ msg.role === 'user' ? '你' : 'AI 助手' }}</div>
                         <div class="message-text">{{ msg.content }}</div>
                         <div class="message-time">{{ formatTime(msg.timestamp) }}</div>
-                    </div>
-                </div>
-
-                <div v-if="isSending" class="message-item">
-                    <div class="message-avatar assistant">
-                        <RobotOutlined />
-                    </div>
-                    <div class="message-content">
-                        <div class="message-role">AI 助手</div>
-                        <div class="message-text">
-                            <a-spin size="small" /> 正在思考...
-                        </div>
                     </div>
                 </div>
             </div>
@@ -130,6 +129,7 @@ const {
     messages,
     userInput,
     isSending,
+    streamingContent,
     sidebarCollapsed,
     selectSession,
     createNewSession,
@@ -146,7 +146,7 @@ const groupedSessions = computed(() => {
         if (!groups[session.date]) {
             groups[session.date] = []
         }
-        groups[session.date].push(session)
+        groups[session.date]!.push(session)
     })
     return groups
 })

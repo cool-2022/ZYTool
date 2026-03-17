@@ -2,18 +2,32 @@
 
 ## 项目结构
 ```
-ZYTool/
-├── backend/                 # FastAPI 后端
-│   ├── app.py              # 主应用文件
-│   └── requirements.txt    # Python 依赖
-├── src/                    # Vue 前端
-│   ├── services/
-│   │   └── api.ts         # API 服务封装
-│   ├── views/
-│   │   ├── HomeView.vue   # 首页
-│   │   ├── ToolView.vue   # 工具列表页
-│   │   └── JsonToolView.vue # JSON工具页
-│   └── ...
+Backup/
+├── app/
+│   ├── __init__.py
+│   ├── main.py                 # 应用入口
+│   ├── core/                    # 核心配置
+│   │   ├── __init__.py
+│   │   ├── config.py           # 配置管理
+│   │   ├── security.py          # 安全认证
+│   │   └── dependencies.py      # 全局依赖
+│   ├── api/                     # API版本管理
+│   │   ├── __init__.py
+│   │   ├── v1/                  # v1版本
+│   │   │   ├── __init__.py
+│   │   │   ├── endpoints/       # 具体路由
+│   │   │   │   ├── __init__.py
+│   │   │   │   ├── users.py
+│   │   │   │   ├── products.py
+│   │   │   │   └── orders.py
+│   │   │   └── dependencies/    # 版本特定依赖
+│   │   └── v2/                  # v2版本（未来扩展）
+│   ├── models/                   # 数据模型
+│   ├── schemas/                  # Pydantic模型
+│   ├── services/                 # 业务逻辑
+│   └── utils/                    # 工具函数
+├── tests/                        # 测试
+└── requirements.txt
 ```
 
 ## 启动步骤
@@ -114,3 +128,5 @@ try {
 3. API 服务模块统一管理所有后端调用
 4. 支持 CORS 跨域请求
 5. 包含完整的错误处理和用户反馈机制
+
+# 流式生成回复

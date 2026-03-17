@@ -4,7 +4,7 @@ import { getToken, clearAuth } from '../utils/auth'
 // 创建axios实例
 const api = axios.create({
     baseURL: import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000/api/v1',
-    timeout: 10000,
+    timeout: 60000,
     headers: {
         'Content-Type': 'application/json',
     },
@@ -263,6 +263,55 @@ export class ApiService {
     static async getRoute(request: any): Promise<any> {
         const response = await api.post('/tools/map/route', request)
         return response.data
+    }
+
+    // AI 聊天
+    static async chat(message: string, sessionId?: string): Promise<{ reply: string }> {
+        const response = await api.post('/agents/chat', { message, session_id: sessionId })
+        return response.data
+    }
+
+    // AI 聊天 - 流式响应
+    static async *chatStream(message: string, sessionId?: string) {
+        const response = await fetch(`${api.defaults.baseURL}/agents/chat`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ message, session_id: sessionId }),
+        })
+
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`)
+        }
+
+        const reader = response.body?.getReader()
+        if (!reader) {
+            throw new Error('Response body is null')
+        }
+
+        const decoder = new TextDecoder()
+        let buffer = ''
+
+        while (true) {
+            const { done, value } = await reader.read()
+            if (done) break
+
+            buffer += decoder.decode(value, { stream: true })
+            
+            // 处理 SSE 格式的数据
+            const lines = buffer.split('\n')
+            buffer = lines.pop() || ''
+
+            for (const line of lines) {
+                if (line.startsWith('data: ')) {
+                    const data = line.slice(6).trim()
+                    if (data && data !== '[DONE]') {
+                        yield data
+                    }
+                }
+            }
+        }
     }
 }
 
