@@ -4,7 +4,7 @@ from dotenv import load_dotenv
 from openai import OpenAI
 
 # 加载 .env 文件
-env_path = os.path.join(os.path.dirname(__file__), "..", "..", ".env.development")
+env_path = os.path.join(os.path.dirname(__file__), "..", "..", "..", ".env.development")
 load_dotenv(env_path)
 
 

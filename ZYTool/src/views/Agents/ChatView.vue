@@ -25,19 +25,8 @@
                                 @click.stop="deleteSession(session.id)">
                                 <DeleteOutlined />
                             </a-button>
-                </div>
-
-                <!-- 流式显示 AI 回复 -->
-                <div v-if="streamingContent" class="message-item">
-                    <div class="message-avatar assistant">
-                        <RobotOutlined />
+                        </div>
                     </div>
-                    <div class="message-content">
-                        <div class="message-role">AI 助手</div>
-                        <div class="message-text">{{ streamingContent }}</div>
-                    </div>
-                </div>
-            </div>
                 </template>
             </div>
         </div>
@@ -85,7 +74,9 @@
             <div class="chat-input-area">
                 <div class="chat-input-wrapper">
                     <a-textarea v-model:value="userInput" placeholder="输入消息..." :auto-size="{ minRows: 1, maxRows: 4 }"
-                        @pressEnter="handleEnter" :disabled="isSending" />
+                        @keydown.enter.exact.prevent="sendMessage"
+                        @keydown.enter.shift.exact="() => {}"
+                        :disabled="isSending" />
                     <div class="chat-input-actions">
                         <a-button type="text" size="small">
                             <PaperClipOutlined />

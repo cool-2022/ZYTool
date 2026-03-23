@@ -73,6 +73,7 @@ export function useChatView() {
 
         const inputContent = userInput.value
         userInput.value = ''
+        await nextTick()
         isSending.value = true
         streamingContent.value = ''
 
@@ -92,8 +93,11 @@ export function useChatView() {
         // 调用后端流式 API
         try {
             for await (const chunk of ApiService.chatStream(inputContent, currentSession.value?.id)) {
-                streamingContent.value += chunk
-                assistantMessage.content = streamingContent.value
+                // 直接更新 messages 数组最后一项，确保 Vue 响应式追踪到变化
+                const lastMsg = messages.value[messages.value.length - 1]
+                if (lastMsg && lastMsg.role === 'assistant') {
+                    lastMsg.content += chunk
+                }
                 
                 // 滚动到底部
                 await nextTick()

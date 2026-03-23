@@ -28,5 +28,8 @@ openai>=1.0.0
 python-dotenv>=1.0.0
 requests>=2.31.0
 
+# MCP
+mcp>=1.0.0
+
 # macOS 原生框架绑定 用于获取GPS定位
 pyobjc==11.1    

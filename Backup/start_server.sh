@@ -2,8 +2,8 @@
 
 # ZYTool Backend 启动脚本
 
-# 切换到Backend目录
-cd "$(dirname "$0")/app"
+# 切换到 Backup 根目录（app 包的父目录）
+cd "$(dirname "$0")"
 
 # 设置Python路径
 export PYTHONPATH="${PYTHONPATH}:$(pwd)"

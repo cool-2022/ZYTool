@@ -4,7 +4,7 @@ from fastapi.responses import StreamingResponse
 from app.schemas import ChatRequest, ChatResponse
 
 
-from app.services.agents import generate_stream, generate_sync
+from app.services.Agents import generate_stream, generate_sync
 
 router = APIRouter()
 
