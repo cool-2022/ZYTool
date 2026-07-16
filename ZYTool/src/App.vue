@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import { ref, onMounted, provide, readonly } from 'vue'
-import { MoonOutlined, SunOutlined } from '@ant-design/icons-vue'
 
 // 主题状态
 type Theme = 'light' | 'dark'
@@ -57,8 +56,8 @@ onMounted(() => {
             @click="toggleTheme"
             :title="theme === 'light' ? '切换到深色模式' : '切换到浅色模式'"
           >
-            <SunOutlined v-if="theme === 'light'" />
-            <MoonOutlined v-else />
+            <span class="theme-icon" v-if="theme === 'light'">☀️</span>
+            <span class="theme-icon" v-else>🌙</span>
           </a-button>
         </div>
       </div>
@@ -181,8 +180,9 @@ onMounted(() => {
   transform: rotate(15deg);
 }
 
-.theme-toggle :deep(.anticon) {
+.theme-icon {
   font-size: 18px;
+  line-height: 1;
 }
 
 @media (max-width: 768px) {
