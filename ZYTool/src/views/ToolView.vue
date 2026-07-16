@@ -273,7 +273,7 @@ onMounted(() => {
 }
 
 .container {
-  max-width: 1400px;
+  max-width: 1600px;
   margin: 0 auto;
   padding: 0 24px;
   margin-top: -40px;
@@ -289,7 +289,7 @@ onMounted(() => {
 
 /* 侧边栏 */
 .tools-sidebar {
-  width: 260px;
+  width: 220px;
   flex-shrink: 0;
   background: var(--bg-primary);
   border: 1px solid var(--border-color);
@@ -450,7 +450,7 @@ onMounted(() => {
 
 .tools-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
   gap: 1rem;
 }
 
