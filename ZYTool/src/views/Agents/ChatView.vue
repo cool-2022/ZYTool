@@ -58,14 +58,16 @@
                     <div class="chat-empty-hint">输入问题开始对话</div>
                 </div>
 
-                <div v-for="msg in messages" :key="msg.id" class="message-item">
+                <div v-for="msg in messages" :key="msg.id" class="message-item" :class="{ self: msg.role === 'user' }">
                     <div class="message-avatar" :class="msg.role">
                         <UserOutlined v-if="msg.role === 'user'" />
                         <RobotOutlined v-else />
                     </div>
                     <div class="message-content">
                         <div class="message-role">{{ msg.role === 'user' ? '你' : 'AI 助手' }}</div>
-                        <div class="message-text">{{ msg.content }}</div>
+                        <div class="message-bubble">
+                            <div class="message-text">{{ msg.content }}</div>
+                        </div>
                         <div class="message-time">{{ formatTime(msg.timestamp) }}</div>
                     </div>
                 </div>
@@ -81,7 +83,7 @@
                         <a-button type="text" size="small">
                             <PaperClipOutlined />
                         </a-button>
-                        <a-button type="text" size="small">
+                        <a-button type="text" size="small" @click="toggleVoice" :class="{ 'voice-active': isListening }">
                             <AudioOutlined />
                         </a-button>
                         <a-button type="primary" @click="sendMessage" :loading="isSending" :disabled="!userInput.trim()">
@@ -98,7 +100,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, ref } from 'vue'
 import {
     RobotOutlined,
     PlusOutlined,
@@ -112,7 +114,9 @@ import {
     PaperClipOutlined,
     AudioOutlined
 } from '@ant-design/icons-vue'
+import { message } from 'ant-design-vue'
 import { useChatView } from './ChatView'
+import { ToolsFuntions } from '@/utils/startVoiceInput'
 
 const {
     chatSessions,
@@ -129,6 +133,33 @@ const {
     toggleSidebar,
     clearCurrentChat
 } = useChatView()
+
+// 语音输入状态
+const isListening = ref(false)
+let stopVoice: (() => void) | null = null
+
+function toggleVoice() {
+    if (isListening.value) {
+        stopVoice?.()
+        stopVoice = null
+        isListening.value = false
+        return
+    }
+
+    isListening.value = true
+    stopVoice = ToolsFuntions.startVoiceInput(
+        (text) => {
+            userInput.value = text
+            isListening.value = false
+            stopVoice = null
+        },
+        (err) => {
+            message.error(err)
+            isListening.value = false
+            stopVoice = null
+        }
+    )
+}
 
 // 按日期分组会话
 const groupedSessions = computed(() => {
