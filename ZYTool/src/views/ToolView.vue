@@ -273,7 +273,7 @@ onMounted(() => {
 }
 
 .container {
-  max-width: 1600px;
+  max-width: 100%;
   margin: 0 auto;
   padding: 0 24px;
   margin-top: -40px;
@@ -289,7 +289,8 @@ onMounted(() => {
 
 /* 侧边栏 */
 .tools-sidebar {
-  width: 220px;
+  width: 10%;
+  min-width: 180px;
   flex-shrink: 0;
   background: var(--bg-primary);
   border: 1px solid var(--border-color);
@@ -371,7 +372,7 @@ onMounted(() => {
 
 /* 主内容区 */
 .tools-content {
-  flex: 1;
+  width: 90%;
   min-width: 0;
   background: var(--bg-primary);
   border: 1px solid var(--border-color);
