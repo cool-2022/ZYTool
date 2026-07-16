@@ -21,7 +21,7 @@ def main():
     try:
         from app.main import app
         import uvicorn
-        from core.config import settings
+        from app.core.config import settings
         
         print(f"🚀 启动 {settings.app_name} v{settings.app_version}")
         print(f"📍 服务地址: http://{settings.host}:{settings.port}")
@@ -38,7 +38,7 @@ def main():
         
     except ImportError as e:
         print(f"❌ 导入错误: {e}")
-        print("💡 请确保所有依赖已安装: pip install -r requirements.txt")
+        print("💡 请确保所有依赖已安装: pip3 install -r requirements.txt")
         sys.exit(1)
     except Exception as e:
         print(f"❌ 启动失败: {e}")
