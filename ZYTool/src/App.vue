@@ -1,5 +1,41 @@
 <script setup lang="ts">
-// App.vue - 主应用组件
+import { ref, onMounted, provide, readonly } from 'vue'
+import { MoonOutlined, SunOutlined } from '@ant-design/icons-vue'
+
+// 主题状态
+type Theme = 'light' | 'dark'
+const theme = ref<Theme>('light')
+
+// 初始化主题
+const initTheme = () => {
+  const saved = localStorage.getItem('zytool-theme') as Theme | null
+  if (saved === 'light' || saved === 'dark') {
+    theme.value = saved
+  } else if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+    theme.value = 'dark'
+  }
+  applyTheme()
+}
+
+// 应用主题到 html 元素
+const applyTheme = () => {
+  document.documentElement.setAttribute('data-theme', theme.value)
+}
+
+// 切换主题
+const toggleTheme = () => {
+  theme.value = theme.value === 'light' ? 'dark' : 'light'
+  applyTheme()
+  localStorage.setItem('zytool-theme', theme.value)
+}
+
+// 提供给子组件使用
+provide('theme', readonly(theme))
+provide('toggleTheme', toggleTheme)
+
+onMounted(() => {
+  initTheme()
+})
 </script>
 
 <template>
@@ -15,6 +51,15 @@
           <router-link to="/home" class="nav-link">首页</router-link>
           <router-link to="/tools" class="nav-link">工具</router-link>
           <router-link to="/" class="nav-link nav-link-primary">登录</router-link>
+          <a-button
+            type="text"
+            class="theme-toggle"
+            @click="toggleTheme"
+            :title="theme === 'light' ? '切换到深色模式' : '切换到浅色模式'"
+          >
+            <SunOutlined v-if="theme === 'light'" />
+            <MoonOutlined v-else />
+          </a-button>
         </div>
       </div>
     </nav>
@@ -118,6 +163,28 @@
   transform: translateY(-1px);
 }
 
+.theme-toggle {
+  color: var(--text-secondary) !important;
+  width: 38px;
+  height: 38px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--border-radius);
+  margin-left: 0.5rem;
+  transition: all var(--transition-speed);
+}
+
+.theme-toggle:hover {
+  color: var(--primary-color) !important;
+  background: rgba(59, 130, 246, 0.08);
+  transform: rotate(15deg);
+}
+
+.theme-toggle :deep(.anticon) {
+  font-size: 18px;
+}
+
 @media (max-width: 768px) {
   .nav-container {
     padding: 0 16px;
@@ -133,6 +200,10 @@
   }
 
   .nav-link-primary {
+    margin-left: 0.25rem;
+  }
+
+  .theme-toggle {
     margin-left: 0.25rem;
   }
 }

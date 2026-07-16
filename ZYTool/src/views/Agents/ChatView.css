@@ -454,7 +454,7 @@
 }
 
 /* 深色模式 */
-@media (prefers-color-scheme: dark) {
+:root[data-theme="dark"] {
   .chat-view-page {
     background: var(--bg-primary);
   }

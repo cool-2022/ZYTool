@@ -96,7 +96,7 @@ p {
 }
 
 /* Ant Design 组件深色模式适配 */
-@media (prefers-color-scheme: dark) {
+:root[data-theme="dark"] {
   /* Typography 组件 */
   .ant-typography,
   .ant-typography h1,

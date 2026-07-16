@@ -310,7 +310,7 @@ const compareFiles = async () => {
 }
 
 /* 深色模式下上传组件特殊适配 */
-@media (prefers-color-scheme: dark) {
+:root[data-theme="dark"] {
     .tool-page :deep(.ant-upload-drag) {
         background: var(--bg-secondary);
         border-color: var(--border-color);
@@ -398,7 +398,7 @@ const compareFiles = async () => {
     border-left: 3px solid #ff4d4f;
 }
 
-@media (prefers-color-scheme: dark) {
+:root[data-theme="dark"] {
     .diff-line-removed {
         background: rgba(255, 77, 79, 0.2);
         border-left: 3px solid #ff7875;
@@ -410,7 +410,7 @@ const compareFiles = async () => {
     border-left: 3px solid #52c41a;
 }
 
-@media (prefers-color-scheme: dark) {
+:root[data-theme="dark"] {
     .diff-line-added {
         background: rgba(82, 196, 26, 0.2);
         border-left: 3px solid #73d13d;
