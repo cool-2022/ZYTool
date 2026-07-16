@@ -8,12 +8,13 @@
     <nav class="navbar">
       <div class="nav-container">
         <router-link to="/" class="nav-logo">
-          ZYTool
+          <span class="logo-icon">⚡</span>
+          <span class="logo-text">ZYTool</span>
         </router-link>
         <div class="nav-menu">
           <router-link to="/home" class="nav-link">首页</router-link>
           <router-link to="/tools" class="nav-link">工具</router-link>
-          <router-link to="/" class="nav-link">登陆</router-link>
+          <router-link to="/" class="nav-link nav-link-primary">登录</router-link>
         </div>
       </div>
     </nav>
@@ -26,100 +27,113 @@
 <style scoped>
 #app {
   min-height: 100vh;
-  background-color: var(--bg-primary);
+  background: var(--gradient-bg);
 }
 
 .navbar {
-  background: var(--gradient-primary);
-  padding: 1rem 0;
-  box-shadow: var(--shadow-md);
+  background: var(--glass-bg);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  border-bottom: 1px solid var(--glass-border);
+  padding: 0.875rem 0;
   position: sticky;
   top: 0;
   z-index: 1000;
-  backdrop-filter: blur(10px);
   transition: all var(--transition-speed);
 }
 
 .nav-container {
-  max-width: 1200px;
+  max-width: 1400px;
   margin: 0 auto;
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 0 20px;
+  padding: 0 24px;
 }
 
 .nav-logo {
-  color: white;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
   text-decoration: none;
-  font-size: 1.8rem;
-  font-weight: 700;
-  letter-spacing: -0.5px;
-  transition: all 0.3s ease;
-  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);
+  transition: transform 0.3s ease;
 }
 
 .nav-logo:hover {
-  transform: scale(1.05);
-  text-shadow: 3px 3px 6px rgba(0, 0, 0, 0.3);
-  color: white;
+  transform: scale(1.02);
+}
+
+.logo-icon {
+  font-size: 1.5rem;
+  filter: drop-shadow(0 2px 4px rgba(59, 130, 246, 0.3));
+}
+
+.logo-text {
+  font-size: 1.6rem;
+  font-weight: 800;
+  background: var(--gradient-primary);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  letter-spacing: -0.5px;
 }
 
 .nav-menu {
   display: flex;
-  gap: 1rem;
+  align-items: center;
+  gap: 0.5rem;
 }
 
 .nav-link {
-  color: rgba(255, 255, 255, 0.9);
+  color: var(--text-secondary);
   text-decoration: none;
-  padding: 0.6rem 1.2rem;
+  padding: 0.55rem 1.1rem;
   border-radius: var(--border-radius);
   transition: all var(--transition-speed);
   font-weight: 500;
-  position: relative;
-  overflow: hidden;
-}
-
-.nav-link::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: -100%;
-  width: 100%;
-  height: 100%;
-  background: rgba(255, 255, 255, 0.2);
-  transition: left var(--transition-speed);
-}
-
-.nav-link:hover::before {
-  left: 0;
+  font-size: 0.95rem;
 }
 
 .nav-link:hover {
-  background-color: rgba(255, 255, 255, 0.15);
-  transform: translateY(-2px);
-  color: white;
+  color: var(--primary-color);
+  background: rgba(59, 130, 246, 0.08);
 }
 
 .nav-link.router-link-active {
-  background-color: rgba(255, 255, 255, 0.25);
-  color: white;
-  box-shadow: var(--shadow-sm);
+  color: var(--primary-color);
+  background: rgba(59, 130, 246, 0.12);
+  font-weight: 600;
+}
+
+.nav-link-primary {
+  background: var(--gradient-primary);
+  color: white !important;
+  box-shadow: var(--shadow-primary);
+  margin-left: 0.5rem;
+}
+
+.nav-link-primary:hover {
+  background: var(--gradient-primary-hover);
+  box-shadow: var(--shadow-primary-hover);
+  transform: translateY(-1px);
 }
 
 @media (max-width: 768px) {
   .nav-container {
-    flex-direction: column;
-    gap: 1rem;
+    padding: 0 16px;
   }
 
-  .nav-menu {
-    gap: 0.5rem;
+  .logo-text {
+    font-size: 1.4rem;
   }
 
-  .nav-logo {
-    font-size: 1.5rem;
+  .nav-link {
+    padding: 0.45rem 0.8rem;
+    font-size: 0.9rem;
+  }
+
+  .nav-link-primary {
+    margin-left: 0.25rem;
   }
 }
 </style>
