@@ -9,30 +9,68 @@
 
     <div class="container">
       <a-spin :spinning="loading" tip="加载工具分类中...">
-        <div class="tools-categories">
-          <div class="category-card" v-for="category in categories" :key="category.id">
-            <div class="category-header">
-              <div class="category-title">
+        <div class="tools-layout">
+          <!-- 左侧分类侧边栏 -->
+          <aside class="tools-sidebar">
+            <div class="sidebar-title">工具分类</div>
+            <div class="category-list">
+              <div
+                class="category-item"
+                :class="{ active: activeCategoryId === null }"
+                @click="selectCategory(null)"
+              >
+                <span class="category-item-icon">📦</span>
+                <span class="category-item-name">全部工具</span>
+                <span class="category-item-count">{{ totalToolCount }}</span>
+              </div>
+              <div
+                v-for="category in categories"
+                :key="category.id"
+                class="category-item"
+                :class="{ active: activeCategoryId === category.id }"
+                @click="selectCategory(category.id)"
+              >
+                <span class="category-item-icon">{{ getCategoryIcon(category.name) }}</span>
+                <span class="category-item-name">{{ category.name }}</span>
+                <span class="category-item-count">{{ category.tools.length }}</span>
+              </div>
+            </div>
+          </aside>
+
+          <!-- 右侧工具内容区 -->
+          <main class="tools-content">
+            <div class="content-header">
+              <h2 class="content-title">{{ currentTitle }}</h2>
+              <p class="content-desc">{{ currentDesc }}</p>
+            </div>
+
+            <div v-if="displayCategories.length === 0" class="empty-tools">
+              <InboxOutlined />
+              <span>暂无工具</span>
+            </div>
+
+            <div v-for="category in displayCategories" :key="category.id" class="category-section">
+              <div class="category-section-header">
                 <span class="category-icon">{{ getCategoryIcon(category.name) }}</span>
                 <h3>{{ category.name }}</h3>
+                <span class="category-desc">{{ category.description }}</span>
               </div>
-              <span class="category-desc">{{ category.description }}</span>
-            </div>
-            <div class="tools-grid">
-              <div class="tool-item" v-for="tool in category.tools" :key="tool.id" @click="openTool(tool)">
-                <div class="tool-icon-wrapper">
-                  <span class="tool-icon">{{ tool.icon }}</span>
+              <div class="tools-grid">
+                <div class="tool-item" v-for="tool in category.tools" :key="tool.id" @click="openTool(tool)">
+                  <div class="tool-icon-wrapper">
+                    <span class="tool-icon">{{ tool.icon }}</span>
+                  </div>
+                  <div class="tool-info">
+                    <h4 class="tool-name">{{ tool.name }}</h4>
+                    <p class="tool-desc">{{ tool.description }}</p>
+                  </div>
+                  <span class="tool-tag" :class="tool.type === 'frontend' ? 'tag-frontend' : 'tag-backend'">
+                    {{ tool.type === 'frontend' ? '前端' : '后端' }}
+                  </span>
                 </div>
-                <div class="tool-info">
-                  <h4 class="tool-name">{{ tool.name }}</h4>
-                  <p class="tool-desc">{{ tool.description }}</p>
-                </div>
-                <span class="tool-tag" :class="tool.type === 'frontend' ? 'tag-frontend' : 'tag-backend'">
-                  {{ tool.type === 'frontend' ? '前端' : '后端' }}
-                </span>
               </div>
             </div>
-          </div>
+          </main>
         </div>
       </a-spin>
     </div>
@@ -40,14 +78,16 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, computed } from 'vue'
 import { ApiService, type Category } from '../services/api'
 import { message } from 'ant-design-vue'
 import router from '../router'
+import { InboxOutlined } from '@ant-design/icons-vue'
 
 // 工具分类数据
 const categories = ref<Category[]>([])
 const loading = ref(false)
+const activeCategoryId = ref<number | null>(null)
 
 const getCategoryIcon = (name: string) => {
   const map: Record<string, string> = {
@@ -56,6 +96,35 @@ const getCategoryIcon = (name: string) => {
     '图片工具': '🖼️'
   }
   return map[name] || '📦'
+}
+
+// 工具总数
+const totalToolCount = computed(() => {
+  return categories.value.reduce((sum, category) => sum + category.tools.length, 0)
+})
+
+// 当前标题和描述
+const currentTitle = computed(() => {
+  if (activeCategoryId.value === null) return '全部工具'
+  const category = categories.value.find(c => c.id === activeCategoryId.value)
+  return category?.name || '全部工具'
+})
+
+const currentDesc = computed(() => {
+  if (activeCategoryId.value === null) return '浏览所有可用的在线工具'
+  const category = categories.value.find(c => c.id === activeCategoryId.value)
+  return category?.description || '浏览所有可用的在线工具'
+})
+
+// 根据选中分类过滤显示
+const displayCategories = computed(() => {
+  if (activeCategoryId.value === null) return categories.value
+  return categories.value.filter(c => c.id === activeCategoryId.value)
+})
+
+// 选择分类
+const selectCategory = (id: number | null) => {
+  activeCategoryId.value = id
 }
 
 // 从API获取工具分类数据
@@ -212,49 +281,171 @@ onMounted(() => {
   z-index: 2;
 }
 
-.tools-categories {
+.tools-layout {
   display: flex;
-  flex-direction: column;
-  gap: 2rem;
+  gap: 1.5rem;
+  align-items: flex-start;
 }
 
-.category-card {
+/* 侧边栏 */
+.tools-sidebar {
+  width: 260px;
+  flex-shrink: 0;
   background: var(--bg-primary);
   border: 1px solid var(--border-color);
   border-radius: var(--border-radius-xl);
-  padding: 1.75rem;
-  box-shadow: var(--shadow-lg);
+  padding: 1.25rem;
+  box-shadow: var(--shadow-md);
+  position: sticky;
+  top: 88px;
 }
 
-.category-header {
+.sidebar-title {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--text-tertiary);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 1rem;
+  padding-left: 0.75rem;
+}
+
+.category-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.category-item {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  margin-bottom: 1.5rem;
+  gap: 0.75rem;
+  padding: 0.85rem 0.75rem;
+  border-radius: var(--border-radius);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border: 1px solid transparent;
+}
+
+.category-item:hover {
+  background: var(--bg-secondary);
+  border-color: var(--border-color);
+}
+
+.category-item.active {
+  background: rgba(59, 130, 246, 0.08);
+  border-color: rgba(59, 130, 246, 0.2);
+}
+
+.category-item-icon {
+  font-size: 1.25rem;
+}
+
+.category-item-name {
+  flex: 1;
+  font-size: 0.95rem;
+  font-weight: 500;
+  color: var(--text-primary);
+}
+
+.category-item.active .category-item-name {
+  color: var(--primary-color);
+  font-weight: 600;
+}
+
+.category-item-count {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--text-tertiary);
+  background: var(--bg-secondary);
+  padding: 0.15rem 0.5rem;
+  border-radius: 50px;
+  min-width: 24px;
+  text-align: center;
+}
+
+.category-item.active .category-item-count {
+  background: var(--primary-color);
+  color: white;
+}
+
+/* 主内容区 */
+.tools-content {
+  flex: 1;
+  min-width: 0;
+  background: var(--bg-primary);
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius-xl);
+  padding: 2rem;
+  box-shadow: var(--shadow-md);
+}
+
+.content-header {
+  margin-bottom: 1.75rem;
+  padding-bottom: 1.25rem;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.content-title {
+  font-size: 1.5rem;
+  font-weight: 800;
+  color: var(--text-primary);
+  margin: 0 0 0.35rem;
+}
+
+.content-desc {
+  font-size: 0.95rem;
+  color: var(--text-secondary);
+  margin: 0;
+}
+
+.empty-tools {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 80px 20px;
+  color: var(--text-tertiary);
+  font-size: 1rem;
+  gap: 0.75rem;
+}
+
+.empty-tools :deep(.anticon) {
+  font-size: 48px;
+  opacity: 0.5;
+}
+
+.category-section {
+  margin-bottom: 2rem;
+}
+
+.category-section:last-child {
+  margin-bottom: 0;
+}
+
+.category-section-header {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 1.25rem;
   flex-wrap: wrap;
-  gap: 0.75rem;
 }
 
-.category-title {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-}
-
-.category-icon {
+.category-section-header .category-icon {
   font-size: 1.5rem;
 }
 
-.category-title h3 {
-  font-size: 1.35rem;
+.category-section-header h3 {
+  font-size: 1.25rem;
   font-weight: 700;
   color: var(--text-primary);
   margin: 0;
 }
 
-.category-desc {
-  font-size: 0.9rem;
+.category-section-header .category-desc {
+  font-size: 0.85rem;
   color: var(--text-secondary);
+  margin-left: auto;
 }
 
 .tools-grid {
@@ -373,9 +564,33 @@ onMounted(() => {
     margin-top: -30px;
   }
 
-  .category-header {
+  .tools-layout {
     flex-direction: column;
-    align-items: flex-start;
+  }
+
+  .tools-sidebar {
+    width: 100%;
+    position: static;
+    top: auto;
+  }
+
+  .category-list {
+    flex-direction: row;
+    flex-wrap: wrap;
+  }
+
+  .category-item {
+    flex: 1;
+    min-width: 120px;
+  }
+
+  .tools-content {
+    padding: 1.25rem;
+  }
+
+  .category-section-header .category-desc {
+    margin-left: 0;
+    width: 100%;
   }
 
   .tools-grid {
