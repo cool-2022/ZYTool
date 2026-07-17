@@ -156,6 +156,8 @@ export function useChatView() {
         }
     }
 
+    // 语音输入模块
+
     return {
         chatSessions,
         currentSession,

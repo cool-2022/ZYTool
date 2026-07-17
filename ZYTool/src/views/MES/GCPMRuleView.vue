@@ -28,11 +28,11 @@
                         </template>
 
                         <a-table :columns="columns" :data-source="ruleData" :pagination="false" size="small"
-                            :scroll="{ y: '100%' }" :row-class-name="(record, index) => index % 2 === 1 ? 'table-striped' : ''"
+                            :scroll="{ y: '100%' }" :row-class-name="(_record: any, index: number) => index % 2 === 1 ? 'table-striped' : ''"
                             @row-click="handleRowClick"
-                            :custom-row="(record) => ({
+                            :custom-row="(record: any) => ({
                                 onDblclick: () => handleRowDblClick(record)
-                            })" class="rule-table-grid">
+                            })"} class="rule-table-grid">
                             <template #bodyCell="{ column, record }">
                                 <template v-if="column.key === 'actions'">
                                     <a-space>

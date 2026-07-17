@@ -88,7 +88,7 @@ const router = createRouter({
 })
 
 // 路由守卫 - 控制页面访问权限
-router.beforeEach((to, from, next) => {
+router.beforeEach((to, _from, next) => {
     // 检查路由是否需要认证
     if (to.meta.requiresAuth && !isAuthenticated()) {
         // 需要登录但未登录，跳转到登录页

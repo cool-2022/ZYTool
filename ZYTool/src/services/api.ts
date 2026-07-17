@@ -1,55 +1,123 @@
-import axios from 'axios'
+import axios, { type AxiosError, type AxiosInstance, type AxiosRequestConfig } from 'axios'
 import { getToken, clearAuth } from '../utils/auth'
+import { AppConfig } from '../config/appConfig'
 
-// 创建axios实例
-const api = axios.create({
-    baseURL: import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000/api/v1',
-    timeout: 60000,
-    headers: {
-        'Content-Type': 'application/json',
-    },
-})
+// ===================== 双后端 axios 实例 =====================
 
-// 请求拦截器 - 添加 token
-api.interceptors.request.use(
-    (config) => {
-        if (import.meta.env.DEV) console.log('发送请求:', config.method?.toUpperCase(), config.url)
+function createApiInstance(baseURL: string): AxiosInstance {
+    const instance = axios.create({
+        baseURL,
+        timeout: 60000,
+        headers: {
+            'Content-Type': 'application/json',
+        },
+    })
 
-        // 从 localStorage 获取 token 并添加到请求头
-        const token = getToken()
-        if (token) {
-            config.headers.Authorization = `Bearer ${token}`
+    // 请求拦截器 - 添加 token
+    instance.interceptors.request.use(
+        (config) => {
+            if (import.meta.env.DEV) console.log('发送请求:', config.method?.toUpperCase(), config.url)
+
+            const token = getToken()
+            if (token) {
+                config.headers.Authorization = `Bearer ${token}`
+            }
+
+            return config
+        },
+        (error) => {
+            if (import.meta.env.DEV) console.error('请求错误:', error)
+            return Promise.reject(error)
+        }
+    )
+
+    // 响应拦截器 - 处理 token 过期
+    instance.interceptors.response.use(
+        (response) => {
+            if (import.meta.env.DEV) console.log('收到响应:', response.status, response.data)
+            return response
+        },
+        (error) => {
+            if (import.meta.env.DEV) console.error('响应错误:', error.response?.status, error.response?.data)
+
+            // 处理 401 未授权错误（token 过期或无效）
+            if (error.response?.status === 401) {
+                clearAuth()
+                // 可以在这里跳转到登录页
+                // window.location.href = '/login'
+            }
+
+            return Promise.reject(error)
+        }
+    )
+
+    return instance
+}
+
+export const rustApi = createApiInstance(`${AppConfig.rustApiBaseUrl}${AppConfig.apiPrefix}`)
+export const pythonApi = createApiInstance(`${AppConfig.pythonApiBaseUrl}${AppConfig.apiPrefix}`)
+
+// 默认导出保持为 Rust 后端，兼容旧代码
+const api = rustApi
+export default api
+
+// ===================== 降级兜底逻辑 =====================
+
+/**
+ * 判断错误是否应该触发 Python 后端降级
+ *
+ * 触发降级的场景：
+ * - 无响应（Rust 未启动或网络不可达）
+ * - 请求超时
+ * - 5xx 服务器错误（503/502/500/504 等，表示 Rust 资源不足或服务异常）
+ *
+ * 不触发的场景：
+ * - 4xx 客户端错误（401/403/422 等，Python 也会返回同样错误）
+ */
+function shouldFallbackToPython(error: AxiosError): boolean {
+    if (!error.response) {
+        // 网络错误、Rust 未启动、请求被取消、超时等
+        return true
+    }
+
+    const status = error.response.status
+    // 5xx 表示服务端问题，降级到 Python
+    if (status >= 500 && status < 600) {
+        return true
+    }
+
+    return false
+}
+
+/**
+ * 优先请求 Rust 后端；失败且满足降级条件时，自动请求 Python 后端
+ */
+export async function requestWithFallback<T>(
+    method: 'get' | 'post' | 'put' | 'delete' | 'patch',
+    url: string,
+    data?: unknown,
+    config?: AxiosRequestConfig
+): Promise<T> {
+    try {
+        const response = await rustApi.request({ method, url, data, ...config })
+        return response.data as T
+    } catch (err) {
+        const axiosError = err as AxiosError
+        if (!shouldFallbackToPython(axiosError)) {
+            throw err
         }
 
-        return config
-    },
-    (error) => {
-        if (import.meta.env.DEV) console.error('请求错误:', error)
-        return Promise.reject(error)
-    }
-)
-
-// 响应拦截器 - 处理 token 过期
-api.interceptors.response.use(
-    (response) => {
-        if (import.meta.env.DEV) console.log('收到响应:', response.status, response.data)
-        return response
-    },
-    (error) => {
-        if (import.meta.env.DEV) console.error('响应错误:', error.response?.status, error.response?.data)
-
-        // 处理 401 未授权错误（token 过期或无效）
-        if (error.response?.status === 401) {
-            clearAuth()
-            // 可以在这里跳转到登录页
-            // window.location.href = '/login'
+        if (import.meta.env.DEV) {
+            console.warn(`[Fallback] Rust 后端不可用，降级到 Python 后端: ${method.toUpperCase()} ${url}`)
         }
 
-        return Promise.reject(error)
+        const response = await pythonApi.request({ method, url, data, ...config })
+        return response.data as T
     }
-)
+}
 
-// API接口定义
+// ===================== 类型定义 =====================
+
 export interface Category {
     id: number
     name: string
@@ -62,7 +130,7 @@ export interface Tool {
     name: string
     icon: string
     description: string
-    type?: 'frontend' | 'backend'  // 工具类型：前端处理或后端处理
+    type?: 'frontend' | 'backend'
 }
 
 export interface TextProcessRequest {
@@ -93,7 +161,6 @@ export interface TimestampConvertRequest {
     action: 'to_datetime' | 'to_timestamp'
 }
 
-// 文件比对相关接口
 export interface DiffLine {
     lineNumber: number
     content: string
@@ -111,13 +178,11 @@ export interface FolderDiffResult {
 
 export type DiffResult = FileDiffResult | FolderDiffResult
 
-// API服务类
+// ===================== API 服务类 =====================
+
 export class ApiService {
     // ========== 认证相关 ==========
 
-    /**
-     * 用户登录
-     */
     static async login(username: string, password: string): Promise<{
         success: boolean
         message: string
@@ -127,13 +192,9 @@ export class ApiService {
             expires_in: number
         }
     }> {
-        const response = await api.post('/auth/login', { username, password })
-        return response.data
+        return requestWithFallback('post', '/auth/login', { username, password })
     }
 
-    /**
-     * 用户注册
-     */
     static async register(username: string, password: string, email?: string): Promise<{
         success: boolean
         message: string
@@ -143,53 +204,35 @@ export class ApiService {
             expires_in: number
         }
     }> {
-        const response = await api.post('/auth/register', { username, password, email })
-        return response.data
+        return requestWithFallback('post', '/auth/register', { username, password, email })
     }
 
-    /**
-     * 获取当前用户信息
-     */
     static async getCurrentUser(): Promise<{
         username: string
         user_id?: number
         roles: string[]
     }> {
-        const response = await api.get('/auth/me')
-        return response.data
+        return requestWithFallback('get', '/auth/me')
     }
 
-    /**
-     * 用户登出
-     */
     static async logout(): Promise<{ success: boolean; message: string }> {
-        const response = await api.post('/auth/logout')
-        return response.data
+        return requestWithFallback('post', '/auth/logout')
     }
 
-    /**
-     * 获取受保护的数据（示例）
-     */
     static async getProtectedData(): Promise<any> {
-        const response = await api.get('/protected/data')
-        return response.data
+        return requestWithFallback('get', '/protected/data')
     }
 
     // ========== 工具相关 ==========
 
-    // 获取工具分类
     static async getCategories(): Promise<{ categories: Category[] }> {
-        const response = await api.get('/tools/categories')
-        return await response.data
+        return requestWithFallback('get', '/tools/categories')
     }
 
-    // 文本处理
     static async processText(request: TextProcessRequest): Promise<{ result: string; success: boolean }> {
-        const response = await api.post('/tools/text/process', request)
-        return response.data
+        return requestWithFallback('post', '/tools/text/process', request)
     }
 
-    // 文本对比
     static async compareText(request: TextCompareRequest): Promise<{
         differences: Array<{
             line: number
@@ -203,11 +246,9 @@ export class ApiService {
             identical: boolean
         }
     }> {
-        const response = await api.post('/tools/text/compare', request)
-        return response.data
+        return requestWithFallback('post', '/tools/text/compare', request)
     }
 
-    // 正则表达式测试
     static async testRegex(request: RegexTestRequest): Promise<{
         matches: string[]
         match_details: Array<{
@@ -218,11 +259,9 @@ export class ApiService {
         }>
         success: boolean
     }> {
-        const response = await api.post('/tools/regex/test', request)
-        return response.data
+        return requestWithFallback('post', '/tools/regex/test', request)
     }
 
-    // 密码生成
     static async generatePassword(request: PasswordGenerateRequest): Promise<{
         password: string
         length: number
@@ -233,116 +272,100 @@ export class ApiService {
             symbols: boolean
         }
     }> {
-        const response = await api.post('/tools/password/generate', request)
-        return response.data
+        return requestWithFallback('post', '/tools/password/generate', request)
     }
 
-    // 时间戳转换
     static async convertTimestamp(request: TimestampConvertRequest): Promise<{
         datetime: string
         timestamp: number
         action: string
     }> {
-        const response = await api.post('/tools/timestamp/convert', request)
-        return response.data
+        return requestWithFallback('post', '/tools/timestamp/convert', request)
     }
 
-    // 文件比对
     static async compareFiles(request: TextCompareRequest): Promise<FileDiffResult> {
-        const response = await api.post('/tools/diff/compare', request)
-        return response.data
+        return requestWithFallback('post', '/tools/diff/compare', request)
     }
 
-    // 健康检查
     static async healthCheck(): Promise<{ status: string; message: string }> {
-        const response = await api.get('/health')
-        return response.data
+        return requestWithFallback('get', '/health')
     }
 
-    // 路径规划
     static async getRoute(request: any): Promise<any> {
-        const response = await api.post('/tools/map/route', request)
-        return response.data
+        return requestWithFallback('post', '/tools/map/route', request)
     }
 
-    // AI 聊天
     static async chat(message: string, sessionId?: string): Promise<{ reply: string }> {
-        const response = await api.post('/agents/chat', { message, session_id: sessionId })
-        return response.data
+        return requestWithFallback('post', '/agents/chat', { message, session_id: sessionId })
     }
 
-    // AI 聊天 - 流式响应
+    // AI 聊天 - 流式响应（使用 axios + fetch adapter，支持双后端兜底）
     static async *chatStream(message: string, sessionId?: string) {
-        const response = await fetch(`${api.defaults.baseURL}/agents/chat`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({ message, session_id: sessionId }),
-        })
-
-        if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`)
+        const body = { message, session_id: sessionId }
+        const token = getToken()
+        const headers: Record<string, string> = {}
+        if (token) {
+            headers.Authorization = `Bearer ${token}`
         }
 
-        const reader = response.body?.getReader()
-        if (!reader) {
-            throw new Error('Response body is null')
+        async function requestChatStream(instance: AxiosInstance): Promise<ReadableStream<Uint8Array>> {
+            const response = await instance.request({
+                method: 'POST',
+                url: '/agents/chat',
+                data: body,
+                headers,
+                adapter: 'fetch',
+                responseType: 'stream',
+            })
+            // fetch adapter + responseType: 'stream' 在浏览器下返回 ReadableStream
+            const stream = response.data as ReadableStream<Uint8Array> | undefined
+            if (!stream) {
+                throw new Error('Response body is not a stream')
+            }
+            return stream
         }
 
+        let stream: ReadableStream<Uint8Array>
+        let usedBackend = 'rust'
+
+        try {
+            stream = await requestChatStream(rustApi)
+        } catch (err) {
+            if (import.meta.env.DEV) {
+                console.warn('[Fallback] Rust 流式后端不可用，降级到 Python 后端:', err)
+            }
+            usedBackend = 'python'
+            stream = await requestChatStream(pythonApi)
+        }
+
+        const reader = stream.getReader()
         const decoder = new TextDecoder()
         let buffer = ''
 
-        while (true) {
-            const { done, value } = await reader.read()
-            if (done) break
+        try {
+            while (true) {
+                const { done, value } = await reader.read()
+                if (done) break
 
-            buffer += decoder.decode(value, { stream: true })
-            
-            // 处理 SSE 格式的数据
-            const lines = buffer.split('\n')
-            buffer = lines.pop() || ''
+                buffer += decoder.decode(value, { stream: true })
 
-            for (const line of lines) {
-                if (line.startsWith('data: ')) {
-                    const data = line.slice(6).trim()
-                    if (data && data !== '[DONE]') {
-                        yield data
+                // 处理 SSE 格式的数据
+                const lines = buffer.split('\n')
+                buffer = lines.pop() || ''
+
+                for (const line of lines) {
+                    if (line.startsWith('data: ')) {
+                        const data = line.slice(6).trim()
+                        if (data && data !== '[DONE]') {
+                            yield data
+                        }
                     }
                 }
             }
+        } catch (err) {
+            throw new Error(`流式读取失败 (backend: ${usedBackend}): ${err}`)
+        } finally {
+            reader.releaseLock()
         }
-    }
-
-    // AI 聊天 - 语音输入（浏览器原生 Web Speech API）
-    static startVoiceInput(
-        onResult: (text: string) => void,
-        onError?: (error: string) => void
-    ): () => void {
-        const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition
-        if (!SpeechRecognition) {
-            onError?.('当前浏览器不支持语音输入')
-            return () => {}
-        }
-
-        const recognition = new SpeechRecognition()
-        recognition.lang = 'zh-CN'
-        recognition.continuous = false
-        recognition.interimResults = false
-
-        recognition.onresult = (event: any) => {
-            const text = event.results[0][0].transcript
-            onResult(text)
-        }
-
-        recognition.onerror = (event: any) => {
-            onError?.(event.error === 'not-allowed' ? '麦克风权限被拒绝' : `语音识别错误: ${event.error}`)
-        }
-
-        recognition.start()
-
-        // 返回停止函数
-        return () => recognition.stop()
     }
 }
-export default api

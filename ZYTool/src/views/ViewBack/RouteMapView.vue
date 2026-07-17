@@ -77,7 +77,7 @@
 
             <!-- 路线详情 -->
             <a-card v-if="routeInfo && routeInfo.steps" title="路线详情" :bordered="false" style="margin-top: 24px;">
-                <a-steps :current="-1" :items="routeInfo.steps.map((step, index) => ({
+                <a-steps :current="-1" :items="routeInfo.steps.map((step) => ({
                     title: step.instruction,
                     description: `${formatDistance(step.distance)} | ${formatDuration(step.duration)}`
                 }))" direction="vertical" size="small" />
@@ -354,7 +354,7 @@ const geocodeAddress = async (address: string): Promise<RoutePoint | null> => {
         return null
     }
 
-    return new Promise((resolve, reject) => {
+    return new Promise((resolve) => {
         const geocoder = new AMap.Geocoder({
             city: '全国'
         })

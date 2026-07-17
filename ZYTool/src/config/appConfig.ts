@@ -1,6 +1,12 @@
 export const AppConfig = {
-    // 前端调用后端的基础地址（优先使用环境变量 VITE_API_BASE_URL）
-    apiBaseUrl: (import.meta.env.VITE_API_BASE_URL as string) || 'http://localhost:8000',
+    // Rust 后端（优先使用）
+    rustApiBaseUrl: (import.meta.env.VITE_RUST_API_BASE_URL as string) || 'http://localhost:8000',
+
+    // Python 后端（降级兜底）
+    pythonApiBaseUrl: (import.meta.env.VITE_PYTHON_API_BASE_URL as string) || 'http://localhost:8001',
+
+    // API 前缀
+    apiPrefix: '/api/v1',
 
     // 可在这里添加其它前端配置，例如默认分页大小、主题开关等
     defaults: {

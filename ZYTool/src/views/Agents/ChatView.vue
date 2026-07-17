@@ -124,7 +124,6 @@ const {
     messages,
     userInput,
     isSending,
-    streamingContent,
     sidebarCollapsed,
     selectSession,
     createNewSession,
@@ -193,15 +192,6 @@ function formatTime(date: Date) {
     })
 }
 
-// 处理 Enter 键
-function handleEnter(e: KeyboardEvent) {
-    if (e.shiftKey) {
-        // Shift + Enter 换行，不做处理
-        return
-    }
-    e.preventDefault()
-    sendMessage()
-}
 </script>
 
 <style scoped src="./ChatView.css"></style>
