@@ -1,4 +1,4 @@
-use axum::{routing::post, Json, Router};
+use axum::{routing::{get, post}, Json, Router};
 use once_cell::sync::Lazy;
 use std::collections::HashMap;
 use std::sync::Mutex;
@@ -45,7 +45,7 @@ pub fn router() -> Router {
     Router::new()
         .route("/login", post(login))
         .route("/register", post(register))
-        .route("/me", post(me))
+        .route("/me", get(me))
         .route("/logout", post(logout))
 }
 
