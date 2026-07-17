@@ -18,6 +18,7 @@ struct User {
     roles: Vec<String>,
 }
 
+// 预计算 bcrypt 哈希（cost=4），避免首次登录时实时计算导致延迟
 static FAKE_USERS_DB: Lazy<Mutex<HashMap<String, User>>> = Lazy::new(|| {
     let mut db = HashMap::new();
     db.insert(
@@ -25,7 +26,7 @@ static FAKE_USERS_DB: Lazy<Mutex<HashMap<String, User>>> = Lazy::new(|| {
         User {
             username: "admin".to_string(),
             user_id: 1,
-            hashed_password: get_password_hash("admin123"),
+            hashed_password: "$2b$04$XlMmQg/TyhuYFKV2.Gb2hOQNn9GMViCry/Ql6fUS5lu6czys96tVG".to_string(),
             roles: vec!["admin".to_string(), "user".to_string()],
         },
     );
@@ -34,7 +35,7 @@ static FAKE_USERS_DB: Lazy<Mutex<HashMap<String, User>>> = Lazy::new(|| {
         User {
             username: "user".to_string(),
             user_id: 2,
-            hashed_password: get_password_hash("user123"),
+            hashed_password: "$2b$04$VZ1g3MHPhLeoJeTHkHp3qOF1ROeikvbu5cbrKItKpYB7uG/zh03UW".to_string(),
             roles: vec!["user".to_string()],
         },
     );
