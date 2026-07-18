@@ -231,20 +231,20 @@ const handleSubmit = async () => {
   -webkit-backdrop-filter: var(--glass-blur);
   border: 1px solid var(--glass-border);
   border-radius: var(--border-radius-xl);
-  padding: 2.5rem;
+  padding: 1.75rem 2rem;
   box-shadow: var(--shadow-xl);
 }
 
 .login-header {
   text-align: center;
-  margin-bottom: 2rem;
+  margin-bottom: 1.25rem;
 }
 
 .login-logo {
   display: inline-flex;
   align-items: center;
   gap: 0.5rem;
-  margin-bottom: 1.25rem;
+  margin-bottom: 0.75rem;
 }
 
 .logo-icon {

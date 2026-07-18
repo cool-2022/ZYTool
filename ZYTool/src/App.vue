@@ -145,7 +145,7 @@ router.afterEach(refreshAuth)
   backdrop-filter: var(--glass-blur);
   -webkit-backdrop-filter: var(--glass-blur);
   border-bottom: 1px solid var(--glass-border);
-  padding: 0.875rem 0;
+  padding: 0.5rem 0;
   position: sticky;
   top: 0;
   z-index: 1000;
@@ -179,7 +179,7 @@ router.afterEach(refreshAuth)
 }
 
 .logo-text {
-  font-size: 1.6rem;
+  font-size: 1.4rem;
   font-weight: 800;
   background: var(--gradient-primary);
   -webkit-background-clip: text;
@@ -197,11 +197,11 @@ router.afterEach(refreshAuth)
 .nav-link {
   color: var(--text-secondary);
   text-decoration: none;
-  padding: 0.55rem 1.1rem;
+  padding: 0.4rem 0.9rem;
   border-radius: var(--border-radius);
   transition: all var(--transition-speed);
   font-weight: 500;
-  font-size: 0.95rem;
+  font-size: 0.9rem;
 }
 
 .nav-link:hover {
@@ -231,9 +231,9 @@ router.afterEach(refreshAuth)
 .user-avatar-btn {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
-  height: 38px;
-  padding: 0 0.75rem;
+  gap: 0.4rem;
+  height: 32px;
+  padding: 0 0.5rem;
   margin-left: 0.5rem;
   border-radius: var(--border-radius);
   color: var(--text-secondary) !important;
@@ -248,7 +248,7 @@ router.afterEach(refreshAuth)
 .user-avatar {
   background: var(--gradient-primary);
   color: white;
-  font-size: 0.85rem;
+  font-size: 0.8rem;
   font-weight: 600;
 }
 
@@ -257,14 +257,14 @@ router.afterEach(refreshAuth)
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  font-size: 0.9rem;
+  font-size: 0.85rem;
   font-weight: 500;
 }
 
 .theme-toggle {
   color: var(--text-secondary) !important;
-  width: 38px;
-  height: 38px;
+  width: 32px;
+  height: 32px;
   display: flex;
   align-items: center;
   justify-content: center;
