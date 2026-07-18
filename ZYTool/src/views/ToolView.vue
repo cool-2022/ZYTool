@@ -272,24 +272,6 @@ onMounted(() => {
   margin: 0;
 }
 
-/* 日间模式：去掉 hero 渐变背景，文字跟随主题色 */
-:global(html[data-theme="light"]) .page-hero {
-  background: transparent;
-}
-
-:global(html[data-theme="light"]) .page-hero::before,
-:global(html[data-theme="light"]) .page-hero::after {
-  display: none;
-}
-
-:global(html[data-theme="light"]) .page-hero-title {
-  color: var(--text-primary);
-}
-
-:global(html[data-theme="light"]) .page-hero-desc {
-  color: var(--text-secondary);
-}
-
 .container {
   max-width: 100%;
   margin: 0 auto;
