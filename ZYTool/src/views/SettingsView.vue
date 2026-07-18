@@ -2,7 +2,7 @@
 import { inject } from 'vue'
 import { useRouter } from 'vue-router'
 import { message } from 'ant-design-vue'
-import { LogoutOutlined, MoonOutlined, SunOutlined } from '@ant-design/icons-vue'
+import { LogoutOutlined } from '@ant-design/icons-vue'
 import { getUserInfo, clearAuth } from '@/utils/auth'
 
 const router = useRouter()
@@ -40,11 +40,7 @@ const handleLogout = () => {
         <div class="info-item">
           <span class="info-label">主题模式</span>
           <a-button type="primary" class="theme-btn" @click="toggleTheme">
-            <template #icon>
-              <SunOutlined v-if="theme?.value === 'dark'" />
-              <MoonOutlined v-else />
-            </template>
-            {{ theme?.value === 'light' ? '切换深色模式' : '切换浅色模式' }}
+            {{ theme?.value === 'light' ? '🌙 切换深色模式' : '☀️ 切换浅色模式' }}
           </a-button>
         </div>
       </div>
