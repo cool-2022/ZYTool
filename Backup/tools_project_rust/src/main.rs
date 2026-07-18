@@ -18,7 +18,7 @@ use tracing::{info, warn};
 use crate::core::config::SETTINGS;
 use crate::core::db::init_pool;
 use crate::core::middleware::request_logging_middleware;
-use crate::routes::api_router;
+use crate::routes::{api_router, auth::init_user_cache};
 
 #[tokio::main]
 async fn main() {
@@ -37,6 +37,8 @@ async fn main() {
         Err(e) => warn!("Database not connected: {}. Server will continue without DB.", e),
     }
 
+    init_user_cache().await;
+
     let app = create_app();
 
     let addr: SocketAddr = format!("{}:{}", SETTINGS.host, SETTINGS.port)
@@ -46,7 +48,12 @@ async fn main() {
     info!("Server listening on http://{}", addr);
 
     let listener = TcpListener::bind(addr).await.expect("Failed to bind address");
-    axum::serve(listener, app).await.expect("Server error");
+    axum::serve(
+        listener,
+        app.into_make_service_with_connect_info::<SocketAddr>(),
+    )
+    .await
+    .expect("Server error");
 }
 
 fn create_app() -> Router {

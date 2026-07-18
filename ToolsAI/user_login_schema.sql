@@ -39,6 +39,12 @@ COMMENT ON COLUMN users.status         IS '1=正常 2=冻结 3=注销';
 CREATE UNIQUE INDEX IF NOT EXISTS uk_users_phone ON users (phone) WHERE phone IS NOT NULL;
 CREATE UNIQUE INDEX IF NOT EXISTS uk_users_email ON users (email) WHERE email IS NOT NULL;
 
+-- 用户名/昵称唯一索引：支持以 nickname 作为登录账号
+CREATE UNIQUE INDEX IF NOT EXISTS uk_users_nickname ON users (nickname) WHERE nickname <> '';
+
+-- 角色权限数组（用于 JWT 角色声明）
+ALTER TABLE users ADD COLUMN IF NOT EXISTS roles TEXT[] NOT NULL DEFAULT ARRAY['user'];
+
 -- -------------------------------------------------------------
 -- 2. 验证码表（注册 / 登录 / 重置密码 / 绑定手机邮箱）
 -- -------------------------------------------------------------
