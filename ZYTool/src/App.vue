@@ -158,7 +158,7 @@ router.afterEach(refreshAuth)
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 0 24px;
+  padding: 0 12px;
 }
 
 .nav-logo {
@@ -286,7 +286,7 @@ router.afterEach(refreshAuth)
 
 @media (max-width: 768px) {
   .nav-container {
-    padding: 0 16px;
+    padding: 0 12px;
   }
 
   .logo-text {
