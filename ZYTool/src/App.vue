@@ -51,7 +51,7 @@ const handleLogout = () => {
   clearAuth()
   refreshAuth()
   message.success('已退出登录')
-  router.push('/login')
+  router.push('/')
 }
 
 const goSettings = () => {

@@ -140,7 +140,7 @@ const handleBindWechat = async () => {
 const handleLogout = () => {
   clearAuth()
   message.success('已退出登录')
-  router.push('/login')
+  router.push('/')
 }
 
 onMounted(loadBindings)
