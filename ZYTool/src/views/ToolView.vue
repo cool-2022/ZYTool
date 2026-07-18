@@ -14,22 +14,13 @@
           <aside class="tools-sidebar">
             <div class="sidebar-title">工具分类</div>
             <div class="category-list">
-              <div
-                class="category-item"
-                :class="{ active: activeCategoryId === null }"
-                @click="selectCategory(null)"
-              >
+              <div class="category-item" :class="{ active: activeCategoryId === null }" @click="selectCategory(null)">
                 <span class="category-item-icon">📦</span>
                 <span class="category-item-name">全部工具</span>
                 <span class="category-item-count">{{ totalToolCount }}</span>
               </div>
-              <div
-                v-for="category in categories"
-                :key="category.id"
-                class="category-item"
-                :class="{ active: activeCategoryId === category.id }"
-                @click="selectCategory(category.id)"
-              >
+              <div v-for="category in categories" :key="category.id" class="category-item"
+                :class="{ active: activeCategoryId === category.id }" @click="selectCategory(category.id)">
                 <span class="category-item-icon">{{ getCategoryIcon(category.name) }}</span>
                 <span class="category-item-name">{{ category.name }}</span>
                 <span class="category-item-count">{{ category.tools.length }}</span>
@@ -347,6 +338,9 @@ onMounted(() => {
   font-size: 0.95rem;
   font-weight: 500;
   color: var(--text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .category-item.active .category-item-name {
