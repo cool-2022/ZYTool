@@ -219,6 +219,37 @@ export class ApiService {
         return requestWithFallback('post', '/auth/logout')
     }
 
+    static async getBindings(): Promise<{
+        phone?: string
+        phone_verified: boolean
+        email?: string
+        providers: Array<{
+            provider: string
+            open_id: string
+            union_id?: string
+            nickname: string
+        }>
+    }> {
+        return requestWithFallback('get', '/auth/bindings')
+    }
+
+    static async bindPhone(phone: string): Promise<{ success: boolean; message: string }> {
+        return requestWithFallback('post', '/auth/bind/phone', { phone })
+    }
+
+    static async bindThirdParty(
+        provider: 'qq' | 'wechat',
+        openId: string,
+        nickname?: string,
+        unionId?: string
+    ): Promise<{ success: boolean; message: string }> {
+        return requestWithFallback('post', `/auth/bind/${provider}`, {
+            open_id: openId,
+            nickname,
+            union_id: unionId,
+        })
+    }
+
     static async getProtectedData(): Promise<any> {
         return requestWithFallback('get', '/protected/data')
     }

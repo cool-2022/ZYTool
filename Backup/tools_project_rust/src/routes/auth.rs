@@ -7,6 +7,7 @@ use axum::{
 use axum_extra::headers::UserAgent;
 use axum_extra::TypedHeader;
 use once_cell::sync::Lazy;
+use regex::Regex;
 use sqlx::Row;
 use std::collections::HashMap;
 use std::net::SocketAddr;
@@ -17,7 +18,8 @@ use crate::core::config::SETTINGS;
 use crate::core::db::{get_pool, DbPool};
 use crate::core::error::{bad_request, unauthorized, AppError, AppResult};
 use crate::models::{
-    LoginRequest, LoginResponse, RegisterRequest, TokenResponse, UserInfoResponse,
+    BindRequest, BindResponse, BindingInfoResponse, LoginRequest, LoginResponse, ProviderInfo,
+    RegisterRequest, TokenResponse, UserInfoResponse,
 };
 
 /// 内存中的用户热缓存，避免每次登录都走数据库往返。
@@ -43,6 +45,10 @@ pub fn router() -> Router {
         .route("/register", post(register))
         .route("/me", get(me))
         .route("/logout", post(logout))
+        .route("/bindings", get(get_bindings))
+        .route("/bind/phone", post(bind_phone))
+        .route("/bind/qq", post(bind_qq))
+        .route("/bind/wechat", post(bind_wechat))
 }
 
 /// 服务启动时从数据库加载全部用户到内存缓存。
@@ -67,11 +73,9 @@ pub async fn init_user_cache() {
 }
 
 async fn load_all_users(pool: &DbPool) -> Result<Vec<CachedUser>, sqlx::Error> {
-    sqlx::query_as::<_, CachedUser>(
-        "SELECT id, nickname, password_hash, roles, status FROM users"
-    )
-    .fetch_all(pool)
-    .await
+    sqlx::query_as::<_, CachedUser>("SELECT id, nickname, password_hash, roles, status FROM users")
+        .fetch_all(pool)
+        .await
 }
 
 async fn fetch_user_from_db(
@@ -241,6 +245,164 @@ async fn logout(current_user: CurrentUser) -> Json<serde_json::Value> {
         "message": "登出成功",
         "user": current_user.username
     }))
+}
+
+// ===================== 账号绑定 =====================
+
+async fn get_bindings(current_user: CurrentUser) -> AppResult<Json<BindingInfoResponse>> {
+    let pool = get_pool().ok_or_else(|| internal_error("数据库连接池未初始化"))?;
+    let user_id = current_user.user_id.ok_or_else(|| unauthorized("无效的用户信息"))?;
+
+    let row = sqlx::query("SELECT phone, phone_verified, email FROM users WHERE id = $1")
+        .bind(user_id)
+        .fetch_one(pool)
+        .await
+        .map_err(|e| internal_error(format!("查询用户信息失败: {}", e)))?;
+
+    let phone: Option<String> = row.try_get("phone").unwrap_or(None);
+    let phone_verified: bool = row.try_get("phone_verified").unwrap_or(false);
+    let email: Option<String> = row.try_get("email").unwrap_or(None);
+
+    let providers = sqlx::query_as::<_, ProviderInfo>(
+        "SELECT provider, open_id, union_id, nickname FROM user_auths WHERE user_id = $1",
+    )
+    .bind(user_id)
+    .fetch_all(pool)
+    .await
+    .map_err(|e| internal_error(format!("查询第三方绑定失败: {}", e)))?;
+
+    Ok(Json(BindingInfoResponse {
+        phone,
+        phone_verified,
+        email,
+        providers,
+    }))
+}
+
+async fn bind_phone(
+    current_user: CurrentUser,
+    Json(req): Json<BindRequest>,
+) -> AppResult<Json<BindResponse>> {
+    let phone = req.phone.ok_or_else(|| bad_request("手机号不能为空"))?;
+    if !is_valid_phone(&phone) {
+        return Err(bad_request("手机号格式不正确"));
+    }
+
+    let pool = get_pool().ok_or_else(|| internal_error("数据库连接池未初始化"))?;
+    let user_id = current_user.user_id.ok_or_else(|| unauthorized("无效的用户信息"))?;
+
+    sqlx::query("UPDATE users SET phone = $1, phone_verified = TRUE WHERE id = $2")
+        .bind(&phone)
+        .bind(user_id)
+        .execute(pool)
+        .await
+        .map_err(|e| internal_error(format!("绑定手机号失败: {}", e)))?;
+
+    Ok(Json(BindResponse {
+        success: true,
+        message: "手机号绑定成功".to_string(),
+    }))
+}
+
+async fn bind_qq(
+    current_user: CurrentUser,
+    Json(req): Json<BindRequest>,
+) -> AppResult<Json<BindResponse>> {
+    let open_id = req.open_id.ok_or_else(|| bad_request("QQ openid 不能为空"))?;
+    let nickname = req.nickname.unwrap_or_default();
+    bind_third_party(
+        current_user,
+        "qq",
+        &open_id,
+        None,
+        &nickname,
+        "QQ 绑定成功",
+    )
+    .await
+}
+
+async fn bind_wechat(
+    current_user: CurrentUser,
+    Json(req): Json<BindRequest>,
+) -> AppResult<Json<BindResponse>> {
+    let open_id = req.open_id.ok_or_else(|| bad_request("微信 openid 不能为空"))?;
+    let nickname = req.nickname.unwrap_or_default();
+    bind_third_party(
+        current_user,
+        "wechat",
+        &open_id,
+        req.union_id.as_deref(),
+        &nickname,
+        "微信绑定成功",
+    )
+    .await
+}
+
+async fn bind_third_party(
+    current_user: CurrentUser,
+    provider: &str,
+    open_id: &str,
+    union_id: Option<&str>,
+    nickname: &str,
+    success_message: &str,
+) -> AppResult<Json<BindResponse>> {
+    let pool = get_pool().ok_or_else(|| internal_error("数据库连接池未初始化"))?;
+    let user_id = current_user.user_id.ok_or_else(|| unauthorized("无效的用户信息"))?;
+
+    // 检查该 open_id 是否已被其他用户绑定
+    let existing = sqlx::query(
+        "SELECT user_id FROM user_auths WHERE provider = $1 AND open_id = $2",
+    )
+    .bind(provider)
+    .bind(open_id)
+    .fetch_optional(pool)
+    .await
+    .map_err(|e| internal_error(format!("查询第三方绑定失败: {}", e)))?;
+
+    if let Some(row) = existing {
+        let bound_user_id: i64 = row
+            .try_get("user_id")
+            .map_err(|e| internal_error(format!("读取绑定用户失败: {}", e)))?;
+        if bound_user_id != user_id {
+            return Err(bad_request("该账号已被其他用户绑定"));
+        }
+
+        // 已绑定到当前用户，执行更新
+        sqlx::query(
+            "UPDATE user_auths SET union_id = $1, nickname = $2, updated_at = NOW() WHERE provider = $3 AND open_id = $4",
+        )
+        .bind(union_id)
+        .bind(nickname)
+        .bind(provider)
+        .bind(open_id)
+        .execute(pool)
+        .await
+        .map_err(|e| internal_error(format!("更新第三方绑定失败: {}", e)))?;
+    } else {
+        sqlx::query(
+            r#"
+            INSERT INTO user_auths (user_id, provider, open_id, union_id, nickname)
+            VALUES ($1, $2, $3, $4, $5)
+            "#,
+        )
+        .bind(user_id)
+        .bind(provider)
+        .bind(open_id)
+        .bind(union_id)
+        .bind(nickname)
+        .execute(pool)
+        .await
+        .map_err(|e| internal_error(format!("写入第三方绑定失败: {}", e)))?;
+    }
+
+    Ok(Json(BindResponse {
+        success: true,
+        message: success_message.to_string(),
+    }))
+}
+
+fn is_valid_phone(phone: &str) -> bool {
+    Regex::new(r"^1[3-9]\d{9}$").map(|re| re.is_match(phone)).unwrap_or(false)
 }
 
 async fn update_login_info(

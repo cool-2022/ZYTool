@@ -40,3 +40,40 @@ pub struct LoginResponse {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub data: Option<TokenResponse>,
 }
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct BindRequest {
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub phone: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub open_id: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub union_id: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub nickname: Option<String>,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct BindResponse {
+    pub success: bool,
+    pub message: String,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, sqlx::FromRow)]
+pub struct ProviderInfo {
+    pub provider: String,
+    pub open_id: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub union_id: Option<String>,
+    pub nickname: String,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct BindingInfoResponse {
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub phone: Option<String>,
+    pub phone_verified: bool,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub email: Option<String>,
+    pub providers: Vec<ProviderInfo>,
+}
