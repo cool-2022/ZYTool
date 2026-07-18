@@ -2,6 +2,7 @@ import { createRouter, createWebHistory } from 'vue-router'
 import { isAuthenticated } from '@/utils/auth'
 import ToolView from '@/views/ToolView.vue'
 import HomeView from '@/views/HomeView.vue'
+import SettingsView from '@/views/SettingsView.vue'
 
 const router = createRouter({
     history: createWebHistory(import.meta.env.BASE_URL),
@@ -82,6 +83,12 @@ const router = createRouter({
             path: '/agents/chat',
             name: 'agents-chat',
             component: () => import('@/views/Agents/ChatView.vue'),
+            meta: { requiresAuth: false }
+        },
+        {
+            path: '/settings',
+            name: 'settings',
+            component: SettingsView,
             meta: { requiresAuth: false }
         }
     ]

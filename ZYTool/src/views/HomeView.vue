@@ -68,7 +68,7 @@
 /* Hero 区域 */
 .hero-section {
   position: relative;
-  padding: 100px 24px 120px;
+  padding: 60px 24px 80px;
   background: var(--gradient-hero);
   overflow: hidden;
   text-align: center;
@@ -297,9 +297,12 @@
 }
 
 @keyframes float {
-  0%, 100% {
+
+  0%,
+  100% {
     transform: translateY(0) scale(1);
   }
+
   50% {
     transform: translateY(-20px) scale(1.05);
   }

@@ -1,5 +1,11 @@
 <script setup lang="ts">
 import { ref, onMounted, provide, readonly } from 'vue'
+import { useRouter } from 'vue-router'
+import { message } from 'ant-design-vue'
+import { SettingOutlined, LogoutOutlined } from '@ant-design/icons-vue'
+import { isAuthenticated, getUserInfo, clearAuth } from './utils/auth'
+
+const router = useRouter()
 
 // 主题状态
 type Theme = 'light' | 'dark'
@@ -32,9 +38,33 @@ const toggleTheme = () => {
 provide('theme', readonly(theme))
 provide('toggleTheme', toggleTheme)
 
+// 登录状态
+const isLoggedIn = ref(false)
+const userInfo = ref<any>(null)
+
+const refreshAuth = () => {
+  isLoggedIn.value = isAuthenticated()
+  userInfo.value = getUserInfo()
+}
+
+const handleLogout = () => {
+  clearAuth()
+  refreshAuth()
+  message.success('已退出登录')
+  router.push('/login')
+}
+
+const goSettings = () => {
+  router.push('/settings')
+}
+
 onMounted(() => {
   initTheme()
+  refreshAuth()
 })
+
+// 路由切换后刷新登录态（例如登录成功后跳转到首页）
+router.afterEach(refreshAuth)
 </script>
 
 <template>
@@ -42,14 +72,50 @@ onMounted(() => {
     <!-- 导航栏 -->
     <nav class="navbar">
       <div class="nav-container">
-        <router-link to="/" class="nav-logo">
+        <router-link to="/home" class="nav-logo">
           <span class="logo-icon">⚡</span>
           <span class="logo-text">ZYTool</span>
         </router-link>
         <div class="nav-menu">
           <router-link to="/home" class="nav-link">首页</router-link>
           <router-link to="/tools" class="nav-link">工具</router-link>
-          <router-link to="/" class="nav-link nav-link-primary">登录</router-link>
+
+          <!-- 未登录：显示登录按钮 -->
+          <router-link
+            v-if="!isLoggedIn"
+            to="/"
+            class="nav-link nav-link-primary"
+          >
+            登录
+          </router-link>
+
+          <!-- 已登录：显示头像下拉菜单 -->
+          <a-dropdown
+            v-else
+            placement="bottomRight"
+            :trigger="['hover', 'click']"
+          >
+            <a-button type="text" class="user-avatar-btn">
+              <a-avatar class="user-avatar" size="small">
+                {{ (userInfo?.username || 'U').charAt(0).toUpperCase() }}
+              </a-avatar>
+              <span class="user-name">{{ userInfo?.username || '用户' }}</span>
+            </a-button>
+            <template #overlay>
+              <a-menu>
+                <a-menu-item key="settings" @click="goSettings">
+                  <SettingOutlined />
+                  <span>个人设置</span>
+                </a-menu-item>
+                <a-menu-divider />
+                <a-menu-item key="logout" @click="handleLogout">
+                  <LogoutOutlined />
+                  <span>退出登录</span>
+                </a-menu-item>
+              </a-menu>
+            </template>
+          </a-dropdown>
+
           <a-button
             type="text"
             class="theme-toggle"
@@ -162,6 +228,39 @@ onMounted(() => {
   transform: translateY(-1px);
 }
 
+.user-avatar-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  height: 38px;
+  padding: 0 0.75rem;
+  margin-left: 0.5rem;
+  border-radius: var(--border-radius);
+  color: var(--text-secondary) !important;
+  transition: all var(--transition-speed);
+}
+
+.user-avatar-btn:hover {
+  color: var(--primary-color) !important;
+  background: rgba(59, 130, 246, 0.08);
+}
+
+.user-avatar {
+  background: var(--gradient-primary);
+  color: white;
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.user-name {
+  max-width: 80px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 0.9rem;
+  font-weight: 500;
+}
+
 .theme-toggle {
   color: var(--text-secondary) !important;
   width: 38px;
@@ -201,6 +300,15 @@ onMounted(() => {
 
   .nav-link-primary {
     margin-left: 0.25rem;
+  }
+
+  .user-avatar-btn {
+    margin-left: 0.25rem;
+    padding: 0 0.5rem;
+  }
+
+  .user-name {
+    max-width: 60px;
   }
 
   .theme-toggle {
