@@ -272,16 +272,6 @@ onMounted(() => {
   margin: 0;
 }
 
-/* 日间模式：hero 改成浅色系渐变，文字保持白色不变 */
-:global(html[data-theme="light"]) .page-hero {
-  background: linear-gradient(135deg, #e0e7ff 0%, #dbeafe 100%);
-}
-
-:global(html[data-theme="light"]) .page-hero::before,
-:global(html[data-theme="light"]) .page-hero::after {
-  opacity: 0.2;
-}
-
 .container {
   max-width: 100%;
   margin: 0 auto;
