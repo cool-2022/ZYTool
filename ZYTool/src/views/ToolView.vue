@@ -210,7 +210,7 @@ onMounted(() => {
 
 <style scoped>
 .tools-page {
-  min-height: 100vh;
+  min-height: 90vh;
   padding-bottom: 100px;
 }
 
