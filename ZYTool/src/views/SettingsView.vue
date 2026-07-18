@@ -18,7 +18,7 @@ const toggleTheme = inject<() => void>('toggleTheme')
 const userInfo = getUserInfo()
 
 // 绑定信息
-const bindings = reactive({2
+const bindings = reactive({
   phone: '',
   phone_verified: false,
   email: '',
