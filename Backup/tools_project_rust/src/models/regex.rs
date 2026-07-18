@@ -1,7 +1,5 @@
 use serde::{Deserialize, Serialize};
 
-use crate::models::base::BaseResponse;
-
 #[derive(Debug, Serialize, Deserialize)]
 pub struct RegexTestRequest {
     pub pattern: String,
@@ -21,8 +19,6 @@ pub struct MatchDetail {
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct RegexTestResponse {
-    #[serde(flatten)]
-    pub base: BaseResponse,
     pub matches: Vec<String>,
     pub match_count: usize,
     pub match_details: Vec<MatchDetail>,

@@ -5,6 +5,8 @@ use axum::{
 };
 use serde_json::json;
 
+use crate::models::BaseResponse;
+
 #[derive(Debug)]
 pub struct AppError {
     pub message: String,
@@ -30,12 +32,15 @@ impl AppError {
 
 impl IntoResponse for AppError {
     fn into_response(self) -> Response {
-        let body = json!({
-            "success": false,
-            "message": self.message,
-            "details": self.details,
-            "status_code": self.status_code.as_u16()
-        });
+        let body = BaseResponse {
+            success: false,
+            message: Some(self.message),
+            base: None,
+            data: json!({
+                "details": self.details,
+                "status_code": self.status_code.as_u16()
+            }),
+        };
         (self.status_code, Json(body)).into_response()
     }
 }

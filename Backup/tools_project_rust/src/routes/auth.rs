@@ -2,12 +2,13 @@ use axum::{
     extract::ConnectInfo,
     http::StatusCode,
     routing::{get, post},
-    Json, Router,
+    Extension, Json, Router,
 };
 use axum_extra::headers::UserAgent;
 use axum_extra::TypedHeader;
 use once_cell::sync::Lazy;
 use regex::Regex;
+use serde_json::json;
 use sqlx::Row;
 use std::collections::HashMap;
 use std::net::SocketAddr;
@@ -18,7 +19,7 @@ use crate::core::config::SETTINGS;
 use crate::core::db::{get_pool, DbPool};
 use crate::core::error::{bad_request, unauthorized, AppError, AppResult};
 use crate::models::{
-    BindRequest, BindResponse, BindingInfoResponse, LoginRequest, LoginResponse, ProviderInfo,
+    BaseInfo, BaseResponse, BindRequest, BindingInfoResponse, LoginRequest, ProviderInfo,
     RegisterRequest, TokenResponse, UserInfoResponse,
 };
 
@@ -97,8 +98,9 @@ async fn fetch_user_from_db(
 async fn login(
     ConnectInfo(addr): ConnectInfo<SocketAddr>,
     user_agent: Option<TypedHeader<UserAgent>>,
+    Extension(base): Extension<Option<BaseInfo>>,
     Json(req): Json<LoginRequest>,
-) -> AppResult<Json<LoginResponse>> {
+) -> AppResult<Json<BaseResponse<TokenResponse>>> {
     let pool = get_pool().ok_or_else(|| internal_error("数据库连接池未初始化"))?;
 
     // 1) 优先读内存缓存，命中则完全避免数据库往返。
@@ -147,18 +149,21 @@ async fn login(
         None,
     );
 
-    Ok(Json(LoginResponse {
-        success: true,
-        message: "登录成功".to_string(),
-        data: Some(TokenResponse {
+    Ok(Json(BaseResponse::ok_with_message(
+        TokenResponse {
             access_token: token,
             token_type: "bearer".to_string(),
             expires_in: SETTINGS.access_token_expire_minutes * 60,
-        }),
-    }))
+        },
+        "登录成功",
+        base,
+    )))
 }
 
-async fn register(Json(req): Json<RegisterRequest>) -> AppResult<Json<LoginResponse>> {
+async fn register(
+    Extension(base): Extension<Option<BaseInfo>>,
+    Json(req): Json<RegisterRequest>,
+) -> AppResult<Json<BaseResponse<TokenResponse>>> {
     if req.username.is_empty() {
         return Err(bad_request("用户名不能为空"));
     }
@@ -220,36 +225,48 @@ async fn register(Json(req): Json<RegisterRequest>) -> AppResult<Json<LoginRespo
         None,
     );
 
-    Ok(Json(LoginResponse {
-        success: true,
-        message: "注册成功".to_string(),
-        data: Some(TokenResponse {
+    Ok(Json(BaseResponse::ok_with_message(
+        TokenResponse {
             access_token: token,
             token_type: "bearer".to_string(),
             expires_in: SETTINGS.access_token_expire_minutes * 60,
-        }),
-    }))
+        },
+        "注册成功",
+        base,
+    )))
 }
 
-async fn me(current_user: CurrentUser) -> Json<UserInfoResponse> {
-    Json(UserInfoResponse {
-        username: current_user.username,
-        user_id: current_user.user_id,
-        roles: current_user.roles,
-    })
+async fn me(
+    Extension(base): Extension<Option<BaseInfo>>,
+    current_user: CurrentUser,
+) -> Json<BaseResponse<UserInfoResponse>> {
+    Json(BaseResponse::ok(
+        UserInfoResponse {
+            username: current_user.username,
+            user_id: current_user.user_id,
+            roles: current_user.roles,
+        },
+        base,
+    ))
 }
 
-async fn logout(current_user: CurrentUser) -> Json<serde_json::Value> {
-    Json(serde_json::json!({
-        "success": true,
-        "message": "登出成功",
-        "user": current_user.username
-    }))
+async fn logout(
+    Extension(base): Extension<Option<BaseInfo>>,
+    current_user: CurrentUser,
+) -> Json<BaseResponse<serde_json::Value>> {
+    Json(BaseResponse::ok_with_message(
+        json!({ "user": current_user.username }),
+        "登出成功",
+        base,
+    ))
 }
 
 // ===================== 账号绑定 =====================
 
-async fn get_bindings(current_user: CurrentUser) -> AppResult<Json<BindingInfoResponse>> {
+async fn get_bindings(
+    Extension(base): Extension<Option<BaseInfo>>,
+    current_user: CurrentUser,
+) -> AppResult<Json<BaseResponse<BindingInfoResponse>>> {
     let pool = get_pool().ok_or_else(|| internal_error("数据库连接池未初始化"))?;
     let user_id = current_user.user_id.ok_or_else(|| unauthorized("无效的用户信息"))?;
 
@@ -271,18 +288,22 @@ async fn get_bindings(current_user: CurrentUser) -> AppResult<Json<BindingInfoRe
     .await
     .map_err(|e| internal_error(format!("查询第三方绑定失败: {}", e)))?;
 
-    Ok(Json(BindingInfoResponse {
-        phone,
-        phone_verified,
-        email,
-        providers,
-    }))
+    Ok(Json(BaseResponse::ok(
+        BindingInfoResponse {
+            phone,
+            phone_verified,
+            email,
+            providers,
+        },
+        base,
+    )))
 }
 
 async fn bind_phone(
+    Extension(base): Extension<Option<BaseInfo>>,
     current_user: CurrentUser,
     Json(req): Json<BindRequest>,
-) -> AppResult<Json<BindResponse>> {
+) -> AppResult<Json<BaseResponse<serde_json::Value>>> {
     let phone = req.phone.ok_or_else(|| bad_request("手机号不能为空"))?;
     if !is_valid_phone(&phone) {
         return Err(bad_request("手机号格式不正确"));
@@ -298,19 +319,22 @@ async fn bind_phone(
         .await
         .map_err(|e| internal_error(format!("绑定手机号失败: {}", e)))?;
 
-    Ok(Json(BindResponse {
-        success: true,
-        message: "手机号绑定成功".to_string(),
-    }))
+    Ok(Json(BaseResponse::ok_with_message(
+        json!({}),
+        "手机号绑定成功",
+        base,
+    )))
 }
 
 async fn bind_qq(
+    Extension(base): Extension<Option<BaseInfo>>,
     current_user: CurrentUser,
     Json(req): Json<BindRequest>,
-) -> AppResult<Json<BindResponse>> {
+) -> AppResult<Json<BaseResponse<serde_json::Value>>> {
     let open_id = req.open_id.ok_or_else(|| bad_request("QQ openid 不能为空"))?;
     let nickname = req.nickname.unwrap_or_default();
     bind_third_party(
+        base,
         current_user,
         "qq",
         &open_id,
@@ -322,12 +346,14 @@ async fn bind_qq(
 }
 
 async fn bind_wechat(
+    Extension(base): Extension<Option<BaseInfo>>,
     current_user: CurrentUser,
     Json(req): Json<BindRequest>,
-) -> AppResult<Json<BindResponse>> {
+) -> AppResult<Json<BaseResponse<serde_json::Value>>> {
     let open_id = req.open_id.ok_or_else(|| bad_request("微信 openid 不能为空"))?;
     let nickname = req.nickname.unwrap_or_default();
     bind_third_party(
+        base,
         current_user,
         "wechat",
         &open_id,
@@ -339,13 +365,14 @@ async fn bind_wechat(
 }
 
 async fn bind_third_party(
+    base: Option<BaseInfo>,
     current_user: CurrentUser,
     provider: &str,
     open_id: &str,
     union_id: Option<&str>,
     nickname: &str,
     success_message: &str,
-) -> AppResult<Json<BindResponse>> {
+) -> AppResult<Json<BaseResponse<serde_json::Value>>> {
     let pool = get_pool().ok_or_else(|| internal_error("数据库连接池未初始化"))?;
     let user_id = current_user.user_id.ok_or_else(|| unauthorized("无效的用户信息"))?;
 
@@ -395,10 +422,11 @@ async fn bind_third_party(
         .map_err(|e| internal_error(format!("写入第三方绑定失败: {}", e)))?;
     }
 
-    Ok(Json(BindResponse {
-        success: true,
-        message: success_message.to_string(),
-    }))
+    Ok(Json(BaseResponse::ok_with_message(
+        json!({}),
+        success_message,
+        base,
+    )))
 }
 
 fn is_valid_phone(phone: &str) -> bool {

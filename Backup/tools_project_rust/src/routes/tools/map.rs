@@ -1,7 +1,8 @@
-use axum::{routing::post, Json, Router};
+use axum::{routing::post, Extension, Json, Router};
+use serde_json::json;
 
 use crate::core::error::AppResult;
-use crate::models::{RouteRequest, RouteResponse};
+use crate::models::{BaseInfo, BaseResponse, RouteRequest, RouteResponse};
 use crate::services::map;
 
 pub fn router() -> Router {
@@ -10,12 +11,18 @@ pub fn router() -> Router {
         .route("/route/test", axum::routing::get(test_route))
 }
 
-async fn get_route(Json(req): Json<RouteRequest>) -> AppResult<Json<RouteResponse>> {
-    Ok(Json(map::generate_mock_route(&req)))
+async fn get_route(
+    Extension(base): Extension<Option<BaseInfo>>,
+    Json(req): Json<RouteRequest>,
+) -> AppResult<Json<BaseResponse<RouteResponse>>> {
+    Ok(Json(BaseResponse::ok(map::generate_mock_route(&req), base)))
 }
 
-async fn test_route() -> Json<serde_json::Value> {
-    Json(serde_json::json!({
-        "message": "Route API is working"
-    }))
+async fn test_route(
+    Extension(base): Extension<Option<BaseInfo>>,
+) -> Json<BaseResponse<serde_json::Value>> {
+    Json(BaseResponse::ok(
+        json!({ "message": "Route API is working" }),
+        base,
+    ))
 }

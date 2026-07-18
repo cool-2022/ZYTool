@@ -1,14 +1,14 @@
 use axum::{
     response::sse::{Event, Sse},
     routing::post,
-    Json, Router,
+    Extension, Json, Router,
 };
 use futures::stream::{self, Stream};
 use std::convert::Infallible;
 use std::time::Duration;
 
 use crate::core::error::{bad_request, AppResult};
-use crate::models::{ChatRequest, ChatResponse};
+use crate::models::{BaseInfo, BaseResponse, ChatRequest, ChatResponse};
 
 pub fn router() -> Router {
     Router::new()
@@ -34,12 +34,18 @@ async fn chat(Json(req): Json<ChatRequest>) -> AppResult<Sse<impl Stream<Item = 
     ))
 }
 
-async fn chat_sync(Json(req): Json<ChatRequest>) -> AppResult<Json<ChatResponse>> {
+async fn chat_sync(
+    Extension(base): Extension<Option<BaseInfo>>,
+    Json(req): Json<ChatRequest>,
+) -> AppResult<Json<BaseResponse<ChatResponse>>> {
     if req.message.trim().is_empty() {
         return Err(bad_request("message is required"));
     }
 
-    Ok(Json(ChatResponse {
-        reply: format!("AI 助手占位回复: {}", req.message),
-    }))
+    Ok(Json(BaseResponse::ok(
+        ChatResponse {
+            reply: format!("AI 助手占位回复: {}", req.message),
+        },
+        base,
+    )))
 }

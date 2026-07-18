@@ -1,7 +1,5 @@
 use serde::{Deserialize, Serialize};
 
-use crate::models::base::BaseResponse;
-
 #[derive(Debug, Serialize, Deserialize)]
 pub struct PasswordGenerateRequest {
     #[serde(default = "default_length")]
@@ -29,8 +27,6 @@ pub struct CharacterTypes {
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct PasswordGenerateResponse {
-    #[serde(flatten)]
-    pub base: BaseResponse,
     pub password: String,
     pub length: usize,
     pub character_types: CharacterTypes,

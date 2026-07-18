@@ -1,8 +1,8 @@
-use axum::{routing::post, Json, Router};
+use axum::{routing::post, Extension, Json, Router};
 
 use crate::core::error::AppResult;
 use crate::models::{
-    BaseResponse, TextCompareRequest, TextCompareResponse, TextProcessRequest,
+    BaseInfo, BaseResponse, TextCompareRequest, TextCompareResponse, TextProcessRequest,
     TextProcessResponse,
 };
 use crate::services::text;
@@ -13,21 +13,27 @@ pub fn router() -> Router {
         .route("/compare", post(compare_text))
 }
 
-async fn process_text(Json(req): Json<TextProcessRequest>) -> AppResult<Json<TextProcessResponse>> {
+async fn process_text(
+    Extension(base): Extension<Option<BaseInfo>>,
+    Json(req): Json<TextProcessRequest>,
+) -> AppResult<Json<BaseResponse<TextProcessResponse>>> {
     let result = text::process_text(&req.action, &req.text)?;
-    Ok(Json(TextProcessResponse {
-        base: BaseResponse {
-            success: true,
-            message: None,
-        },
-        result,
-    }))
+    Ok(Json(BaseResponse::ok(
+        TextProcessResponse { result },
+        base,
+    )))
 }
 
-async fn compare_text(Json(req): Json<TextCompareRequest>) -> Json<TextCompareResponse> {
+async fn compare_text(
+    Extension(base): Extension<Option<BaseInfo>>,
+    Json(req): Json<TextCompareRequest>,
+) -> Json<BaseResponse<TextCompareResponse>> {
     let (differences, summary) = text::compare_text(&req.text1, &req.text2);
-    Json(TextCompareResponse {
-        differences,
-        summary,
-    })
+    Json(BaseResponse::ok(
+        TextCompareResponse {
+            differences,
+            summary,
+        },
+        base,
+    ))
 }

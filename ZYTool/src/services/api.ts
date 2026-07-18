@@ -1,5 +1,5 @@
 import axios, { type AxiosError, type AxiosInstance, type AxiosRequestConfig } from 'axios'
-import { getToken, clearAuth } from '../utils/auth'
+import { getToken, clearAuth, getBaseInfo, buildDefaultBaseInfo, type BaseInfo } from '../utils/auth'
 import { AppConfig } from '../config/appConfig'
 
 // ===================== 双后端 axios 实例 =====================
@@ -13,7 +13,7 @@ function createApiInstance(baseURL: string): AxiosInstance {
         },
     })
 
-    // 请求拦截器 - 添加 token
+    // 请求拦截器 - 添加 token 和基础信息头
     instance.interceptors.request.use(
         (config) => {
             if (import.meta.env.DEV) console.log('发送请求:', config.method?.toUpperCase(), config.url)
@@ -22,6 +22,9 @@ function createApiInstance(baseURL: string): AxiosInstance {
             if (token) {
                 config.headers.Authorization = `Bearer ${token}`
             }
+
+            const baseInfo = getBaseInfo() || buildDefaultBaseInfo()
+            config.headers['X-Base-Info'] = JSON.stringify(baseInfo)
 
             return config
         },
@@ -60,6 +63,22 @@ export const pythonApi = createApiInstance(`${AppConfig.pythonApiBaseUrl}${AppCo
 // 默认导出保持为 Rust 后端，兼容旧代码
 const api = rustApi
 export default api
+
+// ===================== 统一响应结构 =====================
+
+export interface ApiResponse<T> {
+    success: boolean
+    message?: string
+    base?: BaseInfo
+    data: T
+}
+
+function unwrapResponse<T>(data: any): T {
+    if (data && typeof data === 'object' && 'success' in data && 'data' in data) {
+        return data.data as T
+    }
+    return data as T
+}
 
 // ===================== 降级兜底逻辑 =====================
 
@@ -100,7 +119,7 @@ export async function requestWithFallback<T>(
 ): Promise<T> {
     try {
         const response = await rustApi.request({ method, url, data, ...config })
-        return response.data as T
+        return unwrapResponse<T>(response.data)
     } catch (err) {
         const axiosError = err as AxiosError
         if (!shouldFallbackToPython(axiosError)) {
@@ -112,7 +131,7 @@ export async function requestWithFallback<T>(
         }
 
         const response = await pythonApi.request({ method, url, data, ...config })
-        return response.data as T
+        return unwrapResponse<T>(response.data)
     }
 }
 
@@ -180,43 +199,35 @@ export type DiffResult = FileDiffResult | FolderDiffResult
 
 // ===================== API 服务类 =====================
 
+export interface TokenData {
+    access_token: string
+    token_type: string
+    expires_in: number
+}
+
+export interface UserInfo {
+    username: string
+    user_id?: number
+    roles: string[]
+}
+
 export class ApiService {
     // ========== 认证相关 ==========
 
-    static async login(username: string, password: string): Promise<{
-        success: boolean
-        message: string
-        data?: {
-            access_token: string
-            token_type: string
-            expires_in: number
-        }
-    }> {
+    static async login(username: string, password: string): Promise<TokenData> {
         return requestWithFallback('post', '/auth/login', { username, password })
     }
 
-    static async register(username: string, password: string, email?: string): Promise<{
-        success: boolean
-        message: string
-        data?: {
-            access_token: string
-            token_type: string
-            expires_in: number
-        }
-    }> {
+    static async register(username: string, password: string, email?: string): Promise<TokenData> {
         return requestWithFallback('post', '/auth/register', { username, password, email })
     }
 
-    static async getCurrentUser(): Promise<{
-        username: string
-        user_id?: number
-        roles: string[]
-    }> {
+    static async getCurrentUser(): Promise<UserInfo> {
         return requestWithFallback('get', '/auth/me')
     }
 
-    static async logout(): Promise<{ success: boolean; message: string }> {
-        return requestWithFallback('post', '/auth/logout')
+    static async logout(): Promise<void> {
+        await requestWithFallback('post', '/auth/logout')
     }
 
     static async getBindings(): Promise<{
@@ -233,8 +244,8 @@ export class ApiService {
         return requestWithFallback('get', '/auth/bindings')
     }
 
-    static async bindPhone(phone: string): Promise<{ success: boolean; message: string }> {
-        return requestWithFallback('post', '/auth/bind/phone', { phone })
+    static async bindPhone(phone: string): Promise<void> {
+        await requestWithFallback('post', '/auth/bind/phone', { phone })
     }
 
     static async bindThirdParty(
@@ -242,8 +253,8 @@ export class ApiService {
         openId: string,
         nickname?: string,
         unionId?: string
-    ): Promise<{ success: boolean; message: string }> {
-        return requestWithFallback('post', `/auth/bind/${provider}`, {
+    ): Promise<void> {
+        await requestWithFallback('post', `/auth/bind/${provider}`, {
             open_id: openId,
             nickname,
             union_id: unionId,

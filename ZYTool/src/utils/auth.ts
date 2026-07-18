@@ -5,6 +5,14 @@
 
 const TOKEN_KEY = 'zy_tool_token'
 const USER_INFO_KEY = 'zy_tool_user'
+const BASE_INFO_KEY = 'zy_tool_base_info'
+
+export interface BaseInfo {
+  computer_name?: string
+  ip?: string
+  username?: string
+  screen_name?: string
+}
 
 /**
  * 保存 token 到 localStorage
@@ -57,9 +65,45 @@ export function removeUserInfo(): void {
 }
 
 /**
+ * 保存基础信息到 localStorage
+ */
+export function setBaseInfo(baseInfo: BaseInfo): void {
+  localStorage.setItem(BASE_INFO_KEY, JSON.stringify(baseInfo))
+}
+
+/**
+ * 从 localStorage 获取基础信息
+ */
+export function getBaseInfo(): BaseInfo | null {
+  const baseInfo = localStorage.getItem(BASE_INFO_KEY)
+  return baseInfo ? JSON.parse(baseInfo) : null
+}
+
+/**
+ * 删除基础信息
+ */
+export function removeBaseInfo(): void {
+  localStorage.removeItem(BASE_INFO_KEY)
+}
+
+/**
+ * 构建默认基础信息（用于请求头）
+ */
+export function buildDefaultBaseInfo(): BaseInfo {
+  const userInfo = getUserInfo()
+  return {
+    computer_name: '',
+    ip: '',
+    username: userInfo?.username || '',
+    screen_name: typeof document !== 'undefined' ? document.title : '',
+  }
+}
+
+/**
  * 清除所有认证信息
  */
 export function clearAuth(): void {
   removeToken()
   removeUserInfo()
+  removeBaseInfo()
 }

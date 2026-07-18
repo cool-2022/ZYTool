@@ -17,7 +17,8 @@ use tracing::{info, warn};
 
 use crate::core::config::SETTINGS;
 use crate::core::db::init_pool;
-use crate::core::middleware::request_logging_middleware;
+use crate::core::middleware::{base_info_middleware, request_logging_middleware};
+use crate::models::{BaseInfo, BaseResponse};
 use crate::routes::{api_router, auth::init_user_cache};
 
 #[tokio::main]
@@ -71,24 +72,26 @@ fn create_app() -> Router {
     Router::new()
         .route("/health", get(root_health_check))
         .nest("/api/v1", api_router())
+        .layer(axum::middleware::from_fn(base_info_middleware))
         .layer(axum::middleware::from_fn(request_logging_middleware))
         .layer(cors)
         .layer(TraceLayer::new_for_http())
         .fallback(handler_404)
 }
 
-async fn root_health_check() -> Json<serde_json::Value> {
-    Json(serde_json::json!({
-        "status": "ok",
-        "version": SETTINGS.app_version
-    }))
+async fn root_health_check(
+    axum::Extension(base): axum::Extension<Option<BaseInfo>>,
+) -> Json<BaseResponse<serde_json::Value>> {
+    Json(BaseResponse::ok(
+        serde_json::json!({
+            "status": "ok",
+            "version": SETTINGS.app_version
+        }),
+        base,
+    ))
 }
 
-async fn handler_404() -> Response {
-    let body = serde_json::json!({
-        "success": false,
-        "message": "资源未找到",
-        "status_code": 404
-    });
+async fn handler_404(axum::Extension(base): axum::Extension<Option<BaseInfo>>) -> Response {
+    let body = BaseResponse::err("资源未找到", base);
     (StatusCode::NOT_FOUND, Json(body)).into_response()
 }

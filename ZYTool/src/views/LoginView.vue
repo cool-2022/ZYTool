@@ -137,28 +137,20 @@ const handleSubmit = async () => {
   loading.value = true
 
   try {
-    let response
+    const tokenData = isLogin.value
+      ? await ApiService.login(formState.username, formState.password)
+      : await ApiService.register(formState.username, formState.password, formState.email)
 
-    if (isLogin.value) {
-      response = await ApiService.login(formState.username, formState.password)
-    } else {
-      response = await ApiService.register(formState.username, formState.password, formState.email)
-    }
+    setToken(tokenData.access_token)
+    const userInfo = await ApiService.getCurrentUser()
+    setUserInfo(userInfo)
 
-    if (response.success && response.data) {
-      setToken(response.data.access_token)
-      const userInfo = await ApiService.getCurrentUser()
-      setUserInfo(userInfo)
-
-      message.success(response.message)
-      const redirect = route.query.redirect as string || '/home'
-      router.push(redirect)
-    } else {
-      message.error(response.message || '操作失败')
-    }
+    message.success(isLogin.value ? '登录成功' : '注册成功')
+    const redirect = route.query.redirect as string || '/home'
+    router.push(redirect)
   } catch (error: any) {
     console.error('Auth error:', error)
-    message.error(error.response?.data?.detail || error.response?.data?.message || '操作失败')
+    message.error(error.response?.data?.message || error.response?.data?.detail || '操作失败')
   } finally {
     loading.value = false
   }

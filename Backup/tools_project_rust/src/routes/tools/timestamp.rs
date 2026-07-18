@@ -1,7 +1,7 @@
-use axum::{routing::post, Json, Router};
+use axum::{routing::post, Extension, Json, Router};
 
 use crate::core::error::AppResult;
-use crate::models::{BaseResponse, TimestampConvertRequest, TimestampConvertResponse};
+use crate::models::{BaseInfo, BaseResponse, TimestampConvertRequest, TimestampConvertResponse};
 use crate::services::timestamp;
 
 pub fn router() -> Router {
@@ -9,17 +9,17 @@ pub fn router() -> Router {
 }
 
 async fn convert_timestamp(
+    Extension(base): Extension<Option<BaseInfo>>,
     Json(req): Json<TimestampConvertRequest>,
-) -> AppResult<Json<TimestampConvertResponse>> {
+) -> AppResult<Json<BaseResponse<TimestampConvertResponse>>> {
     let (result, action) = timestamp::convert_timestamp(req.timestamp, &req.action)?;
 
-    Ok(Json(TimestampConvertResponse {
-        base: BaseResponse {
-            success: true,
-            message: None,
+    Ok(Json(BaseResponse::ok(
+        TimestampConvertResponse {
+            result,
+            timestamp: req.timestamp,
+            action,
         },
-        result,
-        timestamp: req.timestamp,
-        action,
-    }))
+        base,
+    )))
 }

@@ -1,7 +1,5 @@
 use serde::{Deserialize, Serialize};
 
-use crate::models::base::BaseResponse;
-
 #[derive(Debug, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
 pub enum TextAction {
@@ -20,8 +18,6 @@ pub struct TextProcessRequest {
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct TextProcessResponse {
-    #[serde(flatten)]
-    pub base: BaseResponse,
     pub result: String,
 }
 

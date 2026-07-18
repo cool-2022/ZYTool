@@ -1,8 +1,8 @@
-use axum::{routing::post, Json, Router};
+use axum::{routing::post, Extension, Json, Router};
 
 use crate::core::error::AppResult;
 use crate::models::{
-    BaseResponse, CharacterTypes, PasswordGenerateRequest, PasswordGenerateResponse,
+    BaseInfo, BaseResponse, CharacterTypes, PasswordGenerateRequest, PasswordGenerateResponse,
 };
 use crate::services::password;
 
@@ -11,8 +11,9 @@ pub fn router() -> Router {
 }
 
 async fn generate_password(
+    Extension(base): Extension<Option<BaseInfo>>,
     Json(req): Json<PasswordGenerateRequest>,
-) -> AppResult<Json<PasswordGenerateResponse>> {
+) -> AppResult<Json<BaseResponse<PasswordGenerateResponse>>> {
     let password = password::generate_password(
         req.length,
         req.include_symbols,
@@ -21,18 +22,17 @@ async fn generate_password(
         req.include_lowercase,
     )?;
 
-    Ok(Json(PasswordGenerateResponse {
-        base: BaseResponse {
-            success: true,
-            message: None,
+    Ok(Json(BaseResponse::ok(
+        PasswordGenerateResponse {
+            password,
+            length: req.length,
+            character_types: CharacterTypes {
+                lowercase: req.include_lowercase,
+                uppercase: req.include_uppercase,
+                numbers: req.include_numbers,
+                symbols: req.include_symbols,
+            },
         },
-        password,
-        length: req.length,
-        character_types: CharacterTypes {
-            lowercase: req.include_lowercase,
-            uppercase: req.include_uppercase,
-            numbers: req.include_numbers,
-            symbols: req.include_symbols,
-        },
-    }))
+        base,
+    )))
 }

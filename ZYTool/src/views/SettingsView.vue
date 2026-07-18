@@ -78,14 +78,10 @@ const handleBindPhone = async () => {
   }
   bindLoading.phone = true
   try {
-    const res = await ApiService.bindPhone(bindForms.phone)
-    if (res.success) {
-      message.success(res.message)
-      bindForms.phone = ''
-      await loadBindings()
-    } else {
-      message.error(res.message)
-    }
+    await ApiService.bindPhone(bindForms.phone)
+    message.success('手机号绑定成功')
+    bindForms.phone = ''
+    await loadBindings()
   } catch (err: any) {
     message.error(err.response?.data?.message || '绑定失败')
   } finally {
@@ -100,19 +96,15 @@ const handleBindQQ = async () => {
   }
   bindLoading.qq = true
   try {
-    const res = await ApiService.bindThirdParty(
+    await ApiService.bindThirdParty(
       'qq',
       bindForms.qqOpenId.trim(),
       bindForms.qqNickname.trim() || undefined
     )
-    if (res.success) {
-      message.success(res.message)
-      bindForms.qqOpenId = ''
-      bindForms.qqNickname = ''
-      await loadBindings()
-    } else {
-      message.error(res.message)
-    }
+    message.success('QQ 绑定成功')
+    bindForms.qqOpenId = ''
+    bindForms.qqNickname = ''
+    await loadBindings()
   } catch (err: any) {
     message.error(err.response?.data?.message || '绑定失败')
   } finally {
@@ -127,21 +119,17 @@ const handleBindWechat = async () => {
   }
   bindLoading.wx = true
   try {
-    const res = await ApiService.bindThirdParty(
+    await ApiService.bindThirdParty(
       'wechat',
       bindForms.wxOpenId.trim(),
       bindForms.wxNickname.trim() || undefined,
       bindForms.wxUnionId.trim() || undefined
     )
-    if (res.success) {
-      message.success(res.message)
-      bindForms.wxOpenId = ''
-      bindForms.wxUnionId = ''
-      bindForms.wxNickname = ''
-      await loadBindings()
-    } else {
-      message.error(res.message)
-    }
+    message.success('微信绑定成功')
+    bindForms.wxOpenId = ''
+    bindForms.wxUnionId = ''
+    bindForms.wxNickname = ''
+    await loadBindings()
   } catch (err: any) {
     message.error(err.response?.data?.message || '绑定失败')
   } finally {
