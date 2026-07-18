@@ -192,28 +192,28 @@ const handleSubmit = async () => {
 }
 
 .shape-1 {
-  width: 500px;
-  height: 500px;
-  top: -200px;
-  right: -100px;
+  width: 320px;
+  height: 320px;
+  top: -100px;
+  right: 5%;
   background: var(--primary-color);
   animation: float 10s ease-in-out infinite;
 }
 
 .shape-2 {
-  width: 400px;
-  height: 400px;
-  bottom: -150px;
-  left: -100px;
+  width: 260px;
+  height: 260px;
+  bottom: -80px;
+  left: 5%;
   background: var(--accent-color);
   animation: float 12s ease-in-out infinite reverse;
 }
 
 .shape-3 {
-  width: 300px;
-  height: 300px;
-  top: 50%;
-  left: 60%;
+  width: 220px;
+  height: 220px;
+  top: 55%;
+  left: 55%;
   background: linear-gradient(135deg, var(--primary-light), var(--accent-light));
   animation: float 8s ease-in-out infinite 2s;
 }
