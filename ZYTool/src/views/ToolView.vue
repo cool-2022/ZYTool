@@ -272,6 +272,24 @@ onMounted(() => {
   margin: 0;
 }
 
+/* 日间模式：hero 改成浅色系，文字用主题深色 */
+:global(html[data-theme="light"]) .page-hero {
+  background: linear-gradient(135deg, #f1f5f9 0%, #e0e7ff 100%);
+}
+
+:global(html[data-theme="light"]) .page-hero::before,
+:global(html[data-theme="light"]) .page-hero::after {
+  opacity: 0.15;
+}
+
+:global(html[data-theme="light"]) .page-hero-title {
+  color: var(--text-primary);
+}
+
+:global(html[data-theme="light"]) .page-hero-desc {
+  color: var(--text-secondary);
+}
+
 .container {
   max-width: 100%;
   margin: 0 auto;
