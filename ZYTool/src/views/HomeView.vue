@@ -7,17 +7,19 @@
         <div class="hero-glow hero-glow-2"></div>
       </div>
       <div class="hero-content">
-        <div class="hero-badge">
-          <span class="badge-dot"></span>
-          一站式在线工具平台
+        <div class="hero-text">
+          <div class="hero-badge">
+            <span class="badge-dot"></span>
+            一站式在线工具平台
+          </div>
+          <h1 class="hero-title">
+            <span class="title-main">ZYTool</span>
+            <span class="title-sub">效率工具集合</span>
+          </h1>
+          <p class="hero-subtitle">
+            简洁、强大、开箱即用的在线工具箱，让开发和工作更高效
+          </p>
         </div>
-        <h1 class="hero-title">
-          <span class="title-main">ZYTool</span>
-          <span class="title-sub">效率工具集合</span>
-        </h1>
-        <p class="hero-subtitle">
-          简洁、强大、开箱即用的在线工具箱，让开发和工作更高效
-        </p>
         <div class="hero-actions">
           <router-link to="/tools" class="btn btn-primary">
             开始使用
@@ -68,10 +70,10 @@
 /* Hero 区域 */
 .hero-section {
   position: relative;
-  padding: 60px 24px 80px;
+  padding: 40px 5% 50px;
   background: var(--gradient-hero);
   overflow: hidden;
-  text-align: center;
+  text-align: left;
 }
 
 .hero-grid {
@@ -88,18 +90,18 @@
 }
 
 .hero-glow-1 {
-  width: 500px;
-  height: 500px;
-  top: -150px;
-  right: 10%;
+  width: 360px;
+  height: 360px;
+  top: -120px;
+  right: 5%;
   background: var(--primary-color);
   animation: float 8s ease-in-out infinite;
 }
 
 .hero-glow-2 {
-  width: 400px;
-  height: 400px;
-  bottom: -100px;
+  width: 300px;
+  height: 300px;
+  bottom: -80px;
   left: 5%;
   background: var(--accent-color);
   animation: float 10s ease-in-out infinite reverse;
@@ -108,7 +110,11 @@
 .hero-content {
   position: relative;
   z-index: 2;
-  max-width: 800px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 2rem;
+  max-width: 1400px;
   margin: 0 auto;
 }
 
@@ -135,15 +141,20 @@
   box-shadow: 0 0 8px #22c55e;
 }
 
+.hero-text {
+  flex: 1;
+  min-width: 0;
+}
+
 .hero-title {
-  margin: 0 0 1.25rem;
+  margin: 0 0 1rem;
   display: flex;
   flex-direction: column;
   gap: 0.25rem;
 }
 
 .title-main {
-  font-size: 4.5rem;
+  font-size: 3.5rem;
   font-weight: 900;
   background: linear-gradient(135deg, #ffffff 0%, #bfdbfe 50%, #ddd6fe 100%);
   -webkit-background-clip: text;
@@ -154,25 +165,26 @@
 }
 
 .title-sub {
-  font-size: 1.75rem;
+  font-size: 1.5rem;
   font-weight: 500;
   color: rgba(255, 255, 255, 0.75);
   letter-spacing: 4px;
 }
 
 .hero-subtitle {
-  font-size: 1.25rem;
+  font-size: 1.1rem;
   color: rgba(255, 255, 255, 0.65);
-  margin: 0 auto 2rem;
-  max-width: 560px;
+  margin: 0;
+  max-width: 480px;
   line-height: 1.7;
 }
 
 .hero-actions {
   display: flex;
-  justify-content: center;
-  gap: 1rem;
-  flex-wrap: wrap;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.75rem;
+  flex-shrink: 0;
 }
 
 .btn {
@@ -310,11 +322,24 @@
 
 @media (max-width: 768px) {
   .hero-section {
-    padding: 70px 20px 90px;
+    padding: 40px 5% 50px;
+    text-align: center;
+  }
+
+  .hero-content {
+    flex-direction: column;
+    gap: 1.5rem;
+  }
+
+  .hero-actions {
+    flex-direction: row;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
   }
 
   .title-main {
-    font-size: 3rem;
+    font-size: 2.75rem;
   }
 
   .title-sub {
@@ -323,7 +348,8 @@
   }
 
   .hero-subtitle {
-    font-size: 1.05rem;
+    font-size: 1rem;
+    margin: 0 auto;
   }
 
   .btn {
