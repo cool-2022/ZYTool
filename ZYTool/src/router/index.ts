@@ -90,6 +90,11 @@ const router = createRouter({
             name: 'settings',
             component: SettingsView,
             meta: { requiresAuth: false }
+        },
+        {
+            path: '/:pathMatch(.*)*',
+            name: 'not-found',
+            redirect: '/'
         }
     ]
 })
