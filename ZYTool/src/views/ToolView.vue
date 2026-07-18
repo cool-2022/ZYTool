@@ -280,8 +280,8 @@ onMounted(() => {
 
 /* 侧边栏 */
 .tools-sidebar {
-  width: 15%;
-  min-width: 270px;
+  width: 10%;
+  min-width: 180px;
   flex-shrink: 0;
   background: var(--bg-primary);
   border: 1px solid var(--border-color);
@@ -366,7 +366,7 @@ onMounted(() => {
 
 /* 主内容区 */
 .tools-content {
-  width: 85%;
+  width: 90%;
   min-width: 0;
   background: var(--bg-primary);
   border: 1px solid var(--border-color);
