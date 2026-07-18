@@ -39,7 +39,7 @@
   --gradient-primary: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%);
   --gradient-primary-hover: linear-gradient(135deg, #2563eb 0%, #7c3aed 100%);
   --gradient-bg: linear-gradient(180deg, #f8fafc 0%, #eef2ff 100%);
-  --gradient-hero: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #334155 100%);
+  --gradient-hero: linear-gradient(135deg, #1e40af 0%, #3b82f6 50%, #7c3aed 100%);
   --gradient-card: linear-gradient(
     135deg,
     rgba(255, 255, 255, 0.95) 0%,
