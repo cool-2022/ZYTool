@@ -20,12 +20,13 @@ regex = "1"
 dotenvy = "0.15"
 chrono = { version = "0.4", features = ["serde"] }
 once_cell = "1"
-sqlx = { version = "0.8", features = ["runtime-tokio", "postgres", "chrono"] }
+sqlx = { version = "0.8", features = ["runtime-tokio", "postgres", "chrono", "uuid"] }
 envy = "0.4"
 sysinfo = "0.34"
 base64 = "0.22"
 urlencoding = "2"
 futures = "0.3"
+uuid = { version = "1", features = ["v4", "serde"] }
 
 [profile.release]
 opt-level = 3

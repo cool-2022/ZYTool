@@ -1,3 +1,4 @@
+pub mod agents;
 pub mod tools;
 
 pub use tools::map;

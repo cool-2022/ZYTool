@@ -1,19 +1,21 @@
 import { ref, nextTick } from 'vue'
 import { message } from 'ant-design-vue'
-import { chatSessions as mockChatSessions, type ChatMessage, type ChatSession } from '@/Mock/ChatData'
 import { ApiService } from '@/services/api'
+import type { ChatMessage, ChatSession } from '@/Mock/ChatData'
 
 export type { ChatMessage, ChatSession }
 
 export function useChatView() {
     // 聊天会话列表
-    const chatSessions = mockChatSessions
+    const chatSessions = ref<ChatSession[]>([])
+    const loadingSessions = ref(false)
 
     // 当前选中的会话
     const currentSession = ref<ChatSession | null>(null)
 
     // 当前消息列表
     const messages = ref<ChatMessage[]>([])
+    const loadingMessages = ref(false)
 
     // 用户输入
     const userInput = ref('')
@@ -27,23 +29,76 @@ export function useChatView() {
     // 侧边栏是否折叠
     const sidebarCollapsed = ref(false)
 
+    // 加载会话列表
+    async function loadSessions() {
+        try {
+            loadingSessions.value = true
+            const response = await ApiService.getChatSessions()
+            chatSessions.value = response.sessions.map((s) => ({
+                id: s.id,
+                title: s.title,
+                date: s.date,
+                message_count: s.message_count,
+                total_tokens: s.total_tokens,
+                model_id: s.model_id,
+                updated_at: s.updated_at,
+                messages: [],
+            }))
+        } catch (error: any) {
+            console.error('加载会话列表失败:', error)
+            message.error('加载会话列表失败')
+        } finally {
+            loadingSessions.value = false
+        }
+    }
+
     // 选择会话
-    function selectSession(session: ChatSession) {
+    async function selectSession(session: ChatSession) {
         currentSession.value = session
-        messages.value = [...session.messages]
+        await loadMessages(session.id)
+    }
+
+    // 加载会话消息
+    async function loadMessages(sessionId: string) {
+        try {
+            loadingMessages.value = true
+            const response = await ApiService.getChatMessages(sessionId)
+            messages.value = response.messages.map((m) => ({
+                id: m.id,
+                role: m.role as 'user' | 'assistant' | 'system',
+                content: m.content,
+                timestamp: new Date(m.created_at),
+            }))
+        } catch (error: any) {
+            console.error('加载消息失败:', error)
+            message.error('加载消息失败')
+            messages.value = []
+        } finally {
+            loadingMessages.value = false
+        }
     }
 
     // 创建新会话
-    function createNewSession() {
-        const newSession: ChatSession = {
-            id: Date.now().toString(),
-            title: '新对话',
-            date: new Date().toISOString().slice(0, 7),
-            messages: []
+    async function createNewSession() {
+        try {
+            const session = await ApiService.createChatSession('新对话')
+            const newSession: ChatSession = {
+                id: session.id,
+                title: session.title,
+                date: session.date,
+                message_count: session.message_count,
+                total_tokens: session.total_tokens,
+                model_id: session.model_id,
+                updated_at: session.updated_at,
+                messages: [],
+            }
+            chatSessions.value.unshift(newSession)
+            await selectSession(newSession)
+            message.success('已创建新对话')
+        } catch (error: any) {
+            console.error('创建会话失败:', error)
+            message.error('创建会话失败')
         }
-        chatSessions.value.unshift(newSession)
-        selectSession(newSession)
-        message.success('已创建新对话')
     }
 
     // 发送消息
@@ -54,22 +109,23 @@ export function useChatView() {
         }
 
         if (!currentSession.value) {
-            createNewSession()
+            await createNewSession()
+        }
+
+        const sessionId = currentSession.value?.id
+        if (!sessionId) {
+            message.error('当前会话无效')
+            return
         }
 
         const userMessage: ChatMessage = {
             id: Date.now().toString(),
             role: 'user',
             content: userInput.value,
-            timestamp: new Date()
+            timestamp: new Date(),
         }
 
         messages.value.push(userMessage)
-        
-        // 如果是新会话，更新标题
-        if (currentSession.value && currentSession.value.messages.length === 0) {
-            currentSession.value.title = userInput.value.slice(0, 20) + (userInput.value.length > 20 ? '...' : '')
-        }
 
         const inputContent = userInput.value
         userInput.value = ''
@@ -82,42 +138,71 @@ export function useChatView() {
             id: (Date.now() + 1).toString(),
             role: 'assistant',
             content: '',
-            timestamp: new Date()
+            timestamp: new Date(),
         }
         messages.value.push(assistantMessage)
-        
+
         // 滚动到底部
         await nextTick()
         scrollToBottom()
 
         // 调用后端流式 API
         try {
-            for await (const chunk of ApiService.chatStream(inputContent, currentSession.value?.id)) {
-                // 直接更新 messages 数组最后一项，确保 Vue 响应式追踪到变化
+            for await (const chunk of ApiService.chatStream(inputContent, sessionId)) {
                 const lastMsg = messages.value[messages.value.length - 1]
                 if (lastMsg && lastMsg.role === 'assistant') {
                     lastMsg.content += chunk
                 }
-                
-                // 滚动到底部
+
                 await nextTick()
                 scrollToBottom()
             }
-            
-            if (currentSession.value) {
-                currentSession.value.messages = [...messages.value]
-            }
+
+            // 刷新当前会话的消息和列表（同步后端标题、消息数等）
+            await refreshCurrentSession()
             streamingContent.value = ''
         } catch (error: any) {
             assistantMessage.content = `错误: ${error?.message || '发送消息失败'}`
             console.error('Chat error:', error)
         } finally {
             isSending.value = false
-            
-            // 滚动到底部
             nextTick(() => {
                 scrollToBottom()
             })
+        }
+    }
+
+    // 刷新当前会话数据
+    async function refreshCurrentSession() {
+        if (!currentSession.value) return
+        try {
+            const response = await ApiService.getChatMessages(currentSession.value.id)
+            messages.value = response.messages.map((m) => ({
+                id: m.id,
+                role: m.role as 'user' | 'assistant' | 'system',
+                content: m.content,
+                timestamp: new Date(m.created_at),
+            }))
+
+            // 刷新列表中的当前会话元数据
+            const sessionsResponse = await ApiService.getChatSessions()
+            chatSessions.value = sessionsResponse.sessions.map((s) => ({
+                id: s.id,
+                title: s.id === currentSession.value?.id ? s.title : s.title,
+                date: s.date,
+                message_count: s.message_count,
+                total_tokens: s.total_tokens,
+                model_id: s.model_id,
+                updated_at: s.updated_at,
+                messages: [],
+            }))
+
+            const updated = chatSessions.value.find((s) => s.id === currentSession.value?.id)
+            if (updated) {
+                currentSession.value = updated
+            }
+        } catch (error) {
+            console.error('刷新会话失败:', error)
         }
     }
 
@@ -130,15 +215,21 @@ export function useChatView() {
     }
 
     // 删除会话
-    function deleteSession(sessionId: string) {
-        const index = chatSessions.value.findIndex(s => s.id === sessionId)
-        if (index > -1) {
-            chatSessions.value.splice(index, 1)
-            if (currentSession.value?.id === sessionId) {
-                currentSession.value = null
-                messages.value = []
+    async function deleteSession(sessionId: string) {
+        try {
+            await ApiService.deleteChatSession(sessionId)
+            const index = chatSessions.value.findIndex((s) => s.id === sessionId)
+            if (index > -1) {
+                chatSessions.value.splice(index, 1)
+                if (currentSession.value?.id === sessionId) {
+                    currentSession.value = null
+                    messages.value = []
+                }
+                message.success('已删除会话')
             }
-            message.success('已删除会话')
+        } catch (error: any) {
+            console.error('删除会话失败:', error)
+            message.error('删除会话失败')
         }
     }
 
@@ -148,15 +239,17 @@ export function useChatView() {
     }
 
     // 清空当前对话
-    function clearCurrentChat() {
+    async function clearCurrentChat() {
         if (currentSession.value) {
-            currentSession.value.messages = []
             messages.value = []
             message.success('已清空当前对话')
         }
     }
 
-    // 语音输入模块
+    // 组件初始化时加载会话列表
+    async function init() {
+        await loadSessions()
+    }
 
     return {
         chatSessions,
@@ -166,11 +259,15 @@ export function useChatView() {
         isSending,
         streamingContent,
         sidebarCollapsed,
+        loadingSessions,
+        loadingMessages,
         selectSession,
         createNewSession,
         sendMessage,
         deleteSession,
         toggleSidebar,
-        clearCurrentChat
+        clearCurrentChat,
+        loadSessions,
+        init,
     }
 }

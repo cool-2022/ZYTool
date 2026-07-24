@@ -64,3 +64,7 @@ pub fn unauthorized(msg: impl Into<String>) -> AppError {
 pub fn not_found(msg: impl Into<String>) -> AppError {
     AppError::new(msg, StatusCode::NOT_FOUND)
 }
+
+pub fn internal_error(msg: impl Into<String>) -> AppError {
+    AppError::new(msg, StatusCode::INTERNAL_SERVER_ERROR)
+}

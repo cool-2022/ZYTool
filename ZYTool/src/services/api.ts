@@ -341,6 +341,52 @@ export class ApiService {
         return requestWithFallback('post', '/agents/chat', { message, session_id: sessionId })
     }
 
+    // ========== AI 助手会话/消息 ==========
+
+    static async getChatSessions(): Promise<{ sessions: Array<{
+        id: string
+        title: string
+        date: string
+        message_count: number
+        total_tokens: number
+        model_id?: number
+        updated_at: string
+    }> }> {
+        return requestWithFallback('get', '/agents/sessions')
+    }
+
+    static async createChatSession(title?: string, modelId?: number): Promise<{
+        id: string
+        title: string
+        date: string
+        message_count: number
+        total_tokens: number
+        model_id?: number
+        updated_at: string
+    }> {
+        return requestWithFallback('post', '/agents/sessions', { title, model_id: modelId })
+    }
+
+    static async deleteChatSession(sessionId: string): Promise<void> {
+        await requestWithFallback('delete', `/agents/sessions/${sessionId}`)
+    }
+
+    static async updateChatSessionTitle(sessionId: string, title: string): Promise<void> {
+        await requestWithFallback('patch', `/agents/sessions/${sessionId}`, { title })
+    }
+
+    static async getChatMessages(sessionId: string): Promise<{ messages: Array<{
+        id: string
+        role: string
+        content: string
+        content_type: string
+        tokens_used: number
+        model_id?: number
+        created_at: string
+    }> }> {
+        return requestWithFallback('get', `/agents/sessions/${sessionId}/messages`)
+    }
+
     // AI 聊天 - 流式响应（使用 axios + fetch adapter，支持双后端兜底）
     static async *chatStream(message: string, sessionId?: string) {
         const body = { message, session_id: sessionId }

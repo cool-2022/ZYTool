@@ -10,7 +10,10 @@ pub mod text;
 pub mod timestamp;
 
 // 兼容旧导入：从 models 根重新导出常用类型
-pub use agents::{ChatRequest, ChatResponse};
+pub use agents::{
+    ChatRequest, ChatResponse, CreateSessionRequest, MessageResponse, MessagesResponse,
+    SessionResponse, SessionsResponse, UpdateSessionTitleRequest,
+};
 pub use auth::{
     BindRequest, BindingInfoResponse, LoginRequest, ProviderInfo, RegisterRequest, TokenResponse,
     UserInfoResponse,

@@ -223,7 +223,7 @@
 
 /* 特性介绍区域 */
 .features-section {
-  padding: 100px 24px 120px;
+  padding: 60px 24px 80px;
   background: var(--gradient-bg);
 }
 

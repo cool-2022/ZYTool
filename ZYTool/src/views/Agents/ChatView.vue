@@ -100,7 +100,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref } from 'vue'
+import { computed, onMounted, ref } from 'vue'
 import {
     RobotOutlined,
     PlusOutlined,
@@ -130,8 +130,13 @@ const {
     sendMessage,
     deleteSession,
     toggleSidebar,
-    clearCurrentChat
+    clearCurrentChat,
+    init
 } = useChatView()
+
+onMounted(() => {
+    init()
+})
 
 // 语音输入状态
 const isListening = ref(false)
