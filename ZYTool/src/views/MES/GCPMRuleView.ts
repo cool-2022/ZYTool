@@ -9,11 +9,8 @@ import {
     type RuleRecord,
     type FlowNode,
     type FlowListItem,
-    type FlowDescription,
-    type TreeNode
+    type FlowDescription
 } from '@/Mock/GCPMRuleData'
-
-export type { RuleRecord, FlowNode, FlowListItem, FlowDescription, TreeNode }
 
 // 表格列定义
 export const columns = [

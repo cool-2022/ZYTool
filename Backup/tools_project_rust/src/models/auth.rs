@@ -63,3 +63,13 @@ pub struct BindingInfoResponse {
     pub email: Option<String>,
     pub providers: Vec<ProviderInfo>,
 }
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct QQLoginRequest {
+    pub code: String,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct AuthUrlResponse {
+    pub url: String,
+}

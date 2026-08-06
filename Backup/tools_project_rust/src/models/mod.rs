@@ -15,8 +15,8 @@ pub use agents::{
     SessionResponse, SessionsResponse, UpdateSessionTitleRequest,
 };
 pub use auth::{
-    BindRequest, BindingInfoResponse, LoginRequest, ProviderInfo, RegisterRequest, TokenResponse,
-    UserInfoResponse,
+    AuthUrlResponse, BindRequest, BindingInfoResponse, LoginRequest, ProviderInfo,
+    QQLoginRequest, RegisterRequest, TokenResponse, UserInfoResponse,
 };
 pub use base::{BaseInfo, BaseResponse};
 pub use health::{HealthCheckResponse, HealthInfoResponse};

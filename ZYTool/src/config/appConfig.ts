@@ -8,10 +8,6 @@ export const AppConfig = {
     // API 前缀
     apiPrefix: '/api/v1',
 
-    // 可在这里添加其它前端配置，例如默认分页大小、主题开关等
-    defaults: {
-        pageSize: 20,
-    },
+    // 高德地图 Web 端 JS API Key（可用 VITE_AMAP_KEY 覆盖）
+    amapKey: (import.meta.env.VITE_AMAP_KEY as string) || '82aaaef6e38ad9523d993e795b2fd05c',
 }
-
-export default AppConfig

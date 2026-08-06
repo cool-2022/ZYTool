@@ -1,5 +1,5 @@
 import axios, { type AxiosError, type AxiosInstance, type AxiosRequestConfig } from 'axios'
-import { getToken, clearAuth, getBaseInfo, buildDefaultBaseInfo, type BaseInfo } from '../utils/auth'
+import { getToken, clearAuth, getBaseInfo, buildDefaultBaseInfo } from '../utils/auth'
 import { AppConfig } from '../config/appConfig'
 
 // ===================== 双后端 axios 实例 =====================
@@ -60,18 +60,7 @@ function createApiInstance(baseURL: string): AxiosInstance {
 export const rustApi = createApiInstance(`${AppConfig.rustApiBaseUrl}${AppConfig.apiPrefix}`)
 export const pythonApi = createApiInstance(`${AppConfig.pythonApiBaseUrl}${AppConfig.apiPrefix}`)
 
-// 默认导出保持为 Rust 后端，兼容旧代码
-const api = rustApi
-export default api
-
 // ===================== 统一响应结构 =====================
-
-export interface ApiResponse<T> {
-    success: boolean
-    message?: string
-    base?: BaseInfo
-    data: T
-}
 
 function unwrapResponse<T>(data: any): T {
     if (data && typeof data === 'object' && 'success' in data && 'data' in data) {
@@ -152,32 +141,9 @@ export interface Tool {
     type?: 'frontend' | 'backend'
 }
 
-export interface TextProcessRequest {
-    text: string
-    action: 'json_format' | 'base64_encode' | 'base64_decode' | 'url_encode' | 'url_decode'
-}
-
 export interface TextCompareRequest {
     text1: string
     text2: string
-}
-
-export interface RegexTestRequest {
-    pattern: string
-    text: string
-}
-
-export interface PasswordGenerateRequest {
-    length?: number
-    include_symbols?: boolean
-    include_numbers?: boolean
-    include_uppercase?: boolean
-    include_lowercase?: boolean
-}
-
-export interface TimestampConvertRequest {
-    timestamp: number
-    action: 'to_datetime' | 'to_timestamp'
 }
 
 export interface DiffLine {
@@ -226,10 +192,6 @@ export class ApiService {
         return requestWithFallback('get', '/auth/me')
     }
 
-    static async logout(): Promise<void> {
-        await requestWithFallback('post', '/auth/logout')
-    }
-
     static async getBindings(): Promise<{
         phone?: string
         phone_verified: boolean
@@ -261,68 +223,18 @@ export class ApiService {
         })
     }
 
-    static async getProtectedData(): Promise<any> {
-        return requestWithFallback('get', '/protected/data')
+    static async getQQAuthUrl(): Promise<{ url: string }> {
+        return requestWithFallback('get', '/auth/qq/auth-url')
+    }
+
+    static async loginWithQQ(code: string): Promise<TokenData> {
+        return requestWithFallback('post', '/auth/qq/login', { code })
     }
 
     // ========== 工具相关 ==========
 
     static async getCategories(): Promise<{ categories: Category[] }> {
         return requestWithFallback('get', '/tools/categories')
-    }
-
-    static async processText(request: TextProcessRequest): Promise<{ result: string; success: boolean }> {
-        return requestWithFallback('post', '/tools/text/process', request)
-    }
-
-    static async compareText(request: TextCompareRequest): Promise<{
-        differences: Array<{
-            line: number
-            text1: string
-            text2: string
-            type: 'modified' | 'added' | 'removed'
-        }>
-        summary: {
-            total_lines: number
-            different_lines: number
-            identical: boolean
-        }
-    }> {
-        return requestWithFallback('post', '/tools/text/compare', request)
-    }
-
-    static async testRegex(request: RegexTestRequest): Promise<{
-        matches: string[]
-        match_details: Array<{
-            match: string
-            start: number
-            end: number
-            groups: string[]
-        }>
-        success: boolean
-    }> {
-        return requestWithFallback('post', '/tools/regex/test', request)
-    }
-
-    static async generatePassword(request: PasswordGenerateRequest): Promise<{
-        password: string
-        length: number
-        character_types: {
-            lowercase: boolean
-            uppercase: boolean
-            numbers: boolean
-            symbols: boolean
-        }
-    }> {
-        return requestWithFallback('post', '/tools/password/generate', request)
-    }
-
-    static async convertTimestamp(request: TimestampConvertRequest): Promise<{
-        datetime: string
-        timestamp: number
-        action: string
-    }> {
-        return requestWithFallback('post', '/tools/timestamp/convert', request)
     }
 
     static async compareFiles(request: TextCompareRequest): Promise<FileDiffResult> {
@@ -337,21 +249,19 @@ export class ApiService {
         return requestWithFallback('post', '/tools/map/route', request)
     }
 
-    static async chat(message: string, sessionId?: string): Promise<{ reply: string }> {
-        return requestWithFallback('post', '/agents/chat', { message, session_id: sessionId })
-    }
-
     // ========== AI 助手会话/消息 ==========
 
-    static async getChatSessions(): Promise<{ sessions: Array<{
-        id: string
-        title: string
-        date: string
-        message_count: number
-        total_tokens: number
-        model_id?: number
-        updated_at: string
-    }> }> {
+    static async getChatSessions(): Promise<{
+        sessions: Array<{
+            id: string
+            title: string
+            date: string
+            message_count: number
+            total_tokens: number
+            model_id?: number
+            updated_at: string
+        }>
+    }> {
         return requestWithFallback('get', '/agents/sessions')
     }
 
@@ -371,19 +281,17 @@ export class ApiService {
         await requestWithFallback('delete', `/agents/sessions/${sessionId}`)
     }
 
-    static async updateChatSessionTitle(sessionId: string, title: string): Promise<void> {
-        await requestWithFallback('patch', `/agents/sessions/${sessionId}`, { title })
-    }
-
-    static async getChatMessages(sessionId: string): Promise<{ messages: Array<{
-        id: string
-        role: string
-        content: string
-        content_type: string
-        tokens_used: number
-        model_id?: number
-        created_at: string
-    }> }> {
+    static async getChatMessages(sessionId: string): Promise<{
+        messages: Array<{
+            id: string
+            role: string
+            content: string
+            content_type: string
+            tokens_used: number
+            model_id?: number
+            created_at: string
+        }>
+    }> {
         return requestWithFallback('get', `/agents/sessions/${sessionId}/messages`)
     }
 

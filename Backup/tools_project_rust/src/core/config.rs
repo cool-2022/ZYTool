@@ -58,6 +58,14 @@ pub struct Settings {
     pub db_name: String,
     #[serde(default = "default_db_pool_size")]
     pub db_pool_size: u32,
+
+    // QQ 互联 OAuth 配置
+    #[serde(default)]
+    pub qq_app_id: String,
+    #[serde(default)]
+    pub qq_app_key: String,
+    #[serde(default = "default_qq_redirect_uri")]
+    pub qq_redirect_uri: String,
 }
 
 fn default_app_name() -> String { "ZYTool Backend API".to_string() }
@@ -89,6 +97,7 @@ fn default_db_user() -> String { "postgres".to_string() }
 fn default_db_password() -> String { "".to_string() }
 fn default_db_name() -> String { "zytool".to_string() }
 fn default_db_pool_size() -> u32 { 10 }
+fn default_qq_redirect_uri() -> String { "http://localhost:5173/login".to_string() }
 
 pub static SETTINGS: Lazy<Settings> = Lazy::new(|| {
     dotenvy::dotenv().ok();
@@ -121,6 +130,9 @@ pub static SETTINGS: Lazy<Settings> = Lazy::new(|| {
             db_password: default_db_password(),
             db_name: default_db_name(),
             db_pool_size: default_db_pool_size(),
+            qq_app_id: String::new(),
+            qq_app_key: String::new(),
+            qq_redirect_uri: default_qq_redirect_uri(),
         }
     })
 });

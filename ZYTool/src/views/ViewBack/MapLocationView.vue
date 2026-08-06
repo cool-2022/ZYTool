@@ -24,19 +24,14 @@
                     </a-row>
 
                     <!-- 手动输入区域 -->
-                    <a-card v-if="showManualInput" size="small" title="手动输入位置" :bordered="false" style="background: var(--bg-secondary);">
+                    <a-card v-if="showManualInput" size="small" title="手动输入位置" :bordered="false"
+                        style="background: var(--bg-secondary);">
                         <a-tabs v-model:activeKey="inputMode">
                             <!-- 地址搜索 -->
                             <a-tab-pane key="address" tab="地址搜索">
                                 <a-space direction="vertical" style="width: 100%;" :size="12">
-                                    <a-input-search
-                                        v-model:value="searchAddress"
-                                        placeholder="输入地址，例如：北京市天安门"
-                                        size="large"
-                                        enter-button="搜索"
-                                        :loading="searching"
-                                        @search="searchByAddress"
-                                    >
+                                    <a-input-search v-model:value="searchAddress" placeholder="输入地址，例如：北京市天安门"
+                                        size="large" enter-button="搜索" :loading="searching" @search="searchByAddress">
                                         <template #prefix>
                                             <search-outlined />
                                         </template>
@@ -50,29 +45,24 @@
                                 <a-space direction="vertical" style="width: 100%;" :size="12">
                                     <a-row :gutter="12">
                                         <a-col :span="12">
-                                            <a-input
-                                                v-model:value="manualLongitude"
-                                                placeholder="经度 (如: 116.397428)"
-                                                size="large"
-                                            >
+                                            <a-input v-model:value="manualLongitude" placeholder="经度 (如: 116.397428)"
+                                                size="large">
                                                 <template #prefix>
                                                     经度:
                                                 </template>
                                             </a-input>
                                         </a-col>
                                         <a-col :span="12">
-                                            <a-input
-                                                v-model:value="manualLatitude"
-                                                placeholder="纬度 (如: 39.90923)"
-                                                size="large"
-                                            >
+                                            <a-input v-model:value="manualLatitude" placeholder="纬度 (如: 39.90923)"
+                                                size="large">
                                                 <template #prefix>
                                                     纬度:
                                                 </template>
                                             </a-input>
                                         </a-col>
                                     </a-row>
-                                    <a-button type="primary" @click="locateByCoordinates" :loading="searching" block size="large">
+                                    <a-button type="primary" @click="locateByCoordinates" :loading="searching" block
+                                        size="large">
                                         <aim-outlined /> 定位到此坐标
                                     </a-button>
                                     <a-alert type="info" message="经度范围: -180 ~ 180, 纬度范围: -90 ~ 90" show-icon />
@@ -186,7 +176,7 @@ const loadAMapScript = (): Promise<void> => {
 
         const script = document.createElement('script')
         // 使用你的高德地图API Key，并加载插件
-        script.src = 'https://webapi.amap.com/maps?v=2.0&key=82aaaef6e38ad9523d993e795b2fd05c&plugin=AMap.Geocoder'
+        script.src = `https://webapi.amap.com/maps?v=2.0&key=${import.meta.env.VITE_AMAP_KEY}&plugin=AMap.Geocoder`
         script.async = true
         script.onload = () => {
             AMap = (window as any).AMap
@@ -201,16 +191,42 @@ const loadAMapScript = (): Promise<void> => {
     })
 }
 
-// 初始化地图
+// 初始化地图，优先使用当前定位
 const initMap = async () => {
     try {
         console.log('开始加载高德地图...')
         await loadAMapScript()
-        
+
         console.log('开始初始化地图容器...')
+
+        const defaultCenter: [number, number] = [121.451825, 31.407630]
+        let initialCenter: [number, number] = defaultCenter
+        let hasCurrentLocation = false
+
+        // 尝试获取当前位置作为初始中心点
+        if (navigator.geolocation) {
+            try {
+                const position = await new Promise<GeolocationPosition>((resolve, reject) => {
+                    navigator.geolocation.getCurrentPosition(resolve, reject, {
+                        enableHighAccuracy: true,
+                        timeout: 10000,
+                        maximumAge: 0
+                    })
+                })
+                const { longitude, latitude } = position.coords
+                initialCenter = [longitude, latitude]
+                hasCurrentLocation = true
+                console.log('已获取当前定位作为初始中心点:', initialCenter)
+            } catch (locError) {
+                console.warn('获取当前定位失败，使用默认中心点:', locError)
+            }
+        } else {
+            console.warn('浏览器不支持地理定位，使用默认中心点')
+        }
+
         map = new AMap.Map('map-container', {
             zoom: 15,
-            center: [121.451825, 31.407630], // 默认中心点（宝信软件）
+            center: initialCenter,
             viewMode: '2D', // 改为2D模式，更稳定
             resizeEnable: true
         })
@@ -220,6 +236,13 @@ const initMap = async () => {
             mapLoaded.value = true
             console.log('地图加载完成')
             message.success('地图加载成功')
+
+            // 如果是当前定位，添加一个标记
+            if (hasCurrentLocation) {
+                const [lng, lat] = initialCenter
+                updateMapMarker(lng, lat, 50)
+                updateLocationInfo(lng, lat, 50, '浏览器定位')
+            }
         })
 
         // 监听地图加载错误
@@ -251,9 +274,9 @@ const getCurrentLocation = () => {
     navigator.geolocation.getCurrentPosition(
         async (position) => {
             const { longitude, latitude, accuracy } = position.coords
-            
+
             console.log('获取到位置:', { longitude, latitude, accuracy })
-            
+
             updateLocationInfo(longitude, latitude, accuracy, '浏览器定位')
             await updateMapMarker(longitude, latitude, accuracy)
 
@@ -262,7 +285,7 @@ const getCurrentLocation = () => {
         },
         (error) => {
             loading.value = false
-            
+
             let errorMessage = '定位失败'
             switch (error.code) {
                 case error.PERMISSION_DENIED:
@@ -275,7 +298,7 @@ const getCurrentLocation = () => {
                     errorMessage = '定位请求超时'
                     break
             }
-            
+
             message.error(errorMessage)
             console.error('定位错误:', error)
         },
@@ -319,25 +342,25 @@ const searchByAddress = async () => {
         const geocoder = new AMap.Geocoder({
             city: '全国' // 设置城市范围为全国
         })
-        
+
         console.log('Geocoder创建成功，开始查询...')
-        
+
         geocoder.getLocation(searchAddress.value, (status: string, result: any) => {
             console.log('地址搜索结果:', { status, result })
             searching.value = false
-            
+
             if (status === 'complete' && result.info === 'OK') {
                 if (result.geocodes && result.geocodes.length > 0) {
                     const location = result.geocodes[0].location
                     const longitude = location.lng
                     const latitude = location.lat
                     const address = result.geocodes[0].formattedAddress
-                    
+
                     console.log('解析到坐标:', { longitude, latitude, address })
-                    
+
                     updateLocationInfo(longitude, latitude, 50, '地址搜索', address)
                     updateMapMarker(longitude, latitude, 50)
-                    
+
                     message.success('地址搜索成功')
                 } else {
                     console.error('搜索结果为空')
@@ -381,7 +404,7 @@ const locateByCoordinates = async () => {
     try {
         updateLocationInfo(lng, lat, 50, '手动输入')
         await updateMapMarker(lng, lat, 50)
-        
+
         searching.value = false
         message.success('定位成功')
     } catch (error) {
@@ -394,7 +417,7 @@ const locateByCoordinates = async () => {
 // 更新位置信息
 const updateLocationInfo = (longitude: number, latitude: number, accuracy: number, source: string, address?: string) => {
     console.log('更新位置信息:', { longitude, latitude, accuracy, source, address })
-    
+
     locationInfo.value = {
         longitude: longitude.toFixed(6),
         latitude: latitude.toFixed(6),
@@ -417,7 +440,7 @@ const updateLocationInfo = (longitude: number, latitude: number, accuracy: numbe
                 radius: 1000, // 范围1000米
                 extensions: 'all' // 返回详细信息
             })
-            
+
             geocoder.getAddress([longitude, latitude], (status: string, result: any) => {
                 console.log('逆地理编码结果:', { status, result })
                 if (status === 'complete' && result.info === 'OK') {
@@ -438,7 +461,7 @@ const updateLocationInfo = (longitude: number, latitude: number, accuracy: numbe
 // 更新地图标记
 const updateMapMarker = async (longitude: number, latitude: number, accuracy: number) => {
     console.log('开始更新地图标记:', { longitude, latitude, accuracy, map, AMap, mapLoaded: mapLoaded.value })
-    
+
     if (!map || !AMap) {
         console.error('地图或AMap未初始化')
         message.warning('地图未加载完成，无法显示标记')
@@ -456,7 +479,7 @@ const updateMapMarker = async (longitude: number, latitude: number, accuracy: nu
         console.log('设置地图中心点...')
         map.setCenter([longitude, latitude])
         map.setZoom(15)
-        
+
         // 移除旧标记和圆圈
         if (marker) {
             console.log('移除旧标记')
@@ -468,14 +491,14 @@ const updateMapMarker = async (longitude: number, latitude: number, accuracy: nu
             map.remove(circle)
             circle = null
         }
-        
+
         // 添加新标记 - 使用简化的方式
         console.log('添加新标记...')
         marker = new AMap.Marker({
             position: new AMap.LngLat(longitude, latitude),
             title: '定位位置'
         })
-        
+
         map.add(marker)
         console.log('标记添加成功')
 
@@ -489,13 +512,13 @@ const updateMapMarker = async (longitude: number, latitude: number, accuracy: nu
             strokeColor: '#1890ff',
             strokeWeight: 2
         })
-        
+
         map.add(circle)
         console.log('圆圈添加成功')
-        
+
         // 调整视野以包含圆圈
         map.setFitView([marker, circle])
-        
+
     } catch (error) {
         console.error('更新地图标记失败:', error)
         message.error('地图标记更新失败: ' + (error as Error).message)

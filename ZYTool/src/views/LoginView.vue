@@ -19,38 +19,19 @@
           </p>
         </div>
 
-        <a-form
-          :model="formState"
-          @finish="handleSubmit"
-          layout="vertical"
-          class="login-form"
-        >
-          <a-form-item
-            label="用户名"
-            name="username"
-            :rules="[{ required: true, message: '请输入用户名' }, { min: 3, message: '用户名至少3个字符' }]"
-          >
-            <a-input
-              v-model:value="formState.username"
-              placeholder="请输入用户名"
-              size="large"
-            >
+        <a-form :model="formState" @finish="handleSubmit" layout="vertical" class="login-form">
+          <a-form-item label="用户名" name="username"
+            :rules="[{ required: true, message: '请输入用户名' }, { min: 3, message: '用户名至少3个字符' }]">
+            <a-input v-model:value="formState.username" placeholder="请输入用户名" size="large">
               <template #prefix>
                 <UserOutlined />
               </template>
             </a-input>
           </a-form-item>
 
-          <a-form-item
-            label="密码"
-            name="password"
-            :rules="[{ required: true, message: '请输入密码' }, { min: 6, message: '密码至少6个字符' }]"
-          >
-            <a-input-password
-              v-model:value="formState.password"
-              placeholder="请输入密码"
-              size="large"
-            >
+          <a-form-item label="密码" name="password"
+            :rules="[{ required: true, message: '请输入密码' }, { min: 6, message: '密码至少6个字符' }]">
+            <a-input-password v-model:value="formState.password" placeholder="请输入密码" size="large">
               <template #prefix>
                 <LockOutlined />
               </template>
@@ -58,11 +39,7 @@
           </a-form-item>
 
           <a-form-item v-if="!isLogin" label="邮箱" name="email">
-            <a-input
-              v-model:value="formState.email"
-              placeholder="请输入邮箱（可选）"
-              size="large"
-            >
+            <a-input v-model:value="formState.email" placeholder="请输入邮箱（可选）" size="large">
               <template #prefix>
                 <MailOutlined />
               </template>
@@ -70,17 +47,23 @@
           </a-form-item>
 
           <a-form-item>
-            <a-button
-              type="primary"
-              html-type="submit"
-              :loading="loading"
-              block
-              size="large"
-              class="submit-btn"
-            >
+            <a-button type="primary" html-type="submit" :loading="loading" block size="large" class="submit-btn">
               {{ isLogin ? '登录' : '注册' }}
             </a-button>
           </a-form-item>
+
+          <div class="social-login">
+            <div class="social-divider">
+              <span class="divider-line"></span>
+              <span class="divider-text">或使用</span>
+              <span class="divider-line"></span>
+            </div>
+            <a-button type="default" block size="large" class="qq-login-btn" @click="handleQQLogin"
+              :loading="qqLoading">
+              <span class="qq-icon">🐧</span>
+              <span>QQ 关联登录</span>
+            </a-button>
+          </div>
         </a-form>
 
         <div class="login-footer">
@@ -108,7 +91,7 @@
 </template>
 
 <script setup lang="ts">
-import { reactive, ref } from 'vue'
+import { reactive, ref, onMounted } from 'vue'
 import { message } from 'ant-design-vue'
 import { useRouter, useRoute } from 'vue-router'
 import { UserOutlined, LockOutlined, MailOutlined } from '@ant-design/icons-vue'
@@ -119,6 +102,7 @@ const router = useRouter()
 const route = useRoute()
 const isLogin = ref(true)
 const loading = ref(false)
+const qqLoading = ref(false)
 
 const formState = reactive({
   username: '',
@@ -155,6 +139,47 @@ const handleSubmit = async () => {
     loading.value = false
   }
 }
+
+const handleQQLogin = async () => {
+  qqLoading.value = true
+
+  try {
+    const { url } = await ApiService.getQQAuthUrl()
+    window.location.href = url
+  } catch (error: any) {
+    console.error('QQ login error:', error)
+    message.error('获取QQ授权链接失败')
+  } finally {
+    qqLoading.value = false
+  }
+}
+
+const handleQQCallback = async (code: string) => {
+  qqLoading.value = true
+
+  try {
+    const tokenData = await ApiService.loginWithQQ(code)
+    setToken(tokenData.access_token)
+    const userInfo = await ApiService.getCurrentUser()
+    setUserInfo(userInfo)
+
+    message.success('QQ登录成功')
+    const redirect = route.query.redirect as string || '/home'
+    router.push(redirect)
+  } catch (error: any) {
+    console.error('QQ callback error:', error)
+    message.error(error.response?.data?.message || 'QQ登录失败')
+  } finally {
+    qqLoading.value = false
+  }
+}
+
+onMounted(() => {
+  const qqCode = route.query.code as string
+  if (qqCode) {
+    handleQQCallback(qqCode)
+  }
+})
 </script>
 
 <style scoped>
@@ -311,6 +336,55 @@ const handleSubmit = async () => {
   transform: translateY(-1px);
 }
 
+.social-login {
+  margin-top: 1rem;
+}
+
+.social-divider {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  margin-bottom: 0.75rem;
+}
+
+.divider-line {
+  flex: 1;
+  height: 1px;
+  background: var(--border-color);
+}
+
+.divider-text {
+  font-size: 0.85rem;
+  color: var(--text-tertiary);
+}
+
+.qq-login-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius);
+  height: 46px;
+  font-weight: 500;
+  font-size: 0.95rem;
+  color: var(--text-primary);
+  transition: all 0.3s ease;
+}
+
+.qq-login-btn:hover {
+  background: #f5f5f5;
+  border-color: #1da1f2;
+  box-shadow: var(--shadow-md);
+  color: #1da1f2;
+}
+
+.qq-icon {
+  font-size: 1.25rem;
+}
+
 .login-footer {
   margin-top: 1.5rem;
   text-align: center;
@@ -373,9 +447,12 @@ const handleSubmit = async () => {
 }
 
 @keyframes float {
-  0%, 100% {
+
+  0%,
+  100% {
     transform: translateY(0) scale(1);
   }
+
   50% {
     transform: translateY(-20px) scale(1.05);
   }

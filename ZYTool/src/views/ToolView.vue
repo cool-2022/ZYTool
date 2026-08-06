@@ -191,11 +191,22 @@ const openTool = async (tool: any) => {
     return
   }
 
-  // 后端工具需要检查服务
+  // 后端工具需要检查服务，然后跳转到对应页面
+  const backendRouteMap: Record<string, string> = {
+    '文本对比': '/tools/diff',
+    '地图导航': '/tools/map',
+    'Sql合理性检查': '/tools/sql'
+  }
+
+  const backendRoute = backendRouteMap[tool.name]
+  if (!backendRoute) {
+    message.info(`${tool.name} 工具正在开发中...`)
+    return
+  }
+
   try {
     await ApiService.healthCheck()
-    message.info(`正在打开 ${tool.name} 工具...`)
-    console.log('打开工具:', tool)
+    router.push({ path: backendRoute })
   } catch (error) {
     console.error('后端服务不可用:', error)
     message.warning(`后端服务不可用，${tool.name} 工具暂时无法使用`)

@@ -9,11 +9,6 @@ export const tables = ref<Array<{ name: string; columns: string[] }>>([
 
 export const operators = ref<string[]>(['=', '<>', '>', '<', '>=', '<=', 'LIKE', 'IN', 'NOT IN'])
 
-export default {
-    tables,
-    operators
-}
-
 
 
 

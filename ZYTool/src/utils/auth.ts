@@ -65,13 +65,6 @@ export function removeUserInfo(): void {
 }
 
 /**
- * 保存基础信息到 localStorage
- */
-export function setBaseInfo(baseInfo: BaseInfo): void {
-  localStorage.setItem(BASE_INFO_KEY, JSON.stringify(baseInfo))
-}
-
-/**
  * 从 localStorage 获取基础信息
  */
 export function getBaseInfo(): BaseInfo | null {

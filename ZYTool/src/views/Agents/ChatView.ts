@@ -3,19 +3,15 @@ import { message } from 'ant-design-vue'
 import { ApiService } from '@/services/api'
 import type { ChatMessage, ChatSession } from '@/Mock/ChatData'
 
-export type { ChatMessage, ChatSession }
-
 export function useChatView() {
     // 聊天会话列表
     const chatSessions = ref<ChatSession[]>([])
-    const loadingSessions = ref(false)
 
     // 当前选中的会话
     const currentSession = ref<ChatSession | null>(null)
 
     // 当前消息列表
     const messages = ref<ChatMessage[]>([])
-    const loadingMessages = ref(false)
 
     // 用户输入
     const userInput = ref('')
@@ -23,16 +19,12 @@ export function useChatView() {
     // 是否正在发送
     const isSending = ref(false)
 
-    // 流式响应内容
-    const streamingContent = ref('')
-
     // 侧边栏是否折叠
     const sidebarCollapsed = ref(false)
 
     // 加载会话列表
     async function loadSessions() {
         try {
-            loadingSessions.value = true
             const response = await ApiService.getChatSessions()
             chatSessions.value = response.sessions.map((s) => ({
                 id: s.id,
@@ -47,8 +39,6 @@ export function useChatView() {
         } catch (error: any) {
             console.error('加载会话列表失败:', error)
             message.error('加载会话列表失败')
-        } finally {
-            loadingSessions.value = false
         }
     }
 
@@ -61,7 +51,6 @@ export function useChatView() {
     // 加载会话消息
     async function loadMessages(sessionId: string) {
         try {
-            loadingMessages.value = true
             const response = await ApiService.getChatMessages(sessionId)
             messages.value = response.messages.map((m) => ({
                 id: m.id,
@@ -73,8 +62,6 @@ export function useChatView() {
             console.error('加载消息失败:', error)
             message.error('加载消息失败')
             messages.value = []
-        } finally {
-            loadingMessages.value = false
         }
     }
 
@@ -131,7 +118,6 @@ export function useChatView() {
         userInput.value = ''
         await nextTick()
         isSending.value = true
-        streamingContent.value = ''
 
         // 创建空的助手消息用于流式显示
         const assistantMessage: ChatMessage = {
@@ -160,7 +146,6 @@ export function useChatView() {
 
             // 刷新当前会话的消息和列表（同步后端标题、消息数等）
             await refreshCurrentSession()
-            streamingContent.value = ''
         } catch (error: any) {
             assistantMessage.content = `错误: ${error?.message || '发送消息失败'}`
             console.error('Chat error:', error)
@@ -188,7 +173,7 @@ export function useChatView() {
             const sessionsResponse = await ApiService.getChatSessions()
             chatSessions.value = sessionsResponse.sessions.map((s) => ({
                 id: s.id,
-                title: s.id === currentSession.value?.id ? s.title : s.title,
+                title: s.title,
                 date: s.date,
                 message_count: s.message_count,
                 total_tokens: s.total_tokens,
@@ -257,10 +242,7 @@ export function useChatView() {
         messages,
         userInput,
         isSending,
-        streamingContent,
         sidebarCollapsed,
-        loadingSessions,
-        loadingMessages,
         selectSession,
         createNewSession,
         sendMessage,

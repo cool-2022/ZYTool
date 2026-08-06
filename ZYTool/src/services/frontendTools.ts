@@ -105,49 +105,6 @@ export function urlDecode(text: string): { result: string; success: boolean } {
     }
 }
 
-// 时间戳转换为日期时间
-export function timestampToDatetime(timestamp: number): { result: string; success: boolean } {
-    try {
-        const date = new Date(timestamp)
-        const result = date.toLocaleString('zh-CN', {
-            year: 'numeric',
-            month: '2-digit',
-            day: '2-digit',
-            hour: '2-digit',
-            minute: '2-digit',
-            second: '2-digit',
-            hour12: false
-        })
-        return { result, success: true }
-    } catch (error) {
-        return {
-            result: error instanceof Error ? error.message : '转换失败',
-            success: false
-        }
-    }
-}
-
-// 日期时间转换为时间戳
-export function datetimeToTimestamp(datetime: string): { result: string; success: boolean } {
-    try {
-        const timestamp = new Date(datetime).getTime()
-        if (isNaN(timestamp)) {
-            throw new Error('无效的日期格式')
-        }
-        return { result: timestamp.toString(), success: true }
-    } catch (error) {
-        return {
-            result: error instanceof Error ? error.message : '转换失败',
-            success: false
-        }
-    }
-}
-
-// 获取当前时间戳
-export function getCurrentTimestamp(): number {
-    return Date.now()
-}
-
 // RGB转HEX
 export function rgbToHex(r: number, g: number, b: number): string {
     return '#' + [r, g, b].map(x => {
@@ -165,20 +122,3 @@ export function hexToRgb(hex: string): { r: number; g: number; b: number } | nul
         b: parseInt(result[3]!, 16)
     } : null
 }
-
-// 前端工具类型定义
-export const FrontendTools = {
-    formatJSON,
-    minifyJSON,
-    base64Encode,
-    base64Decode,
-    urlEncode,
-    urlDecode,
-    timestampToDatetime,
-    datetimeToTimestamp,
-    getCurrentTimestamp,
-    rgbToHex,
-    hexToRgb
-}
-
-export default FrontendTools

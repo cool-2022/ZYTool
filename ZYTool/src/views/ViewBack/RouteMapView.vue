@@ -113,6 +113,7 @@ import { ref, onMounted, onUnmounted } from 'vue'
 import { message } from 'ant-design-vue'
 import { EnvironmentOutlined, SearchOutlined } from '@ant-design/icons-vue'
 import { ApiService } from '../../services/api'
+import { AppConfig } from '../../config/appConfig'
 
 interface RoutePoint {
     lat: number
@@ -159,7 +160,7 @@ const loadAMapScript = (): Promise<void> => {
         }
 
         const script = document.createElement('script')
-        script.src = 'https://webapi.amap.com/maps?v=2.0&key=82aaaef6e38ad9523d993e795b2fd05c&plugin=AMap.Driving,AMap.Autocomplete,AMap.PlaceSearch'
+        script.src = `https://webapi.amap.com/maps?v=2.0&key=${AppConfig.amapKey}&plugin=AMap.Driving,AMap.Autocomplete,AMap.PlaceSearch`
         script.async = true
         script.onload = () => {
             AMap = (window as any).AMap
