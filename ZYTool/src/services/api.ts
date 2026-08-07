@@ -281,6 +281,10 @@ export class ApiService {
         await requestWithFallback('delete', `/agents/sessions/${sessionId}`)
     }
 
+    static async updateChatSessionTitle(sessionId: string, title: string): Promise<void> {
+        await requestWithFallback('patch', `/agents/sessions/${sessionId}`, { title })
+    }
+
     static async getChatMessages(sessionId: string): Promise<{
         messages: Array<{
             id: string
@@ -295,8 +299,11 @@ export class ApiService {
         return requestWithFallback('get', `/agents/sessions/${sessionId}/messages`)
     }
 
-    // AI 聊天 - 流式响应（使用 axios + fetch adapter，支持双后端兜底）
-    static async *chatStream(message: string, sessionId?: string) {
+    // AI 聊天 - 流式响应（使用 axios + fetch adapter，支持双后端兜底，可传入 signal 中止）
+    static async *chatStream(message: string, sessionId?: string, signal?: AbortSignal) {
+        // #region debug-point E:chatStream-start
+        fetch('http://127.0.0.1:7777/event', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ sessionId: 'ai-chat-network-error', runId: 'pre-fix', hypothesisId: 'E', location: 'api.ts:chatStream-start', msg: '[DEBUG] chatStream invoked', data: { message, sessionId }, ts: Date.now() }) }).catch(() => { })
+        // #endregion
         const body = { message, session_id: sessionId }
         const token = getToken()
         const headers: Record<string, string> = {}
@@ -305,6 +312,9 @@ export class ApiService {
         }
 
         async function requestChatStream(instance: AxiosInstance): Promise<ReadableStream<Uint8Array>> {
+            // #region debug-point B:request-start
+            fetch('http://127.0.0.1:7777/event', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ sessionId: 'ai-chat-network-error', runId: 'pre-fix', hypothesisId: 'B', location: 'api.ts:request-start', msg: '[DEBUG] requestChatStream start', data: { baseURL: instance.defaults.baseURL }, ts: Date.now() }) }).catch(() => { })
+            // #endregion
             const response = await instance.request({
                 method: 'POST',
                 url: '/agents/chat',
@@ -312,7 +322,11 @@ export class ApiService {
                 headers,
                 adapter: 'fetch',
                 responseType: 'stream',
+                signal,
             })
+            // #region debug-point B:request-success
+            fetch('http://127.0.0.1:7777/event', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ sessionId: 'ai-chat-network-error', runId: 'pre-fix', hypothesisId: 'B', location: 'api.ts:request-success', msg: '[DEBUG] requestChatStream success', data: { status: response.status, hasStream: response.data !== undefined }, ts: Date.now() }) }).catch(() => { })
+            // #endregion
             // fetch adapter + responseType: 'stream' 在浏览器下返回 ReadableStream
             const stream = response.data as ReadableStream<Uint8Array> | undefined
             if (!stream) {
@@ -327,22 +341,36 @@ export class ApiService {
         try {
             stream = await requestChatStream(rustApi)
         } catch (err) {
+            // #region debug-point A:rust-failed
+            fetch('http://127.0.0.1:7777/event', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ sessionId: 'ai-chat-network-error', runId: 'pre-fix', hypothesisId: 'A', location: 'api.ts:rust-failed', msg: '[DEBUG] Rust chatStream failed', data: { error: (err as Error)?.message, name: (err as Error)?.name }, ts: Date.now() }) }).catch(() => { })
+            // #endregion
+            if (signal?.aborted) return
             if (import.meta.env.DEV) {
                 console.warn('[Fallback] Rust 流式后端不可用，降级到 Python 后端:', err)
             }
             usedBackend = 'python'
+            // #region debug-point A:python-fallback-start
+            fetch('http://127.0.0.1:7777/event', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ sessionId: 'ai-chat-network-error', runId: 'pre-fix', hypothesisId: 'A', location: 'api.ts:python-fallback-start', msg: '[DEBUG] Falling back to Python backend', data: {}, ts: Date.now() }) }).catch(() => { })
+            // #endregion
             stream = await requestChatStream(pythonApi)
         }
 
         const reader = stream.getReader()
         const decoder = new TextDecoder()
         let buffer = ''
+        let chunkCount = 0
+
+        const onAbort = () => {
+            reader.cancel().catch(() => { })
+        }
+        signal?.addEventListener('abort', onAbort)
 
         try {
             while (true) {
                 const { done, value } = await reader.read()
                 if (done) break
 
+                chunkCount++
                 buffer += decoder.decode(value, { stream: true })
 
                 // 处理 SSE 格式的数据
@@ -352,15 +380,26 @@ export class ApiService {
                 for (const line of lines) {
                     if (line.startsWith('data: ')) {
                         const data = line.slice(6).trim()
+                        // #region debug-point B:sse-chunk
+                        if (chunkCount <= 3) fetch('http://127.0.0.1:7777/event', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ sessionId: 'ai-chat-network-error', runId: 'pre-fix', hypothesisId: 'B', location: 'api.ts:sse-chunk', msg: '[DEBUG] SSE chunk parsed', data: { chunkCount, dataPreview: data.slice(0, 80) }, ts: Date.now() }) }).catch(() => { })
+                        // #endregion
                         if (data && data !== '[DONE]') {
                             yield data
                         }
                     }
                 }
             }
+            // #region debug-point B:stream-done
+            fetch('http://127.0.0.1:7777/event', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ sessionId: 'ai-chat-network-error', runId: 'pre-fix', hypothesisId: 'B', location: 'api.ts:stream-done', msg: '[DEBUG] Stream reader done', data: { chunkCount }, ts: Date.now() }) }).catch(() => { })
+            // #endregion
         } catch (err) {
+            // #region debug-point B:stream-read-error
+            fetch('http://127.0.0.1:7777/event', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ sessionId: 'ai-chat-network-error', runId: 'pre-fix', hypothesisId: 'B', location: 'api.ts:stream-read-error', msg: '[DEBUG] Stream reader error', data: { error: (err as Error)?.message, name: (err as Error)?.name, chunkCount }, ts: Date.now() }) }).catch(() => { })
+            // #endregion
+            if (signal?.aborted) return
             throw new Error(`流式读取失败 (backend: ${usedBackend}): ${err}`)
         } finally {
+            signal?.removeEventListener('abort', onAbort)
             reader.releaseLock()
         }
     }

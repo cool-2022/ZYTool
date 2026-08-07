@@ -12,23 +12,26 @@ class DeepSeekClient:
     """DeepSeek AI Client using OpenAI SDK with streaming support."""
 
     def __init__(self):
-        self.api_key: Optional[str] = os.getenv("DEEPSEEK_API_KEY")
+        # 优先使用 Kimi（Moonshot）配置，未配置时回退 DeepSeek
+        self.api_key: Optional[str] = os.getenv("KIMI_API_KEY") or os.getenv("DEEPSEEK_API_KEY")
+        self.base_url: str = os.getenv("KIMI_BASE_URL") or "https://api.deepseek.com"
+        self.model: str = os.getenv("KIMI_MODEL") or "deepseek-chat"
         self.client: Optional[OpenAI] = None
         self._init_client()
 
     def _init_client(self) -> None:
-        """初始化 DeepSeek 客户端"""
+        """初始化 LLM 客户端"""
         if not self.api_key:
-            print("Warning: DEEPSEEK_API_KEY not found")
+            print("Warning: KIMI_API_KEY / DEEPSEEK_API_KEY not found")
             return
 
         try:
             self.client = OpenAI(
                 api_key=self.api_key,
-                base_url="https://api.deepseek.com"
+                base_url=self.base_url
             )
         except Exception as e:
-            print(f"Failed to initialize DeepSeek client: {e}")
+            print(f"Failed to initialize LLM client: {e}")
 
     def chat(
         self,
@@ -53,7 +56,7 @@ class DeepSeekClient:
                 extra_params["tool_choice"] = {"type": "function", "function": {"name": tool_choice}}
 
             response = self.client.chat.completions.create(
-                model="deepseek-chat",
+                model=self.model,
                 messages=messages,
                 stream=False,
                 **extra_params
@@ -80,7 +83,7 @@ class DeepSeekClient:
 
         try:
             response = self.client.chat.completions.create(
-                model="deepseek-chat",
+                model=self.model,
                 messages=[
                     {"role": "system", "content": "You are a helpful assistant"},
                     {"role": "user", "content": prompt},

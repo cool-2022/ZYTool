@@ -338,6 +338,45 @@
   word-wrap: break-word;
 }
 
+/* 流式输出打字光标 */
+.message-text.streaming::after {
+  content: '▍';
+  margin-left: 2px;
+  color: var(--primary-color, #1677ff);
+  animation: cursor-blink 1s step-start infinite;
+}
+
+@keyframes cursor-blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0; }
+}
+
+/* 正在思考动画 */
+.thinking-indicator {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 2px 0;
+}
+
+.thinking-gif {
+  width: 56px;
+  height: 40px;
+  object-fit: contain;
+}
+
+.thinking-text {
+  font-size: 13px;
+  color: var(--text-tertiary);
+}
+
+/* 会话重命名输入框 */
+.session-rename-input {
+  flex: 1;
+  min-width: 0;
+  margin-right: 4px;
+}
+
 .message-time {
   font-size: 11px;
   color: var(--text-tertiary);

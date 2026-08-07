@@ -3,7 +3,7 @@ use sqlx::FromRow;
 use uuid::Uuid;
 
 use crate::core::db::DbPool;
-use crate::core::error::{internal_error, not_found, AppError};
+use crate::core::error::{bad_request, internal_error, not_found, AppError};
 
 #[derive(Debug, FromRow)]
 struct SessionRow {
@@ -76,22 +76,86 @@ pub async fn delete_session(
 ) -> Result<(), AppError> {
     let uuid = parse_uuid(session_uuid)?;
 
-    let result = sqlx::query(
+    // 查出待删除会话
+    let session = sqlx::query_as::<_, (i64, Uuid, String, i32, i32)>(
         r#"
-        UPDATE ai_sessions
-        SET status = 3, updated_at = NOW()
+        SELECT id, session_uuid, title, message_count, total_tokens
+        FROM ai_sessions
         WHERE session_uuid = $1 AND user_id = $2 AND status = 1
         "#,
     )
     .bind(uuid)
     .bind(user_id)
-    .execute(pool)
+    .fetch_optional(pool)
+    .await
+    .map_err(|e| internal_error(format!("查询会话失败: {}", e)))?
+    .ok_or_else(|| not_found("会话不存在或无权访问"))?;
+
+    let (session_id, session_uuid_val, title, message_count, total_tokens) = session;
+
+    // 备份消息快照
+    let message_rows = sqlx::query_as::<_, (String, String, DateTime<Utc>)>(
+        r#"
+        SELECT role, content, created_at
+        FROM ai_messages
+        WHERE session_id = $1 AND status = 1
+        ORDER BY created_at ASC
+        "#,
+    )
+    .bind(session_id)
+    .fetch_all(pool)
+    .await
+    .map_err(|e| internal_error(format!("查询消息快照失败: {}", e)))?;
+
+    let snapshot: Vec<serde_json::Value> = message_rows
+        .into_iter()
+        .map(|(role, content, created_at)| {
+            serde_json::json!({
+                "role": role,
+                "content": content,
+                "created_at": created_at,
+            })
+        })
+        .collect();
+
+    // 事务：写入备份履历表 + 物理删除会话（消息/设置/反馈随外键 CASCADE 一并删除）
+    let mut tx = pool
+        .begin()
+        .await
+        .map_err(|e| internal_error(format!("开启事务失败: {}", e)))?;
+
+    sqlx::query(
+        r#"
+        INSERT INTO ai_session_archives
+            (session_id, session_uuid, user_id, title, message_count, total_tokens, messages)
+        VALUES ($1, $2, $3, $4, $5, $6, $7)
+        "#,
+    )
+    .bind(session_id)
+    .bind(session_uuid_val)
+    .bind(user_id)
+    .bind(&title)
+    .bind(message_count)
+    .bind(total_tokens)
+    .bind(serde_json::Value::Array(snapshot))
+    .execute(&mut *tx)
+    .await
+    .map_err(|e| internal_error(format!("写入会话备份履历失败: {}", e)))?;
+
+    sqlx::query(
+        r#"
+        DELETE FROM ai_sessions
+        WHERE id = $1
+        "#,
+    )
+    .bind(session_id)
+    .execute(&mut *tx)
     .await
     .map_err(|e| internal_error(format!("删除会话失败: {}", e)))?;
 
-    if result.rows_affected() == 0 {
-        return Err(not_found("会话不存在或无权访问"));
-    }
+    tx.commit()
+        .await
+        .map_err(|e| internal_error(format!("提交事务失败: {}", e)))?;
 
     Ok(())
 }
@@ -171,6 +235,33 @@ pub async fn list_messages(
     .map_err(|e| internal_error(format!("查询消息失败: {}", e)))?;
 
     Ok(rows.into_iter().map(into_message_response).collect())
+}
+
+/// 查询会话最近的历史消息（用于拼接 LLM 上下文），按时间正序返回 (role, content)
+pub async fn list_history_messages(
+    pool: &DbPool,
+    session_id: i64,
+    limit: i64,
+) -> Result<Vec<(String, String)>, AppError> {
+    let mut rows = sqlx::query_as::<_, (String, String)>(
+        r#"
+        SELECT role, content FROM (
+            SELECT role, content, created_at
+            FROM ai_messages
+            WHERE session_id = $1 AND status = 1 AND role IN ('user', 'assistant')
+            ORDER BY created_at DESC
+            LIMIT $2
+        ) t
+        ORDER BY t.created_at ASC
+        "#,
+    )
+    .bind(session_id)
+    .bind(limit)
+    .fetch_all(pool)
+    .await
+    .map_err(|e| internal_error(format!("查询历史消息失败: {}", e)))?;
+
+    Ok(rows.drain(..).collect())
 }
 
 pub async fn save_user_message(
@@ -270,9 +361,4 @@ fn into_message_response(row: MessageRow) -> crate::models::MessageResponse {
         model_id: row.model_id,
         created_at: row.created_at,
     }
-}
-
-fn bad_request(msg: impl Into<String>) -> AppError {
-    use crate::core::error::bad_request;
-    bad_request(msg)
 }

@@ -40,7 +40,7 @@ async def generate_stream(message: str):
 
         try:
             final_response = deepseek_client.client.chat.completions.create(
-                model="deepseek-chat",
+                model=deepseek_client.model,
                 messages=messages_history,
                 stream=True
             )
@@ -70,7 +70,7 @@ async def generate_stream_no_tools(message: str):
     try:
         # 直接调用流式聊天接口，不传递 tools 参数
         stream = deepseek_client.client.chat.completions.create(
-            model="deepseek-chat",
+            model=deepseek_client.model,
             messages=[
                 {"role": "system", "content": "You are a helpful assistant"},
                 {"role": "user", "content": message}
