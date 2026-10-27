@@ -11,6 +11,7 @@ ZYTool 项目公共层知识：架构、模块地图、开发规范、命令、�
 | 添加新功能流程、代码风格、提交前检查 | `resources/03-dev-conventions.md` |
 | 环境变量、配置项、密钥文件位置 | `resources/04-env-vars.md` |
 | 后端公共契约（接口一致性/SSE/CORS/DB 表结构） | `../backend-knowledge/common/` |
+| 完整后端路由与 Python 降级覆盖 | `../backend-knowledge/common/03-route-coverage.md` |
 | Rust 后端具体功能（路由/服务/DB） | `../backend-knowledge/rust/SKILL.md` |
 | Python 兜底后端具体功能 | `../backend-knowledge/python/SKILL.md` |
 | 前端页面/组件/API 调用 | `../frontend-knowledge/SKILL.md` |
@@ -19,7 +20,7 @@ ZYTool 项目公共层知识：架构、模块地图、开发规范、命令、�
 ## 模块地图
 
 - `Backup/tools_project_rust/`：Rust axum 主后端（端口 8000）
-- `Backup/tools_project_py/`：Python FastAPI 兜底后端（端口 8001）
+- `Backup/tools_project_py/`：Python FastAPI 部分兜底后端（部署预期端口 8001，源码默认 8000）
 - `ZYTool/`：Vue 3 + TS 前端（开发端口 5050）
 
 功能域：AI Agent 系统（Kimi + SSE 流式对话）、在线工具集（ViewFront 浏览器端 / ViewBack 服务器端）、MES 系统。

@@ -21,9 +21,9 @@
 │   └── resources/                     #   01-architecture / 02-commands / 03-dev-conventions / 04-env-vars
 ├── .qoder/backend-knowledge/          # 后端：Rust + Python 统一入口
 │   ├── SKILL.md                       #   入口：后端路由规则
-│   ├── common/                        #   双端公共：01-api-contract（接口契约/SSE/CORS）/ 02-database-schema
+│   ├── common/                        #   双端公共：01-api-contract / 02-database-schema / 03-route-coverage
 │   ├── rust/                          #   Rust 专有（axum，主后端，端口 8000）
-│   └── python/                        #   Python 专有（FastAPI，兜底，端口 8001）
+│   └── python/                        #   Python 专有（FastAPI，部分兜底，部署预期 8001）
 └── .qoder/frontend-knowledge/         # 前端（Vue 3 + TS，ZYTool/，端口 5050）
 ```
 
@@ -33,7 +33,7 @@
 2. **公共问题**（系统架构、双后端机制、统一响应结构、认证、构建命令、开发规范、环境变量）→ 读取 `common-knowledge/resources/` 下对应资源文件；
 3. **具体端问题**（Rust 路由/服务/DB、Python 兜底接口、前端页面/组件）→ 先读取对应端知识库的 `SKILL.md`；
 4. **综合需求**（如"新增一个工具"）→ 两层结合：公共层取架构与规范，模块层取业务细节；
-5. **动手改代码前**，必读公共层 `resources/03-dev-conventions.md`（开发约定与代码风格）。
+5. **动手改代码前**，必读公共层 `.qoder/common-knowledge/resources/03-dev-conventions.md`（开发约定与代码风格）。
 
 ## 修改履历记录
 
