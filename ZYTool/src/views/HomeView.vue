@@ -31,7 +31,7 @@
     </section>
 
     <!-- 特性介绍 -->
-    <section class="features-section">
+    <section class="features-section" ref="featuresRef" :class="{ 'is-visible': featuresVisible }">
       <div class="container">
         <div class="features-grid">
           <div class="feature-card">
@@ -56,7 +56,29 @@
 </template>
 
 <script setup lang="ts">
-// HomeView - 首页仅展示 Hero 和特性介绍
+import { ref, onMounted } from 'vue'
+
+// 特性卡片滚动揭示：进入视口时触发一次
+const featuresRef = ref<HTMLElement | null>(null)
+const featuresVisible = ref(false)
+
+onMounted(() => {
+  const el = featuresRef.value
+  if (!el || !('IntersectionObserver' in window)) {
+    featuresVisible.value = true
+    return
+  }
+  const io = new IntersectionObserver(
+    (entries) => {
+      if (entries[0]?.isIntersecting) {
+        featuresVisible.value = true
+        io.disconnect()
+      }
+    },
+    { rootMargin: '-100px' }
+  )
+  io.observe(el)
+})
 </script>
 
 <style scoped>
@@ -112,6 +134,46 @@
   margin: 0 auto;
 }
 
+/* Hero 入场：60ms stagger，400ms ease-out（罕见/首访页面，允许表达性入场） */
+.hero-badge,
+.hero-title,
+.hero-subtitle,
+.hero-actions {
+  animation: heroFadeInUp 400ms var(--ease-out) both;
+}
+
+.hero-title {
+  animation-delay: 60ms;
+}
+
+.hero-subtitle {
+  animation-delay: 120ms;
+}
+
+.hero-actions {
+  animation-delay: 180ms;
+}
+
+@keyframes heroFadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes heroFadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
 .hero-badge {
   display: inline-flex;
   align-items: center;
@@ -126,7 +188,6 @@
   margin-bottom: 1.5rem;
   backdrop-filter: blur(10px);
 }
-
 .badge-dot {
   width: 8px;
   height: 8px;
@@ -184,7 +245,10 @@
   font-weight: 600;
   font-size: 1rem;
   text-decoration: none;
-  transition: all 0.3s ease;
+  transition: transform var(--duration-press) var(--ease-out),
+    box-shadow var(--duration-base) var(--ease-out),
+    background-color var(--duration-base) var(--ease-out),
+    border-color var(--duration-base) var(--ease-out);
   cursor: pointer;
   border: none;
 }
@@ -195,12 +259,6 @@
   box-shadow: 0 4px 16px rgba(59, 130, 246, 0.4);
 }
 
-.btn-primary:hover {
-  background: var(--gradient-primary-hover);
-  transform: translateY(-2px);
-  box-shadow: 0 6px 24px rgba(59, 130, 246, 0.5);
-}
-
 .btn-secondary {
   background: rgba(255, 255, 255, 0.1);
   color: white;
@@ -208,17 +266,29 @@
   backdrop-filter: blur(10px);
 }
 
-.btn-secondary:hover {
-  background: rgba(255, 255, 255, 0.18);
-  transform: translateY(-2px);
+@media (hover: hover) and (pointer: fine) {
+  .btn-primary:hover {
+    background: var(--gradient-primary-hover);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 24px rgba(59, 130, 246, 0.5);
+  }
+
+  .btn-secondary:hover {
+    background: rgba(255, 255, 255, 0.18);
+    transform: translateY(-2px);
+  }
+
+  .btn-primary:hover .btn-icon {
+    transform: translateX(3px);
+  }
+}
+
+.btn:active {
+  transform: scale(0.97);
 }
 
 .btn-icon {
-  transition: transform 0.3s ease;
-}
-
-.btn-primary:hover .btn-icon {
-  transform: translateX(3px);
+  transition: transform var(--duration-base) var(--ease-out);
 }
 
 /* 特性介绍区域 */
@@ -245,9 +315,28 @@
   padding: 2.5rem 2rem;
   text-align: center;
   box-shadow: var(--shadow-md);
-  transition: all 0.3s ease;
+  transition: box-shadow var(--duration-slow) var(--ease-out),
+    transform var(--duration-slow) var(--ease-out),
+    border-color var(--duration-base) var(--ease-out),
+    opacity 400ms var(--ease-out);
   position: relative;
   overflow: hidden;
+  opacity: 0;
+  transform: translateY(16px);
+}
+
+/* 滚动揭示：进入视口后 60ms stagger 淡入上移 */
+.features-section.is-visible .feature-card {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.features-section.is-visible .feature-card:nth-child(2) {
+  transition-delay: 60ms;
+}
+
+.features-section.is-visible .feature-card:nth-child(3) {
+  transition-delay: 120ms;
 }
 
 .feature-card::before {
@@ -259,27 +348,29 @@
   height: 3px;
   background: var(--gradient-primary);
   opacity: 0;
-  transition: opacity 0.3s ease;
+  transition: opacity var(--duration-base) var(--ease-out);
 }
 
-.feature-card:hover {
-  transform: translateY(-8px);
-  box-shadow: var(--shadow-lg);
-}
+@media (hover: hover) and (pointer: fine) {
+  .feature-card:hover {
+    transform: translateY(-8px);
+    box-shadow: var(--shadow-lg);
+  }
 
-.feature-card:hover::before {
-  opacity: 1;
+  .feature-card:hover::before {
+    opacity: 1;
+  }
+
+  .feature-card:hover .feature-icon {
+    transform: scale(1.15);
+  }
 }
 
 .feature-icon {
   font-size: 3rem;
   margin-bottom: 1.25rem;
   display: inline-block;
-  transition: transform 0.3s ease;
-}
-
-.feature-card:hover .feature-icon {
-  transform: scale(1.15);
+  transition: transform var(--duration-base) var(--ease-out);
 }
 
 .feature-card h3 {
@@ -305,6 +396,27 @@
 
   50% {
     transform: translateY(-20px) scale(1.05);
+  }
+}
+
+/* 减弱动态：入场只保留淡入，特性卡片直接可见 */
+@media (prefers-reduced-motion: reduce) {
+  .hero-badge,
+  .hero-title,
+  .hero-subtitle,
+  .hero-actions {
+    animation-name: heroFadeIn;
+  }
+
+  .feature-card,
+  .features-section.is-visible .feature-card {
+    opacity: 1;
+    transform: none;
+    transition-delay: 0ms;
+  }
+
+  .hero-glow {
+    animation: none;
   }
 }
 

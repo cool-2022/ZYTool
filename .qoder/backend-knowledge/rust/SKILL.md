@@ -1,6 +1,8 @@
-# Rust 后端知识库（rust-backend-knowledge）
+# Rust 后端知识库（backend-knowledge/rust）
 
 位置：`Backup/tools_project_rust/`（axum，端口 8000）
+
+双端公共契约（接口一致性/响应结构/SSE/CORS）见 `../common/01-api-contract.md`。
 
 ## 目录地图
 
@@ -23,16 +25,17 @@ src/
 
 - handler 返回 `Json<BaseResponse<T>>`；错误用 `core::error` 的 `bad_request/unauthorized/not_found/internal_error`
 - 配置只走 `core::config::SETTINGS`；新增配置 = `Settings` 加字段 + `.env` 加变量
-- AI 聊天：Kimi 未配置 `KIMI_API_KEY` 时回退占位回复；上下文取最近 20 条历史消息
+- AI 聊天：模型配置优先取请求 `model_id`（按 id 加载并解密，持久化到会话），其次 ai_models 表 is_enabled+priority 最高（60s 缓存），最后回退 `.env` 的 `KIMI_*`；上下文取最近 20 条历史消息
+- `GET /agents/models` 返回 ai_models 全部模型供前端下拉
 - 注意：部分模型（如 k3-256k）不允许自定义 temperature，请求体不要携带该参数
 - 模型延迟参考（2026-08 实测，TTFB）：k3-256k 6~12s（深度推理）、k3 ~3s、kimi-for-coding-highspeed ~0.8s；日常对话建议用 highspeed 模型
-- 会话/消息表：`ai_sessions`、`ai_messages`，软删除（status=3），按 `session_uuid`/`message_uuid` 对外暴露
+- 会话/消息表：`ai_sessions`、`ai_messages`，删除为物理删除（先快照写入 `ai_session_archives` 再 DELETE，消息随 CASCADE 清除），按 `session_uuid`/`message_uuid` 对外暴露
 
 ## 扩展入口
 
-- 新工具：见公共库 `common-knowledge/resources/03-dev-conventions.md`
+- 新工具：见公共库 `../../common-knowledge/resources/03-dev-conventions.md`
 - 新 LLM 提供方：`services/agents/` 下新建客户端，参照 `llm.rs` 的 `is_configured/chat_stream/chat_complete` 模式
 
 ## Resources
 
-- `resources/01-database-schema.md`：PostgreSQL 全部表结构（认证域 + AI 域，DDL 源文件 `ToolsAI/zytool.sql`）
+- `../common/02-database-schema.md`：PostgreSQL 全部表结构（认证域 + AI 域，DDL 源文件 `ToolsAI/zytool.sql`）

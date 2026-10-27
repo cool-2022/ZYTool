@@ -192,7 +192,7 @@ const copyColor = (type: string) => {
 .page-header {
     text-align: center;
     margin-bottom: 2rem;
-    animation: fadeInDown 0.6s ease-out;
+    animation: fadeInDown var(--duration-enter) var(--ease-out);
 }
 
 .page-header :deep(.ant-typography) {
@@ -214,7 +214,7 @@ const copyColor = (type: string) => {
 .tool-page :deep(.ant-card) {
     border-radius: var(--border-radius-lg);
     box-shadow: var(--shadow-md);
-    transition: all var(--transition-speed);
+    transition: box-shadow var(--duration-base) var(--ease-out), border-color var(--duration-base) var(--ease-out), background-color var(--duration-base) var(--ease-out), color var(--duration-base) var(--ease-out), transform var(--duration-press) var(--ease-out);
     border: 1px solid var(--border-color);
     background: var(--bg-primary);
 }
@@ -235,7 +235,7 @@ const copyColor = (type: string) => {
     height: 200px;
     border-radius: var(--border-radius);
     border: 2px solid var(--border-color);
-    transition: all 0.3s ease;
+    transition: border-color var(--duration-base) var(--ease-out), box-shadow var(--duration-base) var(--ease-out), background-color var(--duration-base) var(--ease-out), transform var(--duration-base) var(--ease-out);
     box-shadow: var(--shadow-md);
 }
 
@@ -290,7 +290,7 @@ const copyColor = (type: string) => {
     border-radius: var(--border-radius);
     border: 2px solid var(--border-color);
     cursor: pointer;
-    transition: all 0.3s ease;
+    transition: border-color var(--duration-base) var(--ease-out), box-shadow var(--duration-base) var(--ease-out), background-color var(--duration-base) var(--ease-out), transform var(--duration-base) var(--ease-out);
 }
 
 .preset-color:hover {

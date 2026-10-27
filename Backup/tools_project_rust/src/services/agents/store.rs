@@ -76,86 +76,57 @@ pub async fn delete_session(
 ) -> Result<(), AppError> {
     let uuid = parse_uuid(session_uuid)?;
 
-    // 查出待删除会话
-    let session = sqlx::query_as::<_, (i64, Uuid, String, i32, i32)>(
+    // 单条 SQL（数据修改 CTE，原子执行）：备份消息快照到履历表 + 物理删除会话
+    // 消息/设置/反馈随外键 CASCADE 一并删除
+    let deleted: Option<(i64,)> = sqlx::query_as(
         r#"
-        SELECT id, session_uuid, title, message_count, total_tokens
-        FROM ai_sessions
-        WHERE session_uuid = $1 AND user_id = $2 AND status = 1
+        WITH target AS (
+            SELECT id, session_uuid, user_id, title, message_count, total_tokens
+            FROM ai_sessions
+            WHERE session_uuid = $1 AND user_id = $2 AND status = 1
+        ),
+        archived AS (
+            INSERT INTO ai_session_archives
+                (session_id, session_uuid, user_id, title, message_count, total_tokens, messages)
+            SELECT
+                t.id,
+                t.session_uuid,
+                t.user_id,
+                t.title,
+                t.message_count,
+                t.total_tokens,
+                COALESCE(
+                    (
+                        SELECT jsonb_agg(
+                            jsonb_build_object(
+                                'role', m.role,
+                                'content', m.content,
+                                'created_at', m.created_at
+                            )
+                            ORDER BY m.created_at ASC
+                        )
+                        FROM ai_messages m
+                        WHERE m.session_id = t.id AND m.status = 1
+                    ),
+                    '[]'::jsonb
+                )
+            FROM target t
+            RETURNING session_id
+        )
+        DELETE FROM ai_sessions
+        WHERE id IN (SELECT session_id FROM archived)
+        RETURNING id
         "#,
     )
     .bind(uuid)
     .bind(user_id)
     .fetch_optional(pool)
     .await
-    .map_err(|e| internal_error(format!("查询会话失败: {}", e)))?
-    .ok_or_else(|| not_found("会话不存在或无权访问"))?;
-
-    let (session_id, session_uuid_val, title, message_count, total_tokens) = session;
-
-    // 备份消息快照
-    let message_rows = sqlx::query_as::<_, (String, String, DateTime<Utc>)>(
-        r#"
-        SELECT role, content, created_at
-        FROM ai_messages
-        WHERE session_id = $1 AND status = 1
-        ORDER BY created_at ASC
-        "#,
-    )
-    .bind(session_id)
-    .fetch_all(pool)
-    .await
-    .map_err(|e| internal_error(format!("查询消息快照失败: {}", e)))?;
-
-    let snapshot: Vec<serde_json::Value> = message_rows
-        .into_iter()
-        .map(|(role, content, created_at)| {
-            serde_json::json!({
-                "role": role,
-                "content": content,
-                "created_at": created_at,
-            })
-        })
-        .collect();
-
-    // 事务：写入备份履历表 + 物理删除会话（消息/设置/反馈随外键 CASCADE 一并删除）
-    let mut tx = pool
-        .begin()
-        .await
-        .map_err(|e| internal_error(format!("开启事务失败: {}", e)))?;
-
-    sqlx::query(
-        r#"
-        INSERT INTO ai_session_archives
-            (session_id, session_uuid, user_id, title, message_count, total_tokens, messages)
-        VALUES ($1, $2, $3, $4, $5, $6, $7)
-        "#,
-    )
-    .bind(session_id)
-    .bind(session_uuid_val)
-    .bind(user_id)
-    .bind(&title)
-    .bind(message_count)
-    .bind(total_tokens)
-    .bind(serde_json::Value::Array(snapshot))
-    .execute(&mut *tx)
-    .await
-    .map_err(|e| internal_error(format!("写入会话备份履历失败: {}", e)))?;
-
-    sqlx::query(
-        r#"
-        DELETE FROM ai_sessions
-        WHERE id = $1
-        "#,
-    )
-    .bind(session_id)
-    .execute(&mut *tx)
-    .await
     .map_err(|e| internal_error(format!("删除会话失败: {}", e)))?;
 
-    tx.commit()
-        .await
-        .map_err(|e| internal_error(format!("提交事务失败: {}", e)))?;
+    if deleted.is_none() {
+        return Err(not_found("会话不存在或无权访问"));
+    }
 
     Ok(())
 }
@@ -337,6 +308,58 @@ pub async fn increment_session_stats(
 
 fn parse_uuid(s: &str) -> Result<Uuid, AppError> {
     Uuid::parse_str(s).map_err(|_| bad_request("无效的会话 ID 格式"))
+}
+
+/// 列出全部模型（供前端下拉选择）
+pub async fn list_models(pool: &DbPool) -> Result<Vec<crate::models::ModelInfo>, AppError> {
+    let rows = sqlx::query_as::<_, (i64, String, String, String, bool, i16)>(
+        r#"
+        SELECT id, provider, model_name, display_name, is_enabled, priority
+        FROM ai_models
+        ORDER BY priority DESC, id ASC
+        "#,
+    )
+    .fetch_all(pool)
+    .await
+    .map_err(|e| internal_error(format!("查询模型列表失败: {}", e)))?;
+
+    Ok(rows
+        .into_iter()
+        .map(
+            |(id, provider, model_name, display_name, is_enabled, priority)| {
+                crate::models::ModelInfo {
+                    id,
+                    provider,
+                    model_name,
+                    display_name,
+                    is_enabled,
+                    priority,
+                }
+            },
+        )
+        .collect())
+}
+
+/// 更新会话使用的模型
+pub async fn update_session_model(
+    pool: &DbPool,
+    session_id: i64,
+    model_id: Option<i64>,
+) -> Result<(), AppError> {
+    sqlx::query(
+        r#"
+        UPDATE ai_sessions
+        SET model_id = $1
+        WHERE id = $2
+        "#,
+    )
+    .bind(model_id)
+    .bind(session_id)
+    .execute(pool)
+    .await
+    .map_err(|e| internal_error(format!("更新会话模型失败: {}", e)))?;
+
+    Ok(())
 }
 
 fn into_session_response(row: SessionRow) -> crate::models::SessionResponse {

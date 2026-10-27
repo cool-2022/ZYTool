@@ -104,6 +104,8 @@ fn default_cors_origins() -> Vec<String> {
         // 局域网访问（本机 IP，供同网段其他设备访问前端）
         "http://192.168.77.154:5050".to_string(),
         "http://192.168.77.154:5173".to_string(),
+        "http://192.168.77.48:5050".to_string(),
+        "http://192.168.77.48:5173".to_string(),
         "http://192.168.188.2:5050".to_string(),
         "http://192.168.188.2:5173".to_string(),
     ]

@@ -39,7 +39,11 @@ pub async fn init_pool() -> Result<&'static DbPool, sqlx::Error> {
 
     let pool = PgPoolOptions::new()
         .max_connections(SETTINGS.db_pool_size)
+        .min_connections(2)
         .acquire_timeout(Duration::from_secs(10))
+        // 远程 DB RTT 较高（~280ms），保持长连接避免每次请求重建 TCP+认证
+        .idle_timeout(None)
+        .max_lifetime(None)
         .connect(&database_url)
         .await?;
 

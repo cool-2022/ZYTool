@@ -23,8 +23,8 @@
 
 | 变量 | 用途 | 默认 |
 |---|---|---|
-| `VITE_RUST_API_BASE_URL` | Rust 后端地址 | http://localhost:8000（局域网共享时改为本机 LAN IP，如 http://192.168.77.154:8000） |
-| `VITE_PYTHON_API_BASE_URL` | Python 后端地址 | http://localhost:8001（同上） |
+| `VITE_RUST_API_BASE_URL` | Rust 后端地址 | 默认跟随访问 hostname（`http://${hostname}:8000`），localhost/IP 打开自动适配；设值则固定 |
+| `VITE_PYTHON_API_BASE_URL` | Python 后端地址 | 同上（8001） |
 | `VITE_AMAP_KEY` | 高德地图 JS API Key | 有内置开发 Key |
 
 ## 敏感文件位置（仅记录位置，禁止复制内容）

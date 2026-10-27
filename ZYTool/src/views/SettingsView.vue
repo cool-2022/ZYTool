@@ -320,6 +320,26 @@ onMounted(loadBindings)
   border-radius: var(--border-radius-xl);
   padding: 2rem;
   box-shadow: var(--shadow-xl);
+  animation: settingsCardIn var(--duration-slow) var(--ease-out) both;
+}
+
+@keyframes settingsCardIn {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .settings-card {
+    animation-name: none;
+    opacity: 1;
+    transform: none;
+  }
 }
 
 .settings-title {

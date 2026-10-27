@@ -48,6 +48,8 @@
                     <span class="chat-title">{{ currentSession?.title || '今天有什么可以帮到你?' }}</span>
                 </div>
                 <a-space>
+                    <a-select v-model:value="selectedModelId" class="model-select" size="small"
+                        :options="modelOptions" placeholder="选择模型" />
                     <a-button type="text" @click="clearCurrentChat" v-if="messages.length > 0">
                         <ClearOutlined />
                         清空对话
@@ -143,6 +145,8 @@ const {
     sidebarCollapsed,
     loadingSessions,
     loadingMessages,
+    chatModels,
+    selectedModelId,
     selectSession,
     createNewSession,
     sendMessage,
@@ -217,6 +221,14 @@ function toggleVoice() {
         }
     )
 }
+
+// 模型下拉选项（显示 display_name，无则用 model_name）
+const modelOptions = computed(() =>
+    chatModels.value.map((m) => ({
+        value: m.id,
+        label: m.display_name || m.model_name,
+    }))
+)
 
 // 按日期分组会话
 const groupedSessions = computed(() => {

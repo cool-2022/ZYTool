@@ -163,7 +163,7 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    transition: transform 0.3s ease;
+    transition: transform var(--duration-base) var(--ease-out);
     transform-origin: center center;
     overflow: auto;
 }
@@ -251,7 +251,7 @@
     text-align: center;
     min-width: 180px;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-    transition: all 0.3s ease;
+    transition: border-color var(--duration-base) var(--ease-out), box-shadow var(--duration-base) var(--ease-out), background-color var(--duration-base) var(--ease-out), transform var(--duration-base) var(--ease-out);
 }
 
 .flow-node:hover {

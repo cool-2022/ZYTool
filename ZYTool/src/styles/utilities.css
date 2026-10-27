@@ -1,3 +1,41 @@
+/* ============================================ */
+/* 全局动效基座（来源：UI 动画设计规范） */
+/* ============================================ */
+
+/* 按压反馈：按钮/可点击卡片按下即响应，160ms ease-out */
+.ant-btn,
+.btn,
+.clickable {
+  transition-property: transform, box-shadow, background-color, border-color, color, opacity;
+  transition-duration: var(--duration-press);
+  transition-timing-function: var(--ease-out);
+}
+
+.ant-btn:active:not(:disabled),
+.btn:active,
+.clickable:active {
+  transform: scale(0.97);
+}
+
+/* 减弱动态：保留透明度/颜色反馈，去掉位移与循环环境动画（降级非归零） */
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+
+  *,
+  *::before,
+  *::after {
+    animation-iteration-count: 1 !important;
+  }
+
+  .ant-btn:active:not(:disabled),
+  .btn:active,
+  .clickable:active {
+    transform: none;
+  }
+}
+
 /* 滚动条样式 */
 ::-webkit-scrollbar {
   width: 10px;

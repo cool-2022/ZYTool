@@ -215,7 +215,7 @@ inputText.value = exampleJson
 .page-header {
     text-align: center;
     margin-bottom: 2rem;
-    animation: fadeInDown 0.6s ease-out;
+    animation: fadeInDown var(--duration-enter) var(--ease-out);
 }
 
 .page-header :deep(.ant-typography) {
@@ -237,7 +237,7 @@ inputText.value = exampleJson
 .tool-page :deep(.ant-card) {
     border-radius: var(--border-radius-lg);
     box-shadow: var(--shadow-md);
-    transition: all var(--transition-speed);
+    transition: box-shadow var(--duration-base) var(--ease-out), border-color var(--duration-base) var(--ease-out), background-color var(--duration-base) var(--ease-out), color var(--duration-base) var(--ease-out), transform var(--duration-press) var(--ease-out);
     border: 1px solid var(--border-color);
     background: var(--bg-primary);
 }
@@ -260,7 +260,7 @@ inputText.value = exampleJson
 .tool-page :deep(.ant-textarea) {
     border-radius: 8px;
     border: 2px solid #e8e8e8;
-    transition: all 0.3s ease;
+    transition: border-color var(--duration-base) var(--ease-out), box-shadow var(--duration-base) var(--ease-out), background-color var(--duration-base) var(--ease-out), transform var(--duration-base) var(--ease-out);
     font-family: 'Courier New', monospace;
 }
 
@@ -315,7 +315,7 @@ inputText.value = exampleJson
     -webkit-text-fill-color: transparent;
     background-clip: text;
     font-weight: bold;
-    transition: all var(--transition-speed);
+    transition: box-shadow var(--duration-base) var(--ease-out), border-color var(--duration-base) var(--ease-out), background-color var(--duration-base) var(--ease-out), color var(--duration-base) var(--ease-out), transform var(--duration-press) var(--ease-out);
 }
 
 .tool-page :deep(.ant-card-hoverable:hover) .tool-icon {
@@ -327,7 +327,7 @@ inputText.value = exampleJson
     border: none;
     border-radius: var(--border-radius);
     font-weight: 600;
-    transition: all var(--transition-speed);
+    transition: box-shadow var(--duration-base) var(--ease-out), border-color var(--duration-base) var(--ease-out), background-color var(--duration-base) var(--ease-out), color var(--duration-base) var(--ease-out), transform var(--duration-press) var(--ease-out);
 }
 
 .tool-page :deep(.ant-btn-primary:hover) {
@@ -340,7 +340,7 @@ inputText.value = exampleJson
     border: 2px solid var(--primary-color);
     color: var(--primary-dark);
     font-weight: 600;
-    transition: all var(--transition-speed);
+    transition: box-shadow var(--duration-base) var(--ease-out), border-color var(--duration-base) var(--ease-out), background-color var(--duration-base) var(--ease-out), color var(--duration-base) var(--ease-out), transform var(--duration-press) var(--ease-out);
 }
 
 .tool-page :deep(.ant-btn:not(.ant-btn-primary):hover) {

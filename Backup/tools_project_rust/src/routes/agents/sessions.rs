@@ -4,8 +4,8 @@ use crate::core::auth::CurrentUser;
 use crate::core::db::{get_pool, DbPool};
 use crate::core::error::{bad_request, internal_error, unauthorized, AppResult};
 use crate::models::{
-    BaseInfo, BaseResponse, CreateSessionRequest, MessagesResponse, SessionResponse,
-    SessionsResponse, UpdateSessionTitleRequest,
+    BaseInfo, BaseResponse, CreateSessionRequest, MessagesResponse, ModelsResponse,
+    SessionResponse, SessionsResponse, UpdateSessionTitleRequest,
 };
 use crate::services::agents::store;
 
@@ -94,4 +94,15 @@ pub async fn list_messages(
     let messages = store::list_messages(pool, user_id, &session_id).await?;
 
     Ok(Json(BaseResponse::ok(MessagesResponse { messages }, base)))
+}
+
+/// 列出可选模型（ai_models 表）
+pub async fn list_models(
+    _current_user: CurrentUser,
+    Extension(base): Extension<Option<BaseInfo>>,
+) -> AppResult<Json<BaseResponse<ModelsResponse>>> {
+    let pool = require_pool()?;
+    let models = store::list_models(pool).await?;
+
+    Ok(Json(BaseResponse::ok(ModelsResponse { models }, base)))
 }

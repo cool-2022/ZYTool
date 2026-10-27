@@ -250,6 +250,18 @@ onMounted(() => {
   border-radius: var(--border-radius-xl);
   padding: 1.75rem 2rem;
   box-shadow: var(--shadow-xl);
+  animation: loginCardIn var(--duration-slow) var(--ease-out) both;
+}
+
+@keyframes loginCardIn {
+  from {
+    opacity: 0;
+    transform: scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
 }
 
 .login-header {
@@ -327,13 +339,16 @@ onMounted(() => {
   font-weight: 600;
   font-size: 1rem;
   box-shadow: var(--shadow-primary);
-  transition: all 0.3s ease;
+  transition: box-shadow var(--duration-base) var(--ease-out),
+    transform var(--duration-press) var(--ease-out);
 }
 
-.submit-btn:hover {
-  background: var(--gradient-primary-hover);
-  box-shadow: var(--shadow-primary-hover);
-  transform: translateY(-1px);
+@media (hover: hover) and (pointer: fine) {
+  .submit-btn:hover {
+    background: var(--gradient-primary-hover);
+    box-shadow: var(--shadow-primary-hover);
+    transform: translateY(-1px);
+  }
 }
 
 .social-login {
@@ -371,14 +386,19 @@ onMounted(() => {
   font-weight: 500;
   font-size: 0.95rem;
   color: var(--text-primary);
-  transition: all 0.3s ease;
+  transition: box-shadow var(--duration-base) var(--ease-out),
+    border-color var(--duration-fast) var(--ease-out),
+    color var(--duration-fast) var(--ease-out),
+    transform var(--duration-press) var(--ease-out);
 }
 
-.qq-login-btn:hover {
-  background: #f5f5f5;
-  border-color: #1da1f2;
-  box-shadow: var(--shadow-md);
-  color: #1da1f2;
+@media (hover: hover) and (pointer: fine) {
+  .qq-login-btn:hover {
+    background: #f5f5f5;
+    border-color: #1da1f2;
+    box-shadow: var(--shadow-md);
+    color: #1da1f2;
+  }
 }
 
 .qq-icon {
@@ -394,7 +414,7 @@ onMounted(() => {
   color: var(--primary-color);
   font-weight: 500;
   cursor: pointer;
-  transition: color 0.3s ease;
+  transition: color var(--duration-fast) var(--ease-out);
 }
 
 .toggle-link:hover {
@@ -455,6 +475,19 @@ onMounted(() => {
 
   50% {
     transform: translateY(-20px) scale(1.05);
+  }
+}
+
+/* 减弱动态：卡片只淡入，背景形状静止 */
+@media (prefers-reduced-motion: reduce) {
+  .login-card {
+    animation-name: none;
+    opacity: 1;
+    transform: none;
+  }
+
+  .bg-shape {
+    animation: none;
   }
 }
 

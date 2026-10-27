@@ -47,7 +47,8 @@
                 <span class="category-desc">{{ category.description }}</span>
               </div>
               <div class="tools-grid">
-                <div class="tool-item" v-for="tool in category.tools" :key="tool.id" @click="openTool(tool)">
+                <div class="tool-item" v-for="(tool, index) in category.tools" :key="tool.id"
+                  :style="{ '--i': index }" @click="openTool(tool)">
                   <div class="tool-icon-wrapper">
                     <span class="tool-icon">{{ tool.icon }}</span>
                   </div>
@@ -266,12 +267,25 @@ onMounted(() => {
   color: white;
   margin: 0 0 0.75rem;
   letter-spacing: -1px;
+  animation: heroTitleIn var(--duration-enter) var(--ease-out) both;
 }
 
 .page-hero-desc {
   font-size: 1.15rem;
   color: rgba(255, 255, 255, 0.7);
   margin: 0;
+  animation: heroTitleIn var(--duration-enter) var(--ease-out) 60ms both;
+}
+
+@keyframes heroTitleIn {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .container {
@@ -326,13 +340,21 @@ onMounted(() => {
   padding: 0.85rem 0.75rem;
   border-radius: var(--border-radius);
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: background-color var(--duration-fast) var(--ease-out),
+    border-color var(--duration-fast) var(--ease-out),
+    transform var(--duration-press) var(--ease-out);
   border: 1px solid transparent;
 }
 
-.category-item:hover {
-  background: var(--bg-secondary);
-  border-color: var(--border-color);
+@media (hover: hover) and (pointer: fine) {
+  .category-item:hover {
+    background: var(--bg-secondary);
+    border-color: var(--border-color);
+  }
+}
+
+.category-item:active {
+  transform: scale(0.98);
 }
 
 .category-item.active {
@@ -469,9 +491,26 @@ onMounted(() => {
   border: 1px solid var(--border-color);
   border-radius: var(--border-radius-lg);
   cursor: pointer;
-  transition: all 0.3s ease;
+  transition: box-shadow var(--duration-slow) var(--ease-out),
+    transform var(--duration-slow) var(--ease-out),
+    border-color var(--duration-base) var(--ease-out),
+    background-color var(--duration-base) var(--ease-out);
   position: relative;
   overflow: hidden;
+  animation: toolItemIn var(--duration-enter) var(--ease-out) both;
+  animation-delay: min(calc(var(--i, 0) * 30ms), 240ms);
+}
+
+/* 工具卡片入场：30ms stagger（纯装饰，不阻塞交互） */
+@keyframes toolItemIn {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .tool-item::before {
@@ -483,18 +522,28 @@ onMounted(() => {
   height: 100%;
   background: var(--gradient-primary);
   opacity: 0;
-  transition: opacity 0.3s ease;
+  transition: opacity var(--duration-base) var(--ease-out);
 }
 
-.tool-item:hover {
-  transform: translateY(-4px);
-  box-shadow: var(--shadow-md);
-  border-color: var(--primary-light);
-  background: var(--bg-primary);
+@media (hover: hover) and (pointer: fine) {
+  .tool-item:hover {
+    transform: translateY(-4px);
+    box-shadow: var(--shadow-md);
+    border-color: var(--primary-light);
+    background: var(--bg-primary);
+  }
+
+  .tool-item:hover::before {
+    opacity: 1;
+  }
+
+  .tool-item:hover .tool-icon-wrapper {
+    transform: scale(1.1) rotate(4deg);
+  }
 }
 
-.tool-item:hover::before {
-  opacity: 1;
+.tool-item:active {
+  transform: scale(0.98);
 }
 
 .tool-icon-wrapper {
@@ -508,11 +557,7 @@ onMounted(() => {
   border-radius: var(--border-radius);
   font-size: 1.5rem;
   box-shadow: var(--shadow-primary);
-  transition: transform 0.3s ease;
-}
-
-.tool-item:hover .tool-icon-wrapper {
-  transform: scale(1.1) rotate(4deg);
+  transition: transform var(--duration-base) var(--ease-out);
 }
 
 .tool-info {
@@ -554,6 +599,17 @@ onMounted(() => {
 .tag-backend {
   background: rgba(139, 92, 246, 0.12);
   color: var(--accent-color);
+}
+
+/* 减弱动态：入场只保留淡入 */
+@media (prefers-reduced-motion: reduce) {
+  .page-hero-title,
+  .page-hero-desc,
+  .tool-item {
+    animation-name: none;
+    opacity: 1;
+    transform: none;
+  }
 }
 
 @media (max-width: 768px) {

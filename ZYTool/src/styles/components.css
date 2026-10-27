@@ -9,13 +9,17 @@ button {
   background-color: var(--primary-dark);
   color: var(--text-inverse);
   cursor: pointer;
-  transition: all var(--transition-speed);
+  transition: background-color var(--duration-base) var(--ease-out),
+    box-shadow var(--duration-base) var(--ease-out),
+    transform var(--duration-press) var(--ease-out);
 }
 
-button:hover {
-  background-color: var(--primary-darker);
-  transform: translateY(-2px);
-  box-shadow: var(--shadow-primary-hover);
+@media (hover: hover) and (pointer: fine) {
+  button:hover {
+    background-color: var(--primary-darker);
+    transform: translateY(-1px);
+    box-shadow: var(--shadow-primary-hover);
+  }
 }
 
 button:focus,
@@ -25,7 +29,7 @@ button:focus-visible {
 }
 
 button:active {
-  transform: translateY(0);
+  transform: scale(0.97);
 }
 
 button:disabled {
@@ -39,13 +43,16 @@ button:disabled {
   border-radius: var(--border-radius-lg);
   background: var(--bg-primary);
   box-shadow: var(--shadow-md);
-  transition: all var(--transition-speed);
-  border: 1px solid var(--border-color);
+  transition: box-shadow var(--duration-slow) var(--ease-out),
+    transform var(--duration-slow) var(--ease-out),
+    border-color var(--duration-base) var(--ease-out);
 }
 
-.card:hover {
-  box-shadow: var(--shadow-lg);
-  transform: translateY(-4px);
+@media (hover: hover) and (pointer: fine) {
+  .card:hover {
+    box-shadow: var(--shadow-lg);
+    transform: translateY(-4px);
+  }
 }
 
 /* 输入框样式 */
@@ -58,7 +65,8 @@ textarea {
   padding: 0.6em 1em;
   font-family: inherit;
   font-size: 1em;
-  transition: all var(--transition-speed);
+  transition: border-color var(--duration-fast) var(--ease-out),
+    box-shadow var(--duration-fast) var(--ease-out);
 }
 
 input:focus,
@@ -131,7 +139,7 @@ textarea:focus {
 @keyframes fadeInUp {
   from {
     opacity: 0;
-    transform: translateY(30px);
+    transform: translateY(16px);
   }
   to {
     opacity: 1;
@@ -142,7 +150,7 @@ textarea:focus {
 @keyframes fadeInDown {
   from {
     opacity: 0;
-    transform: translateY(-20px);
+    transform: translateY(-12px);
   }
   to {
     opacity: 1;
@@ -151,15 +159,23 @@ textarea:focus {
 }
 
 .fade-in {
-  animation: fadeIn 0.6s ease-out;
+  animation: fadeIn var(--duration-enter) var(--ease-out);
 }
 
 .fade-in-up {
-  animation: fadeInUp 0.8s ease-out;
+  animation: fadeInUp var(--duration-enter) var(--ease-out);
 }
 
 .fade-in-down {
-  animation: fadeInDown 0.6s ease-out;
+  animation: fadeInDown var(--duration-enter) var(--ease-out);
+}
+
+/* 减弱动态：入场动画只保留淡入，去掉位移 */
+@media (prefers-reduced-motion: reduce) {
+  .fade-in-up,
+  .fade-in-down {
+    animation-name: fadeIn;
+  }
 }
 
 /* ============================================ */

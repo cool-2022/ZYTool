@@ -24,8 +24,35 @@ export function useChatView() {
     // 流式请求中止控制器
     let abortController: AbortController | null = null
 
+    // 可选模型列表与当前选中模型
+    interface ChatModel {
+        id: number
+        provider: string
+        model_name: string
+        display_name: string
+        is_enabled: boolean
+        priority: number
+    }
+    const chatModels = ref<ChatModel[]>([])
+    const selectedModelId = ref<number | undefined>(undefined)
+
     // 侧边栏是否折叠
     const sidebarCollapsed = ref(false)
+
+    // 加载模型列表
+    async function loadModels() {
+        try {
+            const response = await ApiService.getChatModels()
+            chatModels.value = response.models
+            // 默认选中 is_enabled 的模型（即后端默认模型）
+            if (selectedModelId.value === undefined) {
+                const enabled = response.models.find((m) => m.is_enabled)
+                selectedModelId.value = (enabled || response.models[0])?.id
+            }
+        } catch (error: any) {
+            console.error('加载模型列表失败:', error)
+        }
+    }
 
     // 加载会话列表
     async function loadSessions() {
@@ -53,6 +80,10 @@ export function useChatView() {
     // 选择会话
     async function selectSession(session: ChatSession) {
         currentSession.value = session
+        // 会话有记录的模型则跟随会话，否则保持当前选择
+        if (session.model_id) {
+            selectedModelId.value = session.model_id
+        }
         await loadMessages(session.id)
     }
 
@@ -156,7 +187,7 @@ export function useChatView() {
         abortController = new AbortController()
         let stopped = false
         try {
-            for await (const chunk of ApiService.chatStream(inputContent, sessionId, abortController.signal)) {
+            for await (const chunk of ApiService.chatStream(inputContent, sessionId, abortController.signal, selectedModelId.value)) {
                 const lastMsg = messages.value[messages.value.length - 1]
                 if (lastMsg && lastMsg.role === 'assistant') {
                     lastMsg.content += chunk
@@ -264,19 +295,22 @@ export function useChatView() {
 
     // 删除会话
     async function deleteSession(sessionId: string) {
+        const index = chatSessions.value.findIndex((s) => s.id === sessionId)
+        if (index === -1) return
+
+        // 乐观删除：立即从列表移除，失败再回滚
+        const [removed] = chatSessions.value.splice(index, 1)
+        if (currentSession.value?.id === sessionId) {
+            currentSession.value = null
+            messages.value = []
+        }
+
         try {
             await ApiService.deleteChatSession(sessionId)
-            const index = chatSessions.value.findIndex((s) => s.id === sessionId)
-            if (index > -1) {
-                chatSessions.value.splice(index, 1)
-                if (currentSession.value?.id === sessionId) {
-                    currentSession.value = null
-                    messages.value = []
-                }
-                message.success('已删除会话')
-            }
+            message.success('已删除会话')
         } catch (error: any) {
             console.error('删除会话失败:', error)
+            chatSessions.value.splice(Math.min(index, chatSessions.value.length), 0, removed)
             message.error('删除会话失败')
         }
     }
@@ -294,9 +328,9 @@ export function useChatView() {
         }
     }
 
-    // 组件初始化时加载会话列表
+    // 组件初始化时加载会话列表和模型列表
     async function init() {
-        await loadSessions()
+        await Promise.all([loadSessions(), loadModels()])
     }
 
     return {
@@ -308,6 +342,8 @@ export function useChatView() {
         sidebarCollapsed,
         loadingSessions,
         loadingMessages,
+        chatModels,
+        selectedModelId,
         selectSession,
         createNewSession,
         sendMessage,

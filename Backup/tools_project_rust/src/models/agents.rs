@@ -6,6 +6,8 @@ pub struct ChatRequest {
     pub message: String,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub session_id: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub model_id: Option<i64>,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -56,4 +58,19 @@ pub struct SessionsResponse {
 #[derive(Debug, Serialize, Deserialize)]
 pub struct MessagesResponse {
     pub messages: Vec<MessageResponse>,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct ModelInfo {
+    pub id: i64,
+    pub provider: String,
+    pub model_name: String,
+    pub display_name: String,
+    pub is_enabled: bool,
+    pub priority: i16,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct ModelsResponse {
+    pub models: Vec<ModelInfo>,
 }

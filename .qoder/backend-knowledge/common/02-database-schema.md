@@ -41,6 +41,9 @@ PostgreSQL（`zytool` 库），DDL 源文件：`ToolsAI/zytool.sql`。所有表�
 - `provider varchar(32)`、`model_name varchar(64)`、`display_name`、`api_base_url`、`api_key_encrypted`、`is_enabled`、`priority int2`、`max_tokens_default`、`config jsonb`
 - 唯一约束：`uk_ai_models_provider_model (provider, model_name)`
 - 索引：`idx_ai_models_enabled_priority (is_enabled, priority DESC)`
+- **已接入**：`services/agents/llm.rs::resolve_model` 取 `is_enabled=true` 且 priority 最高的模型（60s 内存缓存），无启用模型时回退 `.env` 的 `KIMI_*`
+- 当前数据：kimi 4 个模型（kimi-for-coding-highspeed 启用 priority=100，kimi-for-coding/k3/k3-256k 停用备用）；切换模型 = UPDATE is_enabled，60s 内生效
+- `api_key_encrypted` 加密存储（2026-08-07 起）：AES-256-GCM，密钥 = SHA-256(SECRET_KEY)，格式 `v1:base64(nonce+密文)`；加解密见 `core/crypto.rs`；加密工具 `cargo run -- encrypt-key <明文>`；历史明文数据兼容读取，启动时检测到明文会告警
 
 ### ai_prompt_templates
 - `name`、`content text`、`description`、`is_system bool`、`sort_order int2`
@@ -75,4 +78,4 @@ PostgreSQL（`zytool` 库），DDL 源文件：`ToolsAI/zytool.sql`。所有表�
 
 - Rust 侧访问：`src/services/agents/store.rs`（ai_sessions/ai_messages）、`src/routes/auth.rs`（users/user_auths）
 - 对外 ID 一律用 `session_uuid`/`message_uuid`（字符串），内部自增 `id` 不出 API
-- 当前已用字段子集；`ai_models`、`ai_prompt_templates`、`ai_session_settings`、`ai_message_feedbacks`、`parent_message_id` 等表/字段已建库但代码尚未接入，属预留扩展点
+- 当前已用字段子集；`ai_prompt_templates`、`ai_session_settings`、`ai_message_feedbacks`、`parent_message_id` 等表/字段已建库但代码尚未接入，属预留扩展点

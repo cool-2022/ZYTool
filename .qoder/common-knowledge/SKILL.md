@@ -10,9 +10,10 @@ ZYTool 项目公共层知识：架构、模块地图、开发规范、命令、�
 | 启动/构建/类型检查命令 | `resources/02-commands.md` |
 | 添加新功能流程、代码风格、提交前检查 | `resources/03-dev-conventions.md` |
 | 环境变量、配置项、密钥文件位置 | `resources/04-env-vars.md` |
-| Rust 后端具体功能（路由/服务/DB） | `../../rust-backend-knowledge/SKILL.md` |
-| Python 兜底后端具体功能 | `../../python-backend-knowledge/SKILL.md` |
-| 前端页面/组件/API 调用 | `../../frontend-knowledge/SKILL.md` |
+| 后端公共契约（接口一致性/SSE/CORS/DB 表结构） | `../backend-knowledge/common/` |
+| Rust 后端具体功能（路由/服务/DB） | `../backend-knowledge/rust/SKILL.md` |
+| Python 兜底后端具体功能 | `../backend-knowledge/python/SKILL.md` |
+| 前端页面/组件/API 调用 | `../frontend-knowledge/SKILL.md` |
 | 综合需求（跨前后端） | 公共层取架构与规范，模块层取业务细节 |
 
 ## 模块地图

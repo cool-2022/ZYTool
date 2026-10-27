@@ -21,11 +21,7 @@
 
 ## 统一响应结构
 
-后端 handler 返回 `Json<BaseResponse<T>>`：
-
-- `success: bool`、`message: Option<String>`、`base: Option<BaseInfo>`、`data: T`
-- `BaseInfo` 由前端请求头 `X-Base-Info` 传入（computer_name/ip/username/screen_name），中间件解析后经 Extension 透传
-- 前端 `unwrapResponse` 自动解包 `data`
+两端共同遵守的接口契约（`BaseResponse<T>` 字段、SSE 规范、CORS、认证）见 `../../backend-knowledge/common/01-api-contract.md`；前端 `unwrapResponse` 自动解包 `data`。
 
 ## 认证
 
@@ -35,9 +31,8 @@
 
 ## 数据库
 
-- PostgreSQL（可选），sqlx 连接池（`core/db.rs`）
+- PostgreSQL（可选，两端共用），表结构见 `../../backend-knowledge/common/02-database-schema.md`
 - 未连接时后端打印警告并以无 DB 模式启动（`main.rs` 中 `init_pool`）
-- AI 会话/消息持久化表：`ai_sessions`、`ai_messages`（软删除 status=3）
 
 ## API 入口
 

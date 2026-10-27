@@ -19,6 +19,12 @@ class Settings(BaseSettings):
         env="CORS_ORIGINS"
     )
 
+    # 额外放行本机/私网网段来源（IP 变化不影响开发使用，与 Rust 后端一致）
+    cors_origin_regex: str = Field(
+        default=r"^https?://(localhost|127\.0\.0\.1|[\w-]+\.local|192\.168\.\d{1,3}\.\d{1,3}|10\.\d{1,3}\.\d{1,3}\.\d{1,3}|172\.(1[6-9]|2[0-9]|3[01])\.\d{1,3}\.\d{1,3})(:\d+)?$",
+        env="CORS_ORIGIN_REGEX"
+    )
+
     log_level: str = Field(default="INFO", env="LOG_LEVEL")
     log_file: Optional[str] = Field(default="app.log", env="LOG_FILE")
     log_dir: str = Field(default="logs", env="LOG_DIR")

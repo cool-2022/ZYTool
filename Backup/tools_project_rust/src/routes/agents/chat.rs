@@ -16,27 +16,6 @@ use crate::services::agents::{llm, store};
 
 use super::sessions::require_pool;
 
-// #region debug-point helper
-fn debug_log(hypothesis_id: &str, location: &str, msg: &str, data: serde_json::Value) {
-    let payload = serde_json::json!({
-        "sessionId": "ai-chat-network-error",
-        "runId": "pre-fix",
-        "hypothesisId": hypothesis_id,
-        "location": location,
-        "msg": format!("[DEBUG] {}", msg),
-        "data": data,
-        "ts": chrono::Utc::now().timestamp_millis(),
-    });
-    tokio::spawn(async move {
-        let _ = reqwest::Client::new()
-            .post("http://127.0.0.1:7777/event")
-            .json(&payload)
-            .send()
-            .await;
-    });
-}
-// #endregion
-
 const HISTORY_LIMIT: i64 = 20;
 
 /// 解析会话：有 session_id 则校验归属，没有则自动创建；返回 (内部 session_id, 新会话 uuid)
@@ -72,9 +51,6 @@ pub async fn chat(
     current_user: CurrentUser,
     Json(req): Json<ChatRequest>,
 ) -> AppResult<Sse<impl Stream<Item = Result<Event, Infallible>>>> {
-    // #region debug-point A:chat-handler-start
-    debug_log("A", "chat.rs:chat-handler-start", "chat handler invoked", serde_json::json!({ "message_len": req.message.len(), "session_id": req.session_id }));
-    // #endregion
     if req.message.trim().is_empty() {
         return Err(bad_request("message is required"));
     }
@@ -86,10 +62,7 @@ pub async fn chat(
         resolve_session(pool, user_id, req.session_id.as_deref()).await?;
 
     // 保存用户消息
-    store::save_user_message(pool, session_id, &req.message, None).await?;
-    // #region debug-point D:user-message-saved
-    debug_log("D", "chat.rs:user-message-saved", "user message saved", serde_json::json!({ "session_id": session_id }));
-    // #endregion
+    store::save_user_message(pool, session_id, &req.message, req.model_id).await?;
 
     // 拼接历史上下文（含刚保存的用户消息）
     let history = store::list_history_messages(pool, session_id, HISTORY_LIMIT).await?;
@@ -97,17 +70,21 @@ pub async fn chat(
     // 新会话用首条消息更新标题
     let title_for_update = new_session_uuid.as_ref().map(|_| trim_title(&req.message));
 
+    // 解析模型配置（请求指定 model_id 优先，其次 ai_models 默认，最后回退 .env）
+    let model = llm::resolve_model(Some(pool), req.model_id).await;
+
+    // 指定了模型则持久化到会话
+    if req.model_id.is_some() {
+        let _ = store::update_session_model(pool, session_id, req.model_id).await;
+    }
+
     // 生成回复流：Kimi 或占位
-    // #region debug-point A:llm-config-check
-    debug_log("A", "chat.rs:llm-config-check", "llm configured check", serde_json::json!({ "configured": llm::is_configured(), "history_len": history.len() }));
-    // #endregion
     let reply_stream: std::pin::Pin<Box<dyn Stream<Item = Result<String, crate::core::error::AppError>> + Send>> =
-        if llm::is_configured() {
-            Box::pin(llm::chat_stream(history).await?)
-        } else {
-            Box::pin(stream::once(async move {
+        match model {
+            Some(cfg) => Box::pin(llm::chat_stream(history, cfg).await?),
+            None => Box::pin(stream::once(async move {
                 Ok(format!("AI 助手占位回复: {}", req.message))
-            }))
+            })),
         };
 
     // 边转发边累积完整回复
@@ -128,13 +105,14 @@ pub async fn chat(
 
     // 流结束后异步保存助手消息并更新统计
     let pool_for_save = pool.clone();
+    let model_id_for_save = req.model_id;
     let done_stream = stream::once(async move {
         let reply = accumulated.lock().await.clone();
         if let (Some(title), Some(sid)) = (title_for_update, new_session_uuid) {
             let _ = store::update_session_title(&pool_for_save, user_id, &sid, title).await;
         }
         if !reply.is_empty() {
-            let _ = store::save_assistant_message(&pool_for_save, session_id, &reply, None, 0).await;
+            let _ = store::save_assistant_message(&pool_for_save, session_id, &reply, model_id_for_save, 0).await;
             let _ = store::increment_session_stats(&pool_for_save, session_id, 0).await;
         }
         Ok::<Event, Infallible>(Event::default().data("[DONE]"))
@@ -163,16 +141,19 @@ pub async fn chat_sync(
     let (session_id, new_session_uuid) =
         resolve_session(pool, user_id, req.session_id.as_deref()).await?;
 
-    store::save_user_message(pool, session_id, &req.message, None).await?;
+    store::save_user_message(pool, session_id, &req.message, req.model_id).await?;
     let history = store::list_history_messages(pool, session_id, HISTORY_LIMIT).await?;
 
-    let (reply, tokens) = if llm::is_configured() {
-        llm::chat_complete(history).await?
-    } else {
-        (format!("AI 助手占位回复: {}", req.message), 0)
+    let model = llm::resolve_model(Some(pool), req.model_id).await;
+    if req.model_id.is_some() {
+        let _ = store::update_session_model(pool, session_id, req.model_id).await;
+    }
+    let (reply, tokens) = match model {
+        Some(cfg) => llm::chat_complete(history, cfg).await?,
+        None => (format!("AI 助手占位回复: {}", req.message), 0),
     };
 
-    store::save_assistant_message(pool, session_id, &reply, None, tokens).await?;
+    store::save_assistant_message(pool, session_id, &reply, req.model_id, tokens).await?;
     store::increment_session_stats(pool, session_id, tokens).await?;
 
     if let Some(sid) = new_session_uuid {

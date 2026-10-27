@@ -14,6 +14,7 @@ pub fn router() -> Router {
             delete(sessions::delete_session).patch(sessions::update_session_title),
         )
         .route("/sessions/{session_id}/messages", get(sessions::list_messages))
+        .route("/models", get(sessions::list_models))
         .route("/chat", post(chat::chat))
         .route("/chat/sync", post(chat::chat_sync))
 }

@@ -61,6 +61,16 @@
   --border-radius-lg: 14px;
   --border-radius-xl: 20px;
   --transition-speed: 0.25s;
+
+  /* 动效 token（缓动曲线与时长，来源：UI 动画设计规范） */
+  --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+  --ease-in-out: cubic-bezier(0.77, 0, 0.175, 1);
+  --ease-drawer: cubic-bezier(0.32, 0.72, 0, 1);
+  --duration-press: 160ms;
+  --duration-fast: 150ms;
+  --duration-base: 200ms;
+  --duration-slow: 250ms;
+  --duration-enter: 300ms;
 }
 
 /* 深色模式 - 通过 data-theme="dark" 控制 */

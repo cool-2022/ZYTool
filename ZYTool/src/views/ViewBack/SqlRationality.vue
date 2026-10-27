@@ -367,7 +367,7 @@ function clearAll() {
     cursor: pointer;
     text-align: left;
     border-radius: 6px;
-    transition: transform .12s ease, box-shadow .12s ease;
+    transition: transform var(--duration-press) var(--ease-out), box-shadow var(--duration-press) var(--ease-out);
     background: var(--bg-secondary);
 }
 

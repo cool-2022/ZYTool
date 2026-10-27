@@ -6,7 +6,7 @@
 
 ## 核心约定
 
-在处理本项目（100_Code / ZYTool）的任何需求时，**默认读取并使用 `.trar/` 下的知识库**。不要仅凭代码搜索或经验直接回答，应先按本约定定位并读取相关文档。
+在处理本项目（100_Code / ZYTool）的任何需求时，**默认读取并使用 `.qoder/` 下的知识库**。不要仅凭代码搜索或经验直接回答，应先按本约定定位并读取相关文档。
 
 针对有序解决的问题，在给出解决方案的同时，**应识别并完善相关知识点**：若现有知识库存在缺失、过时或与代码不一致之处，须按维护规则更新对应知识库文件，确保后续会话能复用。
 
@@ -16,17 +16,20 @@
 
 ```
 100_Code/
-├── .trar/common-knowledge/           # 公共层：架构、模块地图、双后端机制、开发规范、命令、环境变量
-│   ├── SKILL.md                      #   入口：路由规则（判断问题归属）
-│   └── resources/                    #   01-architecture / 02-commands / 03-dev-conventions / 04-env-vars
-├── .trar/rust-backend-knowledge/     # Rust 后端（axum，主后端，端口 8000）
-├── .trar/python-backend-knowledge/   # Python 后端（FastAPI，兜底，端口 8001）
-└── .trar/frontend-knowledge/         # 前端（Vue 3 + TS，ZYTool/，端口 5050）
+├── .qoder/common-knowledge/           # 公共层：架构、模块地图、双后端机制、开发规范、命令、环境变量
+│   ├── SKILL.md                       #   入口：路由规则（判断问题归属）
+│   └── resources/                     #   01-architecture / 02-commands / 03-dev-conventions / 04-env-vars
+├── .qoder/backend-knowledge/          # 后端：Rust + Python 统一入口
+│   ├── SKILL.md                       #   入口：后端路由规则
+│   ├── common/                        #   双端公共：01-api-contract（接口契约/SSE/CORS）/ 02-database-schema
+│   ├── rust/                          #   Rust 专有（axum，主后端，端口 8000）
+│   └── python/                        #   Python 专有（FastAPI，兜底，端口 8001）
+└── .qoder/frontend-knowledge/         # 前端（Vue 3 + TS，ZYTool/，端口 5050）
 ```
 
 ## 使用规则
 
-1. **会话开始时，或接到任何任务时，先读取 `.trar/common-knowledge/SKILL.md`**，按其中的路由规则判断问题归属；
+1. **会话开始时，或接到任何任务时，先读取 `.qoder/common-knowledge/SKILL.md`**，按其中的路由规则判断问题归属；
 2. **公共问题**（系统架构、双后端机制、统一响应结构、认证、构建命令、开发规范、环境变量）→ 读取 `common-knowledge/resources/` 下对应资源文件；
 3. **具体端问题**（Rust 路由/服务/DB、Python 兜底接口、前端页面/组件）→ 先读取对应端知识库的 `SKILL.md`；
 4. **综合需求**（如"新增一个工具"）→ 两层结合：公共层取架构与规范，模块层取业务细节；
