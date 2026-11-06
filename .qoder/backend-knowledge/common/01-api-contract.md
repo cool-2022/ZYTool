@@ -6,7 +6,7 @@
 
 - 目标：统一前缀 `/api/v1`，两端接口路径、请求/响应结构保持一致
 - 前端普通请求走 `requestWithFallback`：网络错误/超时/5xx 自动降级 Python；**4xx 不降级**
-- Python 缺失的接口在降级后返回 404；Agents 会话/模型、账号绑定/QQ 登录、DB 健康检查目前没有 Python 兜底
+- Python 缺失的接口在降级后返回 404；Agents 会话/模型、账号绑定/QQ 登录、DB 健康检查目前没有 Python 兜底；admin 后台管理接口已于 2026-11-06 全部补齐
 - 新增/修改后端接口时原则上两端同步实现；若暂不同步，必须在各自知识库标注能力差异
 
 ## 统一响应结构
@@ -36,6 +36,6 @@
 
 ## 数据库
 
-- 仅 Rust 接入 PostgreSQL（`zytool` 库），表结构见 `02-database-schema.md`；Python 当前无 DB 接入
-- Rust 启动时只初始化一次连接池，失败后以无 DB 模式运行；DB 恢复后通常仍需重启进程。Agent 和多数认证接口此时返回 500，DB 无关工具仍可使用
+- 双端均接入 PostgreSQL（`zytool` 库），表结构见 `02-database-schema.md`；Python 自 2026-11-06 起通过 asyncpg 懒加载连接池接入（`app/core/db.py`，`DATABASE_URL` 配置，json/jsonb 自动解码），当前仅供 admin 后台管理接口使用
+- Rust 启动时只初始化一次连接池，失败后以无 DB 模式运行；DB 恢复后通常仍需重启进程。Agent 和多数认证接口此时返回 500，DB 无关工具仍可使用；Python 侧为懒加载，DB 恢复后无需重启
 - Rust 启动不自动建表或执行 migration，初始化前置条件见 `02-database-schema.md`

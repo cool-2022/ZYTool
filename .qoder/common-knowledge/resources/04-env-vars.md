@@ -26,7 +26,7 @@ Python 有两套配置加载路径：
 
 - `app/core/config.py` 的 `Settings` 从 `.env` 和环境变量读取应用、JWT、CORS、天气配置；天气变量名为 `QWEATHER_API_KEY` / `QWEATHER_HOST`
 - `services/Agents/deepseek_client.py` 另行从 `.env.development` 和环境变量读取 `KIMI_API_KEY/KIMI_BASE_URL/KIMI_MODEL`，未配置密钥时回退 `DEEPSEEK_API_KEY`
-- `PORT` 默认 8000；与 Rust 并行时必须显式设为 8001
+- `PORT` 默认 8000；当前 .env 显式 `PORT=10004`，与 Rust（10003）并行
 - `RATE_LIMIT_*`、`MAX_REQUEST_SIZE` 未接入有效中间件；`LOG_DIR` 未传入日志初始化
 
 ## 前端（ZYTool/，Vite 环境变量）
@@ -36,7 +36,7 @@ Python 有两套配置加载路径：
 | 变量 | 用途 | 默认 |
 |---|---|---|
 | `VITE_RUST_API_BASE_URL` | Rust 后端地址 | 默认跟随访问 hostname（`http://${hostname}:10003`），localhost/IP 打开自动适配；设值则固定 |
-| `VITE_PYTHON_API_BASE_URL` | Python 后端地址 | 同上（8001） |
+| `VITE_PYTHON_API_BASE_URL` | Python 后端地址 | 同上（10004） |
 | `VITE_AMAP_KEY` | 高德地图 JS API Key | 有内置开发 Key |
 
 `.env.example` 中的 `VITE_MAP_CENTER` 当前未被源码读取，设置它不会改变地图中心；两个地图页面的默认中心点仍在组件内。

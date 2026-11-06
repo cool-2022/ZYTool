@@ -47,7 +47,7 @@ Rust 用户数据依赖 PostgreSQL；Python 不与该用户库同步。
 
 ## 后台管理
 
-以下 Rust 接口均要求 JWT 且 `roles` 含 `admin`（非管理员返回 403）；Python 缺失。
+以下接口均要求 JWT 且 `roles` 含 `admin`（非管理员返回 403）。**Python 已全部实现兜底（2026-11-06，asyncpg 连接池 + jose 校验同一 SECRET_KEY）**：路径、参数、响应结构与 Rust 对齐，含字根同步的 DDL 操作；`/admin/services` 在 Python 侧返回 Python 自身身份（name 带 `(Python)` 后缀）。
 
 ### 数据库表（只读）
 

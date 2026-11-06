@@ -19,3 +19,5 @@ requests>=2.31.0
 
 # MCP
 mcp>=1.0.0
+# Database
+asyncpg>=0.29

@@ -115,7 +115,7 @@ GCPM 页面使用 `Mock/GCPMRuleData`，当前实现规则表格、三种流程�
 ## 后台管理
 
 - 外壳 `views/Admin/AdminView.vue/.ts/.css`，路由 `/admin`（旧 `/admin/database` 重定向）；顶栏「管理」入口仅 `userInfo.roles` 含 `admin` 时显示（App.vue `isAdmin`）。
-- **统一表格复用件 `src/components/AdminTable.vue`**：分页条固定在表头上方（`total` 传 null 则隐藏）、表头吸附滚动（`stickyTop` 视口偏移）、列宽拖拽（表头右侧手柄，Pointer Events）、列级筛选（列配置加 `filterable: true`，表头漏斗下拉输入，客户端仅筛当前页）；`bodyCell/expandedRowRender/emptyText` 插槽透传。后续管理类表格一律用它，不再直接写 a-table。
+- **统一表格复用件 `src/styles/gridView/` 模块**（GridView.vue + gridView.css + index.ts，插槽式插件，`import GridView from '@/styles/gridView'`）：分页条固定在表头上方（`total` 传 null 则隐藏）、表头吸附滚动（`stickyTop` 视口偏移）、列宽拖拽（表头右侧手柄，Pointer Events）、列级筛选（列配置加 `filterable: true`，表头漏斗下拉输入，客户端仅筛当前页）；`bodyCell/expandedRowRender/emptyText` 插槽透传。后续管理类表格一律用它，不再直接写 a-table。
 - **固定区布局**：分类菜单（顶 56px 吸附）→ 面板工具条（104px）→ 分页条（156px）→ 表头（202px）逐级吸附，滚动时红框区域不动；≤768px 工具条/分页条降级为随内容滚动。
 - 顶部单行原生按钮分类菜单：数据库管理 / 字根管理 / 服务管理；面板首次切换到时才挂载（visited 集合），之后 v-show 切换保留状态。页面级 `--admin-*` 变量、antd 覆盖、头部、forbidden/panel-toolbar 共用样式在 `AdminView.css`（`.admin-page :deep(...)`），面板 CSS 只写自身样式。
 - 数据库管理 `DatabaseAdminView.vue/.ts/.css`：左侧 264px 表列表（名称＋注释、可关键词过滤、吸顶，≤900px 收为顶部区块）；右侧「数据浏览 / 表结构」两个标签页：数据浏览支持整行模糊搜索与分页（每页条数可选 10/20/50/100，默认 20，切换条数回到第一页；字根管理列表分页同款），NULL/布尔/JSON 单元格分别格式化；表结构含主键徽标、类型、可空、默认值、注释。接口 `ApiService.getAdminTables / getAdminTableColumns / getAdminTableRows`。

@@ -3,7 +3,7 @@ import { message } from 'ant-design-vue'
 import { ApiService } from '@/services/api'
 import type { AdminColumnInfo, AdminRowsData, AdminTableInfo } from '@/services/api'
 
-const PAGE_SIZE_OPTIONS = ['10', '20', '50', '100']
+const PAGE_SIZE_OPTIONS = ['20', '50', '100', '500']
 
 export function useDatabaseAdminView() {
     const tables = ref<AdminTableInfo[]>([])

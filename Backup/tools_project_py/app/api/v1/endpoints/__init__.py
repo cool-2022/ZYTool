@@ -1,6 +1,7 @@
 from fastapi import APIRouter
 
 from .agents_router import router as agents_router
+from .admin_router import router as admin_router
 from .auth_router import router as auth_router
 from .health_router import router as health_router
 from .map_router import router as map_router
@@ -29,6 +30,7 @@ tools_router.include_router(timestamp_router)                   # /tools/timesta
 tools_router.include_router(map_router, prefix="/map")          # /tools/map/route
 
 router = APIRouter()
+router.include_router(admin_router)       # 内置 prefix="/admin"
 router.include_router(agents_router, prefix="/agents", tags=["agents"])
 router.include_router(auth_router)        # 内置 prefix="/auth"
 router.include_router(health_router)      # 内置 prefix="/health"

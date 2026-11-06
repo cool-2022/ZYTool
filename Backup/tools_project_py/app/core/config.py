@@ -44,6 +44,9 @@ class Settings(BaseSettings):
     algorithm: str = Field(default="HS256", env="ALGORITHM")
     access_token_expire_minutes: int = Field(default=30, env="ACCESS_TOKEN_EXPIRE_MINUTES")
 
+    # 数据库（PostgreSQL，后台管理接口使用；与 Rust 后端同库）
+    database_url: str = Field(default="", env="DATABASE_URL")
+
     # 和风天气 API 配置
     qweather_key: str = Field(default="", env="QWEATHER_API_KEY")
     qweather_host: str = Field(default="https://devapi.qweather.com", env="QWEATHER_HOST")

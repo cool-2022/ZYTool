@@ -1,4 +1,4 @@
-/* 字根管理面板（页面级变量、权限不足、工具条样式见 AdminView.css；分页条/表头吸附在 AdminTable 组件内） */
+/* 字根管理面板（页面级变量、权限不足、工具条样式见 AdminView.css；分页条/表头吸附在 styles/gridView 模块内） */
 .roots-card { margin-top: 12px; background: var(--admin-surface); border: 1px solid var(--admin-line); border-radius: 13px; padding: 6px 18px 18px; }
 .root-name { font-weight: 600; font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace; }
 .root-code { padding: 1px 7px; border-radius: 5px; font-size: 12px; background: var(--admin-code-bg); color: var(--admin-muted); font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace; }

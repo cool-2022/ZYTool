@@ -1,20 +1,12 @@
 #!/bin/bash
 
 # ZYTool Backend 启动脚本
+# 端口等配置统一走 app/core/config.py（.env / 环境变量 PORT），本脚本不再硬编码端口
 
-# 切换到 Backup 根目录（app 包的父目录）
 cd "$(dirname "$0")"
-
-# 设置Python路径
 export PYTHONPATH="${PYTHONPATH}:$(pwd)"
 
-# 启动服务器
 echo "🚀 启动ZYTool Backend服务器..."
 echo "📍 工作目录: $(pwd)"
-echo "🐍 Python路径: $PYTHONPATH"
 
-# 使用uvicorn启动
-#uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
-
-# 或者使用Python模块方式启动
- python3 -m uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+python3 run.py

@@ -2,7 +2,7 @@
 import {
   ReloadOutlined, PlusOutlined, LockOutlined, InboxOutlined, ScanOutlined, SyncOutlined,
 } from '@ant-design/icons-vue'
-import AdminTable from '@/components/AdminTable.vue'
+import GridView from '@/styles/gridView'
 import { useRootsAdminView } from './RootsAdminView'
 
 const {
@@ -43,7 +43,7 @@ const {
       </div>
 
       <div class="roots-card">
-        <AdminTable
+        <GridView
           :columns="columns"
           :data-source="rows"
           :loading="loading"
@@ -135,7 +135,7 @@ const {
           <template #emptyText>
             <div class="roots-empty"><InboxOutlined /><span>{{ keyword ? '没有匹配的字段' : '数据库 public 模式下没有字段（id/created_at/updated_at 已排除）' }}</span></div>
           </template>
-        </AdminTable>
+        </GridView>
       </div>
 
       <a-modal

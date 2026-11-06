@@ -1,12 +1,18 @@
 <script setup lang="ts">
 import { computed, reactive } from 'vue'
 
+/**
+ * GridView 复用表格（插槽式插件）
+ * - 分页条固定在表头上方（total 传 null 隐藏分页）
+ * - 表头吸附滚动（stickyTop 为上方固定区总高度）
+ * - 列宽拖拽、列级筛选（列配置 filterable: true，客户端筛当前页）
+ * - bodyCell / expandedRowRender / emptyText 插槽透传
+ */
 interface Props {
     columns: any[]
     dataSource: any[]
     loading?: boolean
     rowKey: string
-    /** null/undefined 不显示分页条（如表结构页） */
     total?: number | null
     page?: number
     pageSize?: number
@@ -86,9 +92,9 @@ const pagerTopValue = computed(() => props.pagerTop ?? Math.max(0, props.stickyT
 </script>
 
 <template>
-  <div class="admin-table">
-    <div v-if="total !== null && total !== undefined" class="admin-table-pager" :style="{ top: pagerTopValue + 'px' }">
-      <span class="pager-total">共 {{ total }} 条</span>
+  <div class="grid-view">
+    <div v-if="total !== null && total !== undefined" class="gv-pager" :style="{ top: pagerTopValue + 'px' }">
+      <span class="gv-pager-total">共 {{ total }} 条</span>
       <a-pagination
         :current="page"
         :page-size="pageSize"
@@ -112,15 +118,15 @@ const pagerTopValue = computed(() => props.pagerTop ?? Math.max(0, props.stickyT
       :sticky="{ offsetHeader: stickyTop }"
     >
       <template #headerCell="{ column }">
-        <span class="th-text">{{ column.title }}</span>
+        <span class="gv-th-text">{{ column.title }}</span>
         <span
-          class="col-resize-handle"
+          class="gv-col-resize"
           @pointerdown="startResize($event, String(column.key ?? column.dataIndex))"
           @click.stop
         />
       </template>
       <template #customFilterDropdown="{ column }">
-        <div class="col-filter">
+        <div class="gv-col-filter">
           <a-input
             v-model:value="filters[String(column.dataIndex)]"
             :placeholder="`筛选 ${column.title}`"
@@ -136,57 +142,4 @@ const pagerTopValue = computed(() => props.pagerTop ?? Math.max(0, props.stickyT
   </div>
 </template>
 
-<style scoped>
-/* 分页条固定在表头上方 */
-.admin-table-pager {
-  position: sticky;
-  z-index: 28;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  height: 46px;
-  padding: 7px 2px;
-  box-sizing: border-box;
-  background: var(--admin-surface);
-  border-bottom: 1px solid var(--admin-line);
-}
-.pager-total { color: var(--admin-caption); font-size: 12px; white-space: nowrap; }
-
-/* 表头吸附层级低于工具条 */
-.admin-table :deep(.ant-table-sticky-holder) { z-index: 27; }
-
-/* 表头拖拽手柄 */
-.admin-table :deep(.ant-table-thead > tr > th) { position: relative; }
-.th-text { display: inline-block; max-width: calc(100% - 10px); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.col-resize-handle {
-  position: absolute;
-  right: -5px;
-  top: 0;
-  bottom: 0;
-  width: 10px;
-  cursor: col-resize;
-  touch-action: none;
-}
-.col-resize-handle::after {
-  content: '';
-  position: absolute;
-  right: 4px;
-  top: 25%;
-  bottom: 25%;
-  width: 2px;
-  border-radius: 1px;
-  background: transparent;
-  transition: background-color var(--duration-fast) var(--ease-out);
-}
-@media (hover: hover) and (pointer: fine) {
-  .col-resize-handle:hover::after { background: var(--admin-accent-line); }
-}
-
-/* 筛选下拉 */
-.col-filter { padding: 8px; width: 200px; }
-
-@media (max-width: 768px) {
-  .admin-table-pager { position: static; }
-}
-</style>
+<style scoped src="./gridView.css"></style>

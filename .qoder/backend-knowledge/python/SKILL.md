@@ -1,6 +1,6 @@
 # Python 后端知识库（backend-knowledge/python）
 
-位置：`Backup/tools_project_py/`（FastAPI）。双后端部署期望使用 8001，但源码 `Settings.port` 和 `start_server.sh` 当前默认/硬编码为 **8000**；与 Rust 并行运行时需显式设置 `PORT=8001`，不要直接使用现有 `start_server.sh`。
+位置：`Backup/tools_project_py/`（FastAPI）。当前使用 10004（`.env` 的 `PORT=10004`，2026-11-06 起）；源码 `Settings.port` 默认为 8000；`start_server.sh` 已改为调用 `python3 run.py`，端口统一由 config/.env 决定。
 
 ## 定位
 
@@ -31,7 +31,7 @@ app/
 - LLM 客户端另行加载 `.env.development`：`KIMI_API_KEY/KIMI_BASE_URL/KIMI_MODEL` 优先，未配置回退 `DEEPSEEK_API_KEY`；模型名统一用 `deepseek_client.model`，不要硬编码
 - Python 天气变量名为 `QWEATHER_API_KEY` / `QWEATHER_HOST`，不要与 Rust 的 `QWEATHER_KEY` 混写
 - `rate_limit_*`、`max_request_size` 当前未接入有效中间件；`log_dir` 未传入日志初始化，均属声明或预留配置
-- 启动：`python3 -m pip install -r requirements.txt`，然后 `PORT=8001 python3 run.py`
+- 启动：`python3 -m pip install -r requirements.txt`，然后 `python3 run.py`（端口取 .env 的 PORT=10004）
 
 ## 当前兼容性边界
 

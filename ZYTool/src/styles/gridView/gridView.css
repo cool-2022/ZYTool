@@ -1,0 +1,54 @@
+/* GridView 复用表格组件样式（styles/gridView 模块） */
+
+/* 分页条固定在表头上方 */
+.gv-pager {
+  position: sticky;
+  z-index: 28;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  height: 46px;
+  padding: 7px 2px;
+  box-sizing: border-box;
+  background: var(--admin-surface);
+  border-bottom: 1px solid var(--admin-line);
+}
+.gv-pager-total { color: var(--admin-caption); font-size: 12px; white-space: nowrap; }
+
+/* 表头吸附层级低于工具条 */
+.grid-view :deep(.ant-table-sticky-holder) { z-index: 27; }
+
+/* 表头拖拽手柄 */
+.grid-view :deep(.ant-table-thead > tr > th) { position: relative; }
+.gv-th-text { display: inline-block; max-width: calc(100% - 10px); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.gv-col-resize {
+  position: absolute;
+  right: -5px;
+  top: 0;
+  bottom: 0;
+  width: 10px;
+  cursor: col-resize;
+  touch-action: none;
+}
+.gv-col-resize::after {
+  content: '';
+  position: absolute;
+  right: 4px;
+  top: 25%;
+  bottom: 25%;
+  width: 2px;
+  border-radius: 1px;
+  background: transparent;
+  transition: background-color var(--duration-fast) var(--ease-out);
+}
+@media (hover: hover) and (pointer: fine) {
+  .gv-col-resize:hover::after { background: var(--admin-accent-line); }
+}
+
+/* 列筛选下拉 */
+.gv-col-filter { padding: 8px; width: 200px; }
+
+@media (max-width: 768px) {
+  .gv-pager { position: static; }
+}

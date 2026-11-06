@@ -19,10 +19,10 @@ cargo check            # 快速类型检查
 
 ```bash
 python3 -m pip install -r requirements.txt
-PORT=8001 python3 run.py  # 与 Rust 并行时显式使用 8001
+python3 run.py  # 端口取 .env 的 PORT=10004（2026-11-06 起持久化）
 ```
 
-源码默认端口和 `start_server.sh` 硬编码端口目前均为 8000，与 Rust 冲突，不要直接用该脚本做双后端启动。
+源码默认端口为 8000；`start_server.sh` 已改为调用 `python3 run.py`，端口统一由 config/.env 决定，不再硬编码。
 
 ## 前端（ZYTool/）
 
