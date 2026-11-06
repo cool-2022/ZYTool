@@ -19,7 +19,7 @@ ZYTool 项目公共层知识：架构、模块地图、开发规范、命令、�
 
 ## 模块地图
 
-- `Backup/tools_project_rust/`：Rust axum 主后端（端口 8000）
+- `Backup/tools_project_rust/`：Rust axum 主后端（.env `PORT=10003`，源码默认 8000）
 - `Backup/tools_project_py/`：Python FastAPI 部分兜底后端（部署预期端口 8001，源码默认 8000）
 - `ZYTool/`：Vue 3 + TS 前端（开发端口 5050）
 

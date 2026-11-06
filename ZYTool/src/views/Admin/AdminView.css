@@ -1,0 +1,132 @@
+.admin-page {
+  --admin-bg: var(--workspace-bg);
+  --admin-surface: var(--workspace-surface);
+  --admin-soft: var(--workspace-soft);
+  --admin-ink: var(--workspace-text);
+  --admin-muted: var(--workspace-muted);
+  --admin-caption: var(--workspace-caption);
+  --admin-line: var(--workspace-line);
+  --admin-coral: var(--workspace-accent);
+  --admin-coral-hover: var(--workspace-accent-hover);
+  --admin-accent-soft: var(--workspace-accent-soft);
+  --admin-accent-line: var(--workspace-accent-line);
+  --admin-green: var(--workspace-green);
+  --admin-green-soft: var(--workspace-green-soft);
+  --admin-sand: var(--workspace-sand);
+  --admin-sand-soft: var(--workspace-sand-soft);
+  --admin-on-accent: #fff;
+  --admin-null: #b3a592;
+  --admin-code-bg: #f6f1e8;
+  /* 将全局 Ant Design 样式覆盖限定在暖色工作区配色中。 */
+  --primary-color: var(--admin-coral);
+  --primary-dark: var(--admin-coral-hover);
+  --primary-darker: var(--admin-coral-hover);
+  --bg-primary: var(--admin-surface);
+  --bg-secondary: var(--admin-bg);
+  --bg-tertiary: var(--admin-surface);
+  --bg-hover: var(--admin-soft);
+  --text-primary: var(--admin-ink);
+  --text-secondary: var(--admin-muted);
+  --text-tertiary: var(--admin-caption);
+  --text-inverse: var(--admin-on-accent);
+  --border-color: var(--admin-line);
+  --border-light: var(--admin-line);
+  --border-dark: var(--admin-line);
+  --shadow-primary-hover: var(--workspace-shadow-hover);
+  min-height: calc(100vh - 56px);
+  background: var(--admin-bg);
+  color: var(--admin-ink);
+  padding: 20px var(--page-gutter) 10px;
+  font-family: Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+  font-size: 14px;
+  line-height: 1.6;
+}
+:global(:root[data-theme="dark"] .admin-page) {
+  --admin-on-accent: #24221f;
+  --admin-null: var(--admin-caption);
+  --admin-code-bg: var(--admin-soft);
+}
+.admin-shell { max-width: var(--page-max-width); margin: 0 auto; }
+.admin-page h1, .admin-page h2, .admin-page h3, .admin-page p { margin: 0; color: inherit; }
+.admin-page :deep(button) { transform: none; box-shadow: none; }
+.admin-page :deep(button:where(:not(:disabled):not(.ant-btn-disabled)):active) { transform: scale(0.97); }
+.admin-page :deep(button:focus-visible) { outline: 2px solid var(--admin-coral); outline-offset: 3px; }
+.admin-page :deep(.ant-btn-default:not(.ant-btn-dangerous):where(:not(:disabled):not(.ant-btn-disabled))) { background: var(--admin-surface); color: var(--admin-ink); border-color: var(--admin-line); }
+.admin-page :deep(.ant-btn-primary:not(.ant-btn-dangerous):not(:disabled):not(.ant-btn-disabled)) { background: var(--admin-coral); border-color: var(--admin-coral); color: var(--admin-on-accent); }
+.admin-page :deep(.ant-btn:disabled), .admin-page :deep(.ant-btn.ant-btn-disabled) { background: var(--admin-soft); border-color: var(--admin-line); color: var(--admin-caption); box-shadow: none; }
+.admin-page :deep(.ant-input), .admin-page :deep(.ant-input-affix-wrapper), .admin-page :deep(.ant-select-selector), .admin-page :deep(.ant-input-number) { background: var(--admin-surface); border-color: var(--admin-line); color: var(--admin-ink); }
+.admin-page :deep(.ant-input::placeholder) { color: var(--admin-caption); }
+.admin-page :deep(.ant-input-affix-wrapper .ant-input) { background: transparent; }
+.admin-page :deep(.ant-input:focus), .admin-page :deep(.ant-input-affix-wrapper-focused), .admin-page :deep(.ant-input-number-focused) { border-color: var(--admin-coral); box-shadow: 0 0 0 2px var(--admin-accent-soft); }
+.admin-page :deep(.ant-input-clear-icon) { color: var(--admin-caption); }
+.admin-page :deep(.ant-pagination-item-link) { background: var(--admin-surface); color: var(--admin-ink); border-color: var(--admin-line); }
+.admin-page :deep(.ant-pagination-disabled .ant-pagination-item-link) { background: var(--admin-soft); color: var(--admin-caption); }
+
+/* 表格暖色适配 */
+.admin-page :deep(.ant-table) { background: var(--admin-surface); color: var(--admin-ink); }
+.admin-page :deep(.ant-table-thead > tr > th) { background: var(--admin-soft); color: var(--admin-muted); border-color: var(--admin-line); font-weight: 600; font-size: 12px; }
+.admin-page :deep(.ant-table-tbody > tr > td) { border-color: var(--admin-line); font-size: 13px; }
+.admin-page :deep(.ant-table-tbody > tr:hover > td) { background: var(--admin-soft) !important; }
+.admin-page :deep(.ant-table-cell) { color: var(--admin-ink); }
+.admin-page :deep(.ant-table-container), .admin-page :deep(.ant-table-content) { border-radius: 10px; }
+.admin-page :deep(.ant-spin-dot-item) { background: var(--admin-coral); }
+
+/* 头部 */
+.admin-header { display: flex; align-items: center; justify-content: space-between; gap: 14px; padding: 0 0 12px; border-bottom: 1px solid var(--admin-line); }
+.admin-brand { display: flex; align-items: center; gap: 12px; }
+.admin-mark { display: grid; place-items: center; width: 42px; height: 46px; color: var(--admin-coral); background: var(--admin-accent-soft); border-radius: 11px; font-size: 25px; transform: rotate(-5deg); }
+.admin-brand h1 { font-size: 22px; font-weight: 600; letter-spacing: 0.5px; line-height: 1.4; }
+.brand-dot { color: var(--admin-coral); padding-left: 3px; }
+.admin-brand p { color: var(--admin-muted); font-size: 12px; margin-top: 4px; letter-spacing: 0.5px; }
+
+/* 分类菜单（吸附固定：navbar 56px 之下） */
+.admin-tabs {
+  display: flex;
+  gap: 6px;
+  overflow-x: auto;
+  position: sticky;
+  top: 56px;
+  z-index: 30;
+  height: 48px;
+  margin-top: 0;
+  padding-top: 12px;
+  box-sizing: border-box;
+  background: var(--admin-bg);
+}
+.admin-tab { display: inline-flex; align-items: center; gap: 6px; height: 36px; padding: 0 15px; border: 0; border-radius: 9px; background: transparent; color: var(--admin-muted); font-size: 13px; white-space: nowrap; cursor: pointer; transition: background-color var(--duration-fast) var(--ease-out), color var(--duration-fast) var(--ease-out), transform var(--duration-press) var(--ease-out); }
+@media (hover: hover) and (pointer: fine) {
+  .admin-tab:hover { color: var(--admin-ink); background: var(--admin-soft); }
+}
+.admin-tab.selected { color: var(--admin-coral); background: var(--admin-accent-soft); font-weight: 600; }
+
+/* 权限不足（各分类面板共用） */
+.admin-page :deep(.forbidden-panel) { display: flex; flex-direction: column; align-items: center; gap: 10px; margin-top: 16px; padding: 46px 20px; background: var(--admin-surface); border: 1px solid var(--admin-line); border-radius: 13px; text-align: center; }
+.admin-page :deep(.forbidden-icon) { font-size: 34px; color: var(--admin-coral); }
+.admin-page :deep(.forbidden-panel h2) { font-size: 18px; font-weight: 600; }
+.admin-page :deep(.forbidden-panel p) { color: var(--admin-muted); font-size: 13px; }
+
+/* 面板工具条（吸附固定：navbar + tabs 之下） */
+.admin-page :deep(.panel-toolbar) {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: nowrap;
+  position: sticky;
+  top: 104px;
+  z-index: 29;
+  height: 52px;
+  margin-top: 0;
+  padding: 10px 0;
+  box-sizing: border-box;
+  background: var(--admin-bg);
+}
+.admin-page :deep(.panel-toolbar-search) { max-width: 340px; }
+.admin-page :deep(.panel-tip) { color: var(--admin-caption); font-size: 12px; }
+
+@media (max-width: 768px) {
+  .admin-mark { width: 36px; height: 40px; font-size: 21px; border-radius: 9px; }
+  .admin-brand h1 { font-size: 19px; }
+  .admin-page :deep(.panel-toolbar) { position: static; height: auto; flex-wrap: wrap; }
+  .admin-page :deep(.panel-toolbar-search) { max-width: none; width: 100%; }
+}

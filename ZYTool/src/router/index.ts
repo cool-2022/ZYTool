@@ -86,6 +86,22 @@ const router = createRouter({
             meta: { requiresAuth: false }
         },
         {
+            path: '/finance/ledger',
+            name: 'finance-ledger',
+            component: () => import('@/views/Finance/LedgerView.vue'),
+            meta: { requiresAuth: false }
+        },
+        {
+            path: '/admin',
+            name: 'admin',
+            component: () => import('@/views/Admin/AdminView.vue'),
+            meta: { requiresAuth: true } // 后台管理需要登录，接口侧再校验 admin 角色
+        },
+        {
+            path: '/admin/database',
+            redirect: '/admin'
+        },
+        {
             path: '/settings',
             name: 'settings',
             component: SettingsView,

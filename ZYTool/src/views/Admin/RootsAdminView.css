@@ -1,0 +1,32 @@
+/* 字根管理面板（页面级变量、权限不足、工具条样式见 AdminView.css；分页条/表头吸附在 AdminTable 组件内） */
+.roots-card { margin-top: 12px; background: var(--admin-surface); border: 1px solid var(--admin-line); border-radius: 13px; padding: 6px 18px 18px; }
+.root-name { font-weight: 600; font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace; }
+.root-code { padding: 1px 7px; border-radius: 5px; font-size: 12px; background: var(--admin-code-bg); color: var(--admin-muted); font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace; }
+.cell-empty { color: var(--admin-null); font-size: 12px; }
+.roots-empty { display: flex; flex-direction: column; align-items: center; gap: 8px; padding: 30px 0; color: var(--admin-caption); font-size: 13px; }
+.row-actions { display: flex; gap: 6px; }
+
+/* 引用标注 */
+.ref-count { font-size: 12px; color: var(--admin-muted); margin-right: 6px; }
+.ref-tag { display: inline-block; padding: 0 7px; margin-right: 4px; border-radius: 5px; font-size: 11px; font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace; background: var(--admin-green-soft); color: var(--admin-green); }
+.ref-tag.diff { background: var(--admin-sand-soft); color: var(--admin-sand); }
+
+.sync-badge { display: inline-block; padding: 1px 9px; border-radius: 999px; font-size: 11px; background: var(--admin-soft); color: var(--admin-muted); white-space: nowrap; }
+.sync-badge.ok { background: var(--admin-green-soft); color: var(--admin-green); }
+.sync-badge.diff { background: var(--admin-sand-soft); color: var(--admin-sand); }
+.sync-badge.none { background: var(--admin-soft); color: var(--admin-caption); }
+
+/* 展开行引用明细 */
+.refs-detail { display: flex; flex-direction: column; gap: 6px; padding: 4px 0 4px 12px; }
+.refs-title { font-size: 12px; color: var(--admin-caption); }
+.refs-item { display: flex; flex-direction: column; gap: 4px; }
+.refs-row { display: flex; align-items: center; flex-wrap: wrap; gap: 10px; font-size: 12px; }
+.refs-diffs { display: flex; flex-wrap: wrap; gap: 4px; }
+.ref-diff { padding: 1px 7px; border-radius: 5px; font-size: 11px; color: var(--admin-sand); background: var(--admin-sand-soft); }
+.refs-table { font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace; font-weight: 600; }
+.refs-comment { flex: 1; color: var(--admin-muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.refs-empty { color: var(--admin-caption); font-size: 12px; }
+
+@media (max-width: 768px) {
+  .roots-card { padding: 10px 12px 14px; }
+}

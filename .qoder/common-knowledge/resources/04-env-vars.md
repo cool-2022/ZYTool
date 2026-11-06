@@ -16,7 +16,7 @@
 | `KIMI_MODEL` | Kimi 模型 | kimi-k2-0905-preview |
 | `RUST_LOG` / `LOG_LEVEL` | tracing 日志过滤 | `RUST_LOG` 优先；守护模式文件日志来自 shell 重定向 |
 
-常用默认值：`host=0.0.0.0`、`port=8000`。CORS 使用精确清单 + 本机/私网/`.local` 来源规则，见后端公共契约。
+常用默认值：`host=0.0.0.0`、`port=8000`（当前 .env 显式 `PORT=10003`，避开本机 8000 被微信等占用）。CORS 使用精确清单 + 本机/私网/`.local` 来源规则，见后端公共契约。
 
 **仅声明、当前未生效的字段**：`DEBUG`、`MAX_REQUEST_SIZE`、`LOG_FILE`、`LOG_DIR`、`RATE_LIMIT_*`、`ALGORITHM`、`QWEATHER_KEY/QWEATHER_HOST`。不要据此认为已有限流、请求体限制、文件日志、可配置 JWT 算法或天气业务。
 
@@ -35,7 +35,7 @@ Python 有两套配置加载路径：
 
 | 变量 | 用途 | 默认 |
 |---|---|---|
-| `VITE_RUST_API_BASE_URL` | Rust 后端地址 | 默认跟随访问 hostname（`http://${hostname}:8000`），localhost/IP 打开自动适配；设值则固定 |
+| `VITE_RUST_API_BASE_URL` | Rust 后端地址 | 默认跟随访问 hostname（`http://${hostname}:10003`），localhost/IP 打开自动适配；设值则固定 |
 | `VITE_PYTHON_API_BASE_URL` | Python 后端地址 | 同上（8001） |
 | `VITE_AMAP_KEY` | 高德地图 JS API Key | 有内置开发 Key |
 

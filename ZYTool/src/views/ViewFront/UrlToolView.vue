@@ -8,7 +8,7 @@
             </div>
 
             <!-- 工具内容 -->
-            <a-row :gutter="24">
+            <a-row :gutter="{ xs: 16, sm: 24 }">
                 <a-col :xs="24" :lg="12">
                     <a-card title="输入文本" :bordered="false">
                         <a-textarea v-model:value="inputText" placeholder="请输入要编码或解码的URL..." :rows="15"
@@ -148,13 +148,13 @@ const loadExample = (type: string) => {
 .tool-page {
     min-height: 100vh;
     background: var(--gradient-bg);
-    padding: 2rem 0;
+    padding: 2rem var(--page-gutter);
 }
 
 .container {
-    max-width: 1200px;
+    max-width: var(--page-max-width);
     margin: 0 auto;
-    padding: 0 20px;
+    padding: 0;
 }
 
 .page-header {

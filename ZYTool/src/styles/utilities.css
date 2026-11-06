@@ -36,27 +36,68 @@
   }
 }
 
-/* 滚动条样式 */
-::-webkit-scrollbar {
-  width: 10px;
-  height: 10px;
+/* 全局细滚动条：Firefox 使用原生 thin，WebKit/Chromium 精确控制宽度 */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--scrollbar-thumb) transparent;
 }
 
-::-webkit-scrollbar-track {
-  background: var(--bg-secondary);
+/* 标准属性的非 auto 值会覆盖 WebKit 伪元素，避免 4px 设置失效 */
+@supports selector(::-webkit-scrollbar) {
+  * {
+    scrollbar-width: auto;
+    scrollbar-color: auto;
+  }
+}
+
+::-webkit-scrollbar {
+  width: var(--scrollbar-size);
+  height: var(--scrollbar-size);
+}
+
+::-webkit-scrollbar-track,
+::-webkit-scrollbar-corner {
+  background: transparent;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: var(--gradient-primary);
-  border-radius: 5px;
+  min-height: 24px;
+  background: var(--scrollbar-thumb);
+  border-radius: 999px;
 }
 
-::-webkit-scrollbar-thumb:hover {
-  background: linear-gradient(
-    135deg,
-    var(--primary-dark) 0%,
-    var(--primary-darker) 100%
-  );
+::-webkit-scrollbar-button {
+  display: none;
+  width: 0;
+  height: 0;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  ::-webkit-scrollbar-thumb:hover {
+    background: var(--scrollbar-thumb-hover);
+  }
+}
+
+/* 高对比度模式保留系统滚动条的可辨识性与操作尺寸 */
+@media (forced-colors: active) {
+  * {
+    scrollbar-width: auto;
+    scrollbar-color: auto;
+  }
+
+  ::-webkit-scrollbar {
+    width: auto;
+    height: auto;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background: ButtonText;
+  }
+
+  ::-webkit-scrollbar-track,
+  ::-webkit-scrollbar-corner {
+    background: Canvas;
+  }
 }
 
 /* 选中文本样式 */

@@ -169,6 +169,100 @@ export interface FolderDiffResult {
 
 export type DiffResult = FileDiffResult | FolderDiffResult
 
+export interface AdminTableInfo {
+    name: string
+    comment?: string | null
+    row_estimate: number
+}
+
+export interface AdminColumnInfo {
+    name: string
+    data_type: string
+    nullable: boolean
+    is_primary: boolean
+    column_default?: string | null
+    comment?: string | null
+}
+
+export interface AdminRowsData {
+    table: string
+    columns: string[]
+    rows: Record<string, any>[]
+    total: number
+    page: number
+    page_size: number
+}
+
+export interface FieldRootRef {
+    table_name: string
+    data_type: string
+    data_length: number | null
+    data_precision: number | null
+    data_scale: number | null
+    type_expr: string
+    comment: string
+    type_synced: boolean
+    comment_synced: boolean
+    synced: boolean
+    diffs: string[]
+}
+
+export interface FieldRootInfo {
+    id: number | null
+    registered: boolean
+    field_name: string
+    data_type: string
+    data_length: number | null
+    data_precision: number | null
+    data_scale: number | null
+    type_expr: string
+    comment: string
+    remark: string
+    updated_at: string | null
+    refs: FieldRootRef[]
+}
+
+export interface FieldRootPayload {
+    field_name: string
+    data_type?: string
+    data_length?: number | null
+    data_precision?: number | null
+    data_scale?: number | null
+    comment?: string
+    remark?: string
+}
+
+export interface FieldRootsData {
+    rows: FieldRootInfo[]
+    total: number
+    page: number
+    page_size: number
+}
+
+export interface FieldRootSyncResult {
+    table_name: string
+    ok: boolean
+    message: string
+}
+
+export interface AdminServiceInfo {
+    name: string
+    version: string
+    description: string
+    status: string
+    db_connected: boolean
+    uptime_seconds: number
+    timestamp: string
+}
+
+export interface ServiceHealth {
+    ok: boolean
+    status?: string
+    version?: string
+    timestamp?: string
+    error?: string
+}
+
 // ===================== API 服务类 =====================
 
 export interface TokenData {
@@ -253,6 +347,81 @@ export class ApiService {
 
     static async getRoute(request: any): Promise<any> {
         return requestWithFallback('post', '/tools/map/route', request)
+    }
+
+    // ========== 后台管理（数据库表） ==========
+
+    static async getAdminTables(): Promise<{ tables: AdminTableInfo[] }> {
+        return requestWithFallback('get', '/admin/tables')
+    }
+
+    static async getAdminTableColumns(table: string): Promise<{ table: string; columns: AdminColumnInfo[] }> {
+        return requestWithFallback('get', `/admin/tables/${encodeURIComponent(table)}/columns`)
+    }
+
+    static async getAdminTableRows(
+        table: string,
+        page: number,
+        pageSize: number,
+        keyword?: string
+    ): Promise<AdminRowsData> {
+        return requestWithFallback('get', `/admin/tables/${encodeURIComponent(table)}/rows`, undefined, {
+            params: { page, page_size: pageSize, keyword: keyword || undefined },
+        })
+    }
+
+    // ========== 后台管理（字段字根） ==========
+
+    static async getAdminRoots(page: number, pageSize: number, keyword?: string): Promise<FieldRootsData> {
+        return requestWithFallback('get', '/admin/roots', undefined, {
+            params: { page, page_size: pageSize, keyword: keyword || undefined },
+        })
+    }
+
+    // 扫描现有表字段入库（已存在的字段名不覆盖）
+    static async scanAdminRoots(): Promise<{ inserted: number; total_roots: number }> {
+        return requestWithFallback('post', '/admin/roots/scan')
+    }
+
+    static async createAdminRoot(payload: FieldRootPayload): Promise<{ root_item: FieldRootInfo }> {
+        return requestWithFallback('post', '/admin/roots', payload)
+    }
+
+    static async updateAdminRoot(id: number, payload: FieldRootPayload): Promise<{ root_item: FieldRootInfo }> {
+        return requestWithFallback('put', `/admin/roots/${id}`, payload)
+    }
+
+    static async deleteAdminRoot(id: number): Promise<void> {
+        await requestWithFallback('delete', `/admin/roots/${id}`)
+    }
+
+    // 手动把字根的注释/类型同步到所有引用表字段
+    static async syncAdminRoot(
+        id: number,
+        syncComment: boolean,
+        syncType: boolean
+    ): Promise<{ results: FieldRootSyncResult[] }> {
+        return requestWithFallback('post', `/admin/roots/${id}/sync`, {
+            sync_comment: syncComment,
+            sync_type: syncType,
+        })
+    }
+
+    // ========== 后台管理（服务状态） ==========
+
+    static async getAdminServices(): Promise<{ service: AdminServiceInfo }> {
+        return requestWithFallback('get', '/admin/services')
+    }
+
+    // 直接探测 Python 兜底后端健康状态（不走降级，用于服务监控展示）
+    static async checkPythonHealth(): Promise<ServiceHealth> {
+        try {
+            const response = await pythonApi.get('/health')
+            const data = unwrapResponse<{ status?: string; version?: string; timestamp?: string }>(response.data)
+            return { ok: true, status: data.status, version: data.version, timestamp: data.timestamp }
+        } catch (e: any) {
+            return { ok: false, error: e?.message || '无法连接' }
+        }
     }
 
     // ========== AI 助手会话/消息 ==========

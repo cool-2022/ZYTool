@@ -4,7 +4,7 @@
 
 前后端分离 + 双后端部分兜底：
 
-- **后端（主要）**：Rust / axum，`Backup/tools_project_rust/`，默认 `http://localhost:8000`
+- **后端（主要）**：Rust / axum，`Backup/tools_project_rust/`，当前 `http://localhost:10003`（.env `PORT=10003`，源码默认 8000）
 - **后端（兜底）**：Python 3.9+ / FastAPI，`Backup/tools_project_py/`，部署预期 `http://localhost:8001`；源码默认端口仍为 8000，并行启动需显式 `PORT=8001`
 - **前端**：Vue 3 + TypeScript + Vite + Ant Design Vue 4.x，`ZYTool/`
 

@@ -7,7 +7,7 @@
 ./start.sh -d        # 后台守护运行（日志 logs/server.log，PID logs/watchdog.pid）
 ./start.sh stop      # 停止看门狗与后端进程
 
-cargo run              # 直接启动（无守护），默认监听 http://0.0.0.0:8000
+cargo run              # 直接启动（无守护），监听 .env PORT（当前 10003，源码默认 8000）
 cargo build            # 编译（类型检查）
 cargo build --release  # 生产构建（opt-level 3 + LTO）
 cargo check            # 快速类型检查

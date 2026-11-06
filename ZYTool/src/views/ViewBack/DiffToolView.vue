@@ -8,7 +8,7 @@
             </div>
 
             <!-- 上传区域 -->
-            <a-row :gutter="24">
+            <a-row :gutter="{ xs: 16, sm: 24 }">
                 <a-col :xs="24" :lg="12">
                     <a-card title="A 侧文件" :bordered="false">
                         <a-space direction="vertical" style="width: 100%" :size="16">
@@ -59,7 +59,7 @@
             <a-card v-if="diffResult" title="比对结果" :bordered="false" style="margin-top: 24px;">
                 <!-- 文件比对结果 -->
                 <div v-if="compareMode === 'file' && diffResult && 'onlyInA' in diffResult">
-                    <a-row :gutter="24">
+                    <a-row :gutter="{ xs: 16, sm: 24 }">
                         <!-- A文件差异 -->
                         <a-col :xs="24" :lg="12">
                             <a-card title="A 文件独有的行" :bordered="false" size="small">
@@ -231,13 +231,13 @@ const compareFiles = async () => {
 .tool-page {
     min-height: 100vh;
     background: var(--gradient-bg);
-    padding: 2rem 0;
+    padding: 2rem var(--page-gutter);
 }
 
 .container {
-    max-width: 1400px;
+    max-width: var(--page-max-width);
     margin: 0 auto;
-    padding: 0 20px;
+    padding: 0;
 }
 
 .page-header {

@@ -191,7 +191,7 @@ onMounted(() => {
   background: var(--gradient-bg);
   position: relative;
   overflow: hidden;
-  padding: 24px;
+  padding: 24px var(--page-gutter);
 }
 
 .login-background {
@@ -248,7 +248,7 @@ onMounted(() => {
   -webkit-backdrop-filter: var(--glass-blur);
   border: 1px solid var(--glass-border);
   border-radius: var(--border-radius-xl);
-  padding: 1.75rem 2rem;
+  padding: 1.75rem 1.5rem;
   box-shadow: var(--shadow-xl);
   animation: loginCardIn var(--duration-slow) var(--ease-out) both;
 }
@@ -493,7 +493,7 @@ onMounted(() => {
 
 @media (max-width: 480px) {
   .login-card {
-    padding: 1.75rem;
+    padding: 1.5rem 1.25rem;
   }
 
   .login-title {

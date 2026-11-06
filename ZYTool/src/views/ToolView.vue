@@ -1,34 +1,39 @@
 <template>
   <div class="tools-page">
-    <div class="page-hero">
+    <header class="page-hero">
       <div class="page-hero-content">
-        <h1 class="page-hero-title">在线工具集合</h1>
-        <p class="page-hero-desc">选择你需要的工具，快速完成日常任务</p>
+        <span class="page-hero-mark" aria-hidden="true"><AppstoreOutlined /></span>
+        <div class="page-hero-copy">
+          <h1 class="page-hero-title">在线工具集合<span class="title-dot">.</span></h1>
+          <p class="page-hero-desc">常用工具，随手取用</p>
+        </div>
       </div>
-    </div>
+      <span v-if="!loading" class="tools-count"><AppstoreOutlined /> {{ totalToolCount }} 个工具</span>
+    </header>
 
     <div class="container">
       <a-spin :spinning="loading" tip="加载工具分类中...">
         <div class="tools-layout">
-          <!-- 左侧分类侧边栏 -->
-          <aside class="tools-sidebar">
-            <div class="sidebar-title">工具分类</div>
-            <div class="category-list">
-              <div class="category-item" :class="{ active: activeCategoryId === null }" @click="selectCategory(null)">
-                <span class="category-item-icon">📦</span>
+          <!-- 顶部横向分类菜单，与财务页菜单保持一致 -->
+          <div class="tools-toolbar">
+            <nav class="category-list" aria-label="工具分类">
+              <button type="button" class="category-item" :class="{ active: activeCategoryId === null }"
+                :aria-pressed="activeCategoryId === null" @click="selectCategory(null)">
+                <span class="category-item-icon"><AppstoreOutlined /></span>
                 <span class="category-item-name">全部工具</span>
                 <span class="category-item-count">{{ totalToolCount }}</span>
-              </div>
-              <div v-for="category in categories" :key="category.id" class="category-item"
-                :class="{ active: activeCategoryId === category.id }" @click="selectCategory(category.id)">
-                <span class="category-item-icon">{{ getCategoryIcon(category.name) }}</span>
+              </button>
+              <button v-for="category in categories" :key="category.id" type="button" class="category-item"
+                :class="{ active: activeCategoryId === category.id }" :aria-pressed="activeCategoryId === category.id"
+                @click="selectCategory(category.id)">
+                <span class="category-item-icon"><component :is="getCategoryIcon(category.name)" /></span>
                 <span class="category-item-name">{{ category.name }}</span>
                 <span class="category-item-count">{{ category.tools.length }}</span>
-              </div>
-            </div>
-          </aside>
+              </button>
+            </nav>
+          </div>
 
-          <!-- 右侧工具内容区 -->
+          <!-- 分类菜单下方的工具内容区 -->
           <main class="tools-content">
             <div class="content-header">
               <h2 class="content-title">{{ currentTitle }}</h2>
@@ -42,13 +47,15 @@
 
             <div v-for="category in displayCategories" :key="category.id" class="category-section">
               <div class="category-section-header">
-                <span class="category-icon">{{ getCategoryIcon(category.name) }}</span>
+                <span class="category-icon"><component :is="getCategoryIcon(category.name)" /></span>
                 <h3>{{ category.name }}</h3>
                 <span class="category-desc">{{ category.description }}</span>
               </div>
               <div class="tools-grid">
                 <div class="tool-item" v-for="(tool, index) in category.tools" :key="tool.id"
-                  :style="{ '--i': index }" @click="openTool(tool)">
+                  role="button" tabindex="0" :aria-label="`打开${tool.name}`"
+                  :style="{ '--i': index }" @click="openTool(tool)"
+                  @keydown.enter="openTool(tool)" @keydown.space.prevent="openTool(tool)">
                   <div class="tool-icon-wrapper">
                     <span class="tool-icon">{{ tool.icon }}</span>
                   </div>
@@ -74,7 +81,7 @@ import { ref, onMounted, computed } from 'vue'
 import { ApiService, type Category } from '../services/api'
 import { message } from 'ant-design-vue'
 import router from '../router'
-import { InboxOutlined } from '@ant-design/icons-vue'
+import { AppstoreOutlined, CodeOutlined, InboxOutlined, PictureOutlined, SettingOutlined } from '@ant-design/icons-vue'
 
 // 工具分类数据
 const categories = ref<Category[]>([])
@@ -82,12 +89,10 @@ const loading = ref(false)
 const activeCategoryId = ref<number | null>(null)
 
 const getCategoryIcon = (name: string) => {
-  const map: Record<string, string> = {
-    '前端工具': '🎨',
-    '后端工具': '⚙️',
-    '图片工具': '🖼️'
-  }
-  return map[name] || '📦'
+  if (name === '前端工具') return CodeOutlined
+  if (name === '后端工具') return SettingOutlined
+  if (name === '图片工具') return PictureOutlined
+  return AppstoreOutlined
 }
 
 // 工具总数
@@ -222,220 +227,209 @@ onMounted(() => {
 
 <style scoped>
 .tools-page {
-  min-height: 90vh;
-  padding-bottom: 100px;
+  min-height: calc(100vh - 60px);
+  padding: 20px var(--page-gutter) 48px;
+  background: var(--workspace-bg);
+  color: var(--workspace-text);
 }
 
 .page-hero {
-  background: var(--gradient-hero);
-  padding: 70px 24px 90px;
-  text-align: center;
-  position: relative;
-  overflow: hidden;
-}
-
-.page-hero::before {
-  content: '';
-  position: absolute;
-  top: -50%;
-  left: -20%;
-  width: 60%;
-  height: 200%;
-  background: radial-gradient(circle, rgba(59, 130, 246, 0.15) 0%, transparent 70%);
-  pointer-events: none;
-}
-
-.page-hero::after {
-  content: '';
-  position: absolute;
-  bottom: -50%;
-  right: -20%;
-  width: 60%;
-  height: 200%;
-  background: radial-gradient(circle, rgba(139, 92, 246, 0.15) 0%, transparent 70%);
-  pointer-events: none;
+  max-width: var(--page-max-width);
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  padding: 0 0 12px;
+  border-bottom: 1px solid var(--workspace-line);
 }
 
 .page-hero-content {
-  position: relative;
-  z-index: 1;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
 }
+
+.page-hero-mark {
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  width: 42px;
+  height: 46px;
+  border-radius: 11px;
+  background: var(--workspace-accent-soft);
+  color: var(--workspace-accent);
+  font-size: 25px;
+  transform: rotate(-5deg);
+}
+
+.page-hero-copy { min-width: 0; }
 
 .page-hero-title {
-  font-size: 2.75rem;
-  font-weight: 800;
-  color: white;
-  margin: 0 0 0.75rem;
-  letter-spacing: -1px;
-  animation: heroTitleIn var(--duration-enter) var(--ease-out) both;
+  font-size: 22px;
+  font-weight: 600;
+  line-height: 1.4;
+  color: var(--workspace-text);
+  margin: 0;
+  letter-spacing: 0.5px;
 }
+
+.title-dot { color: var(--workspace-accent); margin-left: 3px; }
 
 .page-hero-desc {
-  font-size: 1.15rem;
-  color: rgba(255, 255, 255, 0.7);
-  margin: 0;
-  animation: heroTitleIn var(--duration-enter) var(--ease-out) 60ms both;
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--workspace-muted);
+  margin: 4px 0 0;
+  letter-spacing: 0.5px;
 }
 
-@keyframes heroTitleIn {
-  from {
-    opacity: 0;
-    transform: translateY(12px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+.tools-count {
+  display: inline-flex;
+  align-items: center;
+  flex-shrink: 0;
+  gap: 6px;
+  padding: 4px 8px;
+  border: 1px solid var(--workspace-line);
+  border-radius: 6px;
+  color: var(--workspace-muted);
+  background: var(--workspace-surface);
+  font-size: 11px;
+  white-space: nowrap;
 }
+
+.tools-page :deep(.ant-spin) { color: var(--workspace-accent); }
+.tools-page :deep(.ant-spin-dot-item) { background: var(--workspace-accent); }
 
 .container {
-  max-width: 100%;
+  max-width: var(--page-max-width);
   margin: 0 auto;
-  padding: 0 24px;
-  margin-top: -40px;
-  position: relative;
-  z-index: 2;
+  padding: 0;
 }
 
 .tools-layout {
   display: flex;
-  gap: 1.5rem;
-  align-items: flex-start;
+  flex-direction: column;
+  gap: 20px;
 }
 
-/* 侧边栏 */
-.tools-sidebar {
-  width: 13%;
-  min-width: 234px;
-  flex-shrink: 0;
-  background: var(--bg-primary);
-  border: 1px solid var(--border-color);
-  border-radius: var(--border-radius-xl);
-  padding: 1.25rem;
-  box-shadow: var(--shadow-md);
-  position: sticky;
-  top: 88px;
-}
-
-.sidebar-title {
-  font-size: 0.85rem;
-  font-weight: 700;
-  color: var(--text-tertiary);
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-  margin-bottom: 1rem;
-  padding-left: 0.75rem;
+/* 顶部分类菜单：保持单行，窄屏可横向滑动 */
+.tools-toolbar {
+  width: 100%;
+  min-width: 0;
+  padding: 9px 0;
+  border-bottom: 1px solid var(--workspace-line);
 }
 
 .category-list {
   display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
+  flex-wrap: nowrap;
+  gap: 5px;
+  width: 100%;
+  padding: 4px;
+  overflow-x: auto;
 }
 
 .category-item {
   display: flex;
   align-items: center;
-  gap: 0.75rem;
-  padding: 0.85rem 0.75rem;
-  border-radius: var(--border-radius);
+  flex: 0 0 auto;
+  gap: 8px;
+  height: 38px;
+  padding: 0 17px;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--workspace-muted);
   cursor: pointer;
+  white-space: nowrap;
+  box-shadow: none;
   transition: background-color var(--duration-fast) var(--ease-out),
-    border-color var(--duration-fast) var(--ease-out),
+    color var(--duration-fast) var(--ease-out),
     transform var(--duration-press) var(--ease-out);
-  border: 1px solid transparent;
+  border: 0;
 }
 
 @media (hover: hover) and (pointer: fine) {
   .category-item:hover {
-    background: var(--bg-secondary);
-    border-color: var(--border-color);
+    background: var(--workspace-soft);
+    border-color: var(--workspace-line);
+    transform: none;
+    box-shadow: none;
   }
 }
 
-.category-item:active {
-  transform: scale(0.98);
-}
+.category-item:active { transform: scale(0.97); }
+.category-item:focus-visible, .tool-item:focus-visible { outline: 2px solid var(--workspace-accent); outline-offset: 3px; }
 
 .category-item.active {
-  background: rgba(59, 130, 246, 0.08);
-  border-color: rgba(59, 130, 246, 0.2);
+  color: var(--workspace-accent);
+  background: var(--workspace-accent-soft);
+  border-color: var(--workspace-accent-line);
 }
 
-.category-item-icon {
-  font-size: 1.25rem;
-}
+.category-item-icon { font-size: 16px; display: flex; flex-shrink: 0; }
 
 .category-item-name {
   flex: 1;
-  font-size: 0.95rem;
+  font-size: 13px;
   font-weight: 500;
-  color: var(--text-primary);
+  color: var(--workspace-text);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 
-.category-item.active .category-item-name {
-  color: var(--primary-color);
-  font-weight: 600;
-}
+.category-item.active .category-item-name { color: var(--workspace-accent); font-weight: 600; }
 
 .category-item-count {
-  font-size: 0.75rem;
-  font-weight: 600;
-  color: var(--text-tertiary);
-  background: var(--bg-secondary);
-  padding: 0.15rem 0.5rem;
-  border-radius: 50px;
-  min-width: 24px;
+  font-size: 10px;
+  font-weight: 500;
+  color: var(--workspace-caption);
+  background: var(--workspace-soft);
+  padding: 2px 6px;
+  border-radius: 5px;
+  min-width: 22px;
   text-align: center;
+  font-variant-numeric: tabular-nums;
 }
 
-.category-item.active .category-item-count {
-  background: var(--primary-color);
-  color: white;
-}
+.category-item.active .category-item-count { color: var(--workspace-accent); background: var(--workspace-surface); }
 
 /* 主内容区 */
 .tools-content {
-  width: 87%;
+  width: 100%;
   min-width: 0;
-  background: var(--bg-primary);
-  border: 1px solid var(--border-color);
-  border-radius: var(--border-radius-xl);
-  padding: 2rem;
-  box-shadow: var(--shadow-md);
+  background: var(--workspace-surface);
+  border: 1px solid var(--workspace-line);
+  border-radius: var(--workspace-radius);
+  padding: 20px;
 }
 
 .content-header {
-  margin-bottom: 1.75rem;
-  padding-bottom: 1.25rem;
-  border-bottom: 1px solid var(--border-color);
+  margin-bottom: 24px;
+  padding-bottom: 20px;
+  border-bottom: 1px solid var(--workspace-line);
 }
 
 .content-title {
-  font-size: 1.5rem;
-  font-weight: 800;
-  color: var(--text-primary);
-  margin: 0 0 0.35rem;
+  font-size: 20px;
+  font-weight: 600;
+  color: var(--workspace-text);
+  margin: 0 0 6px;
 }
 
-.content-desc {
-  font-size: 0.95rem;
-  color: var(--text-secondary);
-  margin: 0;
-}
+.content-desc { font-size: 12px; color: var(--workspace-muted); margin: 0; }
 
 .empty-tools {
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 80px 20px;
-  color: var(--text-tertiary);
-  font-size: 1rem;
-  gap: 0.75rem;
+  padding: 70px 20px;
+  color: var(--workspace-caption);
+  font-size: 14px;
+  gap: 12px;
 }
 
 .empty-tools :deep(.anticon) {
@@ -443,62 +437,45 @@ onMounted(() => {
   opacity: 0.5;
 }
 
-.category-section {
-  margin-bottom: 2rem;
-}
-
-.category-section:last-child {
-  margin-bottom: 0;
-}
+.category-section { margin-bottom: 28px; }
+.category-section:last-child { margin-bottom: 0; }
 
 .category-section-header {
   display: flex;
   align-items: center;
-  gap: 0.75rem;
-  margin-bottom: 1.25rem;
+  gap: 9px;
+  margin-bottom: 14px;
   flex-wrap: wrap;
 }
 
-.category-section-header .category-icon {
-  font-size: 1.5rem;
-}
-
-.category-section-header h3 {
-  font-size: 1.25rem;
-  font-weight: 700;
-  color: var(--text-primary);
-  margin: 0;
-}
-
-.category-section-header .category-desc {
-  font-size: 0.85rem;
-  color: var(--text-secondary);
-  margin-left: auto;
-}
+.category-section-header .category-icon { display: flex; font-size: 17px; color: var(--workspace-caption); }
+.category-section-header h3 { font-size: 15px; font-weight: 600; color: var(--workspace-text); margin: 0; }
+.category-section-header .category-desc { font-size: 11px; color: var(--workspace-caption); margin-left: auto; }
 
 .tools-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-  gap: 1rem;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 250px), 1fr));
+  gap: 12px;
 }
 
 .tool-item {
   display: flex;
   align-items: center;
-  gap: 1rem;
-  padding: 1.25rem;
-  background: var(--bg-secondary);
-  border: 1px solid var(--border-color);
-  border-radius: var(--border-radius-lg);
+  gap: 12px;
+  min-width: 0;
+  min-height: 106px;
+  padding: 17px 15px;
+  background: var(--workspace-surface);
+  border: 1px solid var(--workspace-line);
+  border-radius: 10px;
   cursor: pointer;
-  transition: box-shadow var(--duration-slow) var(--ease-out),
-    transform var(--duration-slow) var(--ease-out),
+  transition: box-shadow var(--duration-base) var(--ease-out),
+    transform var(--duration-press) var(--ease-out),
     border-color var(--duration-base) var(--ease-out),
     background-color var(--duration-base) var(--ease-out);
   position: relative;
-  overflow: hidden;
-  animation: toolItemIn var(--duration-enter) var(--ease-out) both;
-  animation-delay: min(calc(var(--i, 0) * 30ms), 240ms);
+  animation: toolItemIn var(--duration-base) var(--ease-out) backwards;
+  animation-delay: min(calc(var(--i, 0) * 30ms), 150ms);
 }
 
 /* 工具卡片入场：30ms stagger（纯装饰，不阻塞交互） */
@@ -513,51 +490,28 @@ onMounted(() => {
   }
 }
 
-.tool-item::before {
-  content: '';
-  position: absolute;
-  left: 0;
-  top: 0;
-  width: 3px;
-  height: 100%;
-  background: var(--gradient-primary);
-  opacity: 0;
-  transition: opacity var(--duration-base) var(--ease-out);
-}
-
 @media (hover: hover) and (pointer: fine) {
   .tool-item:hover {
-    transform: translateY(-4px);
-    box-shadow: var(--shadow-md);
-    border-color: var(--primary-light);
-    background: var(--bg-primary);
-  }
-
-  .tool-item:hover::before {
-    opacity: 1;
-  }
-
-  .tool-item:hover .tool-icon-wrapper {
-    transform: scale(1.1) rotate(4deg);
+    box-shadow: var(--workspace-shadow-hover);
+    border-color: var(--workspace-accent-line);
+    background: var(--workspace-soft);
   }
 }
 
-.tool-item:active {
-  transform: scale(0.98);
-}
+.tool-item:active { transform: scale(0.97); }
 
 .tool-icon-wrapper {
-  width: 52px;
-  height: 52px;
-  min-width: 52px;
+  width: 42px;
+  height: 42px;
+  min-width: 42px;
   display: flex;
   align-items: center;
   justify-content: center;
-  background: var(--gradient-primary);
-  border-radius: var(--border-radius);
-  font-size: 1.5rem;
-  box-shadow: var(--shadow-primary);
-  transition: transform var(--duration-base) var(--ease-out);
+  background: var(--workspace-accent-soft);
+  color: var(--workspace-accent);
+  border-radius: 10px;
+  font-size: 18px;
+  font-weight: 600;
 }
 
 .tool-info {
@@ -565,18 +519,13 @@ onMounted(() => {
   min-width: 0;
 }
 
-.tool-name {
-  font-size: 1.05rem;
-  font-weight: 700;
-  color: var(--text-primary);
-  margin: 0 0 0.25rem;
-}
+.tool-name { font-size: 14px; font-weight: 600; color: var(--workspace-text); margin: 0 0 5px; }
 
 .tool-desc {
-  font-size: 0.85rem;
-  color: var(--text-secondary);
+  font-size: 11px;
+  color: var(--workspace-muted);
   margin: 0;
-  line-height: 1.4;
+  line-height: 1.7;
   display: -webkit-box;
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
@@ -584,79 +533,52 @@ onMounted(() => {
 }
 
 .tool-tag {
-  font-size: 0.7rem;
-  font-weight: 600;
-  padding: 0.25rem 0.6rem;
-  border-radius: 50px;
-  text-transform: uppercase;
+  align-self: flex-start;
+  flex-shrink: 0;
+  font-size: 9px;
+  font-weight: 500;
+  padding: 2px 6px;
+  border-radius: 5px;
 }
 
-.tag-frontend {
-  background: rgba(59, 130, 246, 0.12);
-  color: var(--primary-dark);
-}
+.tag-frontend { background: var(--workspace-green-soft); color: var(--workspace-green); }
+.tag-backend { background: var(--workspace-sand-soft); color: var(--workspace-sand); }
 
-.tag-backend {
-  background: rgba(139, 92, 246, 0.12);
-  color: var(--accent-color);
-}
-
-/* 减弱动态：入场只保留淡入 */
+/* 减弱动态：入场只保留淡入，取消按压位移 */
+@keyframes toolItemFade { from { opacity: 0; } to { opacity: 1; } }
 @media (prefers-reduced-motion: reduce) {
-  .page-hero-title,
-  .page-hero-desc,
-  .tool-item {
-    animation-name: none;
-    opacity: 1;
-    transform: none;
-  }
+  .tool-item { animation-name: toolItemFade; animation-delay: 0ms; }
+  .tool-item:active, .category-item:active { transform: none; }
+}
+
+@media (max-width: 1000px) {
+  .tools-content { padding: 20px; }
+  .category-section-header .category-desc { width: 100%; margin-left: 26px; }
 }
 
 @media (max-width: 768px) {
-  .page-hero {
-    padding: 50px 20px 70px;
-  }
+  .tools-page { padding: 18px var(--page-gutter) 36px; }
+  .page-hero { padding-bottom: 11px; }
+  .page-hero-title { font-size: 20px; }
+  .tools-count { font-size: 10px; }
+  .tools-layout { gap: 15px; }
+  .category-item { padding: 0 12px; }
+  .category-item-name { font-size: 12px; }
+  .tools-content { padding: 21px; }
+  .category-section-header .category-desc { margin-left: 26px; }
+  .tools-grid { grid-template-columns: repeat(auto-fill, minmax(min(100%, 230px), 1fr)); }
+}
 
-  .page-hero-title {
-    font-size: 2rem;
-  }
-
-  .container {
-    padding: 0 20px;
-    margin-top: -30px;
-  }
-
-  .tools-layout {
-    flex-direction: column;
-  }
-
-  .tools-sidebar {
-    width: 100%;
-    position: static;
-    top: auto;
-  }
-
-  .category-list {
-    flex-direction: row;
-    flex-wrap: wrap;
-  }
-
-  .category-item {
-    flex: 1;
-    min-width: 120px;
-  }
-
-  .tools-content {
-    padding: 1.25rem;
-  }
-
-  .category-section-header .category-desc {
-    margin-left: 0;
-    width: 100%;
-  }
-
-  .tools-grid {
-    grid-template-columns: 1fr;
-  }
+@media (max-width: 480px) {
+  .tools-page { padding: 16px var(--page-gutter) 30px; }
+  .page-hero { gap: 10px; }
+  .page-hero-content { gap: 10px; }
+  .page-hero-mark { width: 36px; height: 40px; border-radius: 9px; font-size: 22px; }
+  .page-hero-title { font-size: 19px; }
+  .page-hero-desc { font-size: 11px; margin-top: 3px; }
+  .tools-content { padding: 16px 12px; }
+  .content-title { font-size: 19px; }
+  .tools-grid { grid-template-columns: 1fr; }
+  .tool-item { min-height: 95px; }
 }
 </style>

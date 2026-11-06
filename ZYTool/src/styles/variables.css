@@ -56,6 +56,35 @@
   --glass-border: rgba(255, 255, 255, 0.3);
   --glass-blur: blur(20px);
 
+  /* 首页 / 工具中心 / 顶部导航：与小账本协调的暖色工作区 */
+  --workspace-bg: #f8f6f0;
+  --workspace-surface: #fffdf9;
+  --workspace-soft: #f5f0e7;
+  --workspace-text: #423e38;
+  --workspace-muted: #81786e;
+  --workspace-caption: #95897b;
+  --workspace-line: #ece6dc;
+  --workspace-accent: #cf654a;
+  --workspace-accent-hover: #b9553c;
+  --workspace-accent-soft: #f3e7dd;
+  --workspace-accent-line: #e8c4b4;
+  --workspace-green: #5d8d74;
+  --workspace-green-soft: #eaf0e7;
+  --workspace-sand: #95713f;
+  --workspace-sand-soft: #f4eedf;
+  --workspace-shadow: 0 4px 16px rgba(94, 73, 47, 0.04);
+  --workspace-shadow-hover: 0 6px 20px rgba(94, 73, 47, 0.07);
+  --workspace-radius: 13px;
+
+  /* 页面布局：外层负责边距，内容容器不重复填充 */
+  --page-max-width: 1600px;
+  --page-gutter: 16px;
+
+  /* 全局细滚动条：暖灰色，透明轨道 */
+  --scrollbar-size: 4px;
+  --scrollbar-thumb: #d4c6b5;
+  --scrollbar-thumb-hover: #bca78e;
+
   /* 其他 */
   --border-radius: 10px;
   --border-radius-lg: 14px;
@@ -71,6 +100,14 @@
   --duration-base: 200ms;
   --duration-slow: 250ms;
   --duration-enter: 300ms;
+}
+
+@media (max-width: 768px) {
+  :root { --page-gutter: 12px; }
+}
+
+@media (max-width: 480px) {
+  :root { --page-gutter: 10px; }
 }
 
 /* 深色模式 - 通过 data-theme="dark" 控制 */
@@ -125,6 +162,27 @@
       rgba(255, 255, 255, 0.08) 0%,
       rgba(255, 255, 255, 0.03) 100%
     );
+
+    /* 暖色工作区深色适配，不覆盖其他业务页面的主题变量 */
+    --workspace-bg: #24221f;
+    --workspace-surface: #2e2b27;
+    --workspace-soft: #353029;
+    --workspace-text: #eee8df;
+    --workspace-muted: #c0b4a4;
+    --workspace-caption: #aa9c8c;
+    --workspace-line: #433c33;
+    --workspace-accent: #ed9b7e;
+    --workspace-accent-hover: #f4ae94;
+    --workspace-accent-soft: #443027;
+    --workspace-accent-line: #73513e;
+    --workspace-green: #a0c0a8;
+    --workspace-green-soft: #2e3a30;
+    --workspace-sand: #d1b17f;
+    --workspace-sand-soft: #3d3528;
+    --workspace-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+    --workspace-shadow-hover: 0 6px 20px rgba(0, 0, 0, 0.14);
+    --scrollbar-thumb: #645849;
+    --scrollbar-thumb-hover: #8a7762;
 
     /* 深色玻璃拟态 */
     --glass-bg: rgba(30, 41, 59, 0.7);

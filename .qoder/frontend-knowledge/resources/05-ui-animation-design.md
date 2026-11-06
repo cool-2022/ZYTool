@@ -137,8 +137,8 @@
 | 拖拽 | dnd kit | vue-draggable-plus |
 | 虚拟化长列表 | Virtuoso | vue-virtual-scroller |
 | 实时流式图表 | Liveline | — |
-| 通用图表 | recharts | ECharts（本项目已定） |
-| 状态管理 | zustand | Pinia（本项目已定） |
+| 通用图表 | recharts | ECharts（选型参考，当前未安装；小账本使用 SVG） |
+| 状态管理 | zustand | Pinia（选型参考，当前未安装；现有页面使用 Vue ref/computed） |
 | 条件 className | clsx | clsx（通用） |
 | 语法高亮 | shiki | shiki（通用） |
 | 主题切换无闪烁 | next-themes | @vueuse/core useDark |

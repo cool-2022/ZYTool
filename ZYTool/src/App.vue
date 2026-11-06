@@ -1,8 +1,8 @@
 <script setup lang="ts">
-import { ref, onMounted, provide, readonly } from 'vue'
+import { ref, computed, onMounted, provide, readonly } from 'vue'
 import { useRouter } from 'vue-router'
 import { message } from 'ant-design-vue'
-import { SettingOutlined, LogoutOutlined } from '@ant-design/icons-vue'
+import { BulbFilled, BulbOutlined, SettingOutlined, LogoutOutlined, ThunderboltOutlined } from '@ant-design/icons-vue'
 import { isAuthenticated, getUserInfo, clearAuth } from './utils/auth'
 
 const router = useRouter()
@@ -47,6 +47,9 @@ const refreshAuth = () => {
   userInfo.value = getUserInfo()
 }
 
+// 仅管理员可见的后台管理入口
+const isAdmin = computed(() => (userInfo.value?.roles || []).includes('admin'))
+
 const handleLogout = () => {
   clearAuth()
   refreshAuth()
@@ -72,13 +75,16 @@ router.afterEach(refreshAuth)
     <!-- 导航栏 -->
     <nav class="navbar">
       <div class="nav-container">
-        <router-link to="/home" class="nav-logo">
-          <span class="logo-icon">⚡</span>
-          <span class="logo-text">ZYTool</span>
+        <router-link to="/home" class="nav-logo" aria-label="ZYTool 首页">
+          <span class="logo-icon"><ThunderboltOutlined /></span>
+          <span class="logo-text">ZYTool<span class="logo-dot">.</span></span>
         </router-link>
         <div class="nav-menu">
           <router-link to="/home" class="nav-link">首页</router-link>
           <router-link to="/tools" class="nav-link">工具</router-link>
+          <router-link to="/agents/chat" class="nav-link">AI 助手</router-link>
+          <router-link to="/finance/ledger" class="nav-link finance-nav-link">财务</router-link>
+          <router-link v-if="isAdmin" to="/admin" class="nav-link">管理</router-link>
 
           <!-- 未登录：显示登录按钮 -->
           <router-link
@@ -121,9 +127,10 @@ router.afterEach(refreshAuth)
             class="theme-toggle"
             @click="toggleTheme"
             :title="theme === 'light' ? '切换到深色模式' : '切换到浅色模式'"
+            :aria-label="theme === 'light' ? '切换到深色模式' : '切换到浅色模式'"
           >
-            <span class="theme-icon" v-if="theme === 'light'">☀️</span>
-            <span class="theme-icon" v-else>🌙</span>
+            <BulbOutlined class="theme-icon" v-if="theme === 'light'" />
+            <BulbFilled class="theme-icon" v-else />
           </a-button>
         </div>
       </div>
@@ -141,11 +148,9 @@ router.afterEach(refreshAuth)
 }
 
 .navbar {
-  background: var(--glass-bg);
-  backdrop-filter: var(--glass-blur);
-  -webkit-backdrop-filter: var(--glass-blur);
-  border-bottom: 1px solid var(--glass-border);
-  padding: 0.5rem 0;
+  background: var(--workspace-surface);
+  border-bottom: 1px solid var(--workspace-line);
+  padding: 10px var(--page-gutter);
   position: sticky;
   top: 0;
   z-index: 1000;
@@ -154,88 +159,85 @@ router.afterEach(refreshAuth)
 }
 
 .nav-container {
-  max-width: 1400px;
+  max-width: var(--page-max-width);
   margin: 0 auto;
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 0 12px;
+  min-height: 38px;
+  gap: 12px;
+  padding: 0;
 }
 
 .nav-logo {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
+  flex-shrink: 0;
+  gap: 9px;
   text-decoration: none;
-  transition: transform var(--duration-base) var(--ease-out);
-}
-
-@media (hover: hover) and (pointer: fine) {
-  .nav-logo:hover {
-    transform: scale(1.02);
-  }
 }
 
 .logo-icon {
-  font-size: 1.5rem;
-  filter: drop-shadow(0 2px 4px rgba(59, 130, 246, 0.3));
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 9px;
+  background: var(--workspace-accent-soft);
+  color: var(--workspace-accent);
+  font-size: 19px;
 }
 
 .logo-text {
-  font-size: 1.4rem;
-  font-weight: 800;
-  background: var(--gradient-primary);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
+  font-size: 21px;
+  font-weight: 650;
+  color: var(--workspace-text);
   letter-spacing: -0.5px;
 }
+
+.logo-dot { color: var(--workspace-accent); padding-left: 2px; }
 
 .nav-menu {
   display: flex;
   align-items: center;
   gap: 0.5rem;
+  min-width: 0;
 }
 
 .nav-link {
-  color: var(--text-secondary);
+  flex-shrink: 0;
+  white-space: nowrap;
+  color: var(--workspace-muted);
   text-decoration: none;
-  padding: 0.4rem 0.9rem;
-  border-radius: var(--border-radius);
+  padding: 7px 15px;
+  border-radius: 8px;
   transition: color var(--duration-fast) var(--ease-out),
     background-color var(--duration-fast) var(--ease-out),
-    box-shadow var(--duration-base) var(--ease-out),
     transform var(--duration-press) var(--ease-out);
   font-weight: 500;
-  font-size: 0.9rem;
+  font-size: 13px;
 }
 
 @media (hover: hover) and (pointer: fine) {
-  .nav-link:hover {
-    color: var(--primary-color);
-    background: rgba(59, 130, 246, 0.08);
-  }
+  .nav-link:hover { color: var(--workspace-accent); background: var(--workspace-soft); }
 }
 
 .nav-link.router-link-active {
-  color: var(--primary-color);
-  background: rgba(59, 130, 246, 0.12);
+  color: var(--workspace-accent);
+  background: var(--workspace-accent-soft);
   font-weight: 600;
 }
 
-.nav-link-primary {
-  background: var(--gradient-primary);
-  color: white !important;
-  box-shadow: var(--shadow-primary);
-  margin-left: 0.5rem;
+.nav-link-primary, .nav-link-primary.router-link-active {
+  background: var(--workspace-accent);
+  color: var(--workspace-bg);
+  margin-left: 8px;
 }
 
+.nav-logo:focus-visible, .nav-link:focus-visible { outline: 2px solid var(--workspace-accent); outline-offset: 3px; }
+
 @media (hover: hover) and (pointer: fine) {
-  .nav-link-primary:hover {
-    background: var(--gradient-primary-hover);
-    box-shadow: var(--shadow-primary-hover);
-    transform: translateY(-1px);
-  }
+  .nav-link-primary:hover { background: var(--workspace-accent-hover); color: var(--workspace-bg); }
 }
 
 .nav-link-primary:active {
@@ -249,22 +251,26 @@ router.afterEach(refreshAuth)
   height: 32px;
   padding: 0 0.5rem;
   margin-left: 0.5rem;
-  border-radius: var(--border-radius);
-  color: var(--text-secondary) !important;
+  border-radius: 8px;
+  color: var(--workspace-muted) !important;
+  background: transparent;
+  box-shadow: none;
   transition: color var(--duration-fast) var(--ease-out),
     background-color var(--duration-fast) var(--ease-out);
 }
 
 @media (hover: hover) and (pointer: fine) {
   .user-avatar-btn:hover {
-    color: var(--primary-color) !important;
-    background: rgba(59, 130, 246, 0.08);
+    color: var(--workspace-accent) !important;
+    background: var(--workspace-soft);
+    box-shadow: none;
+    transform: none;
   }
 }
 
 .user-avatar {
-  background: var(--gradient-primary);
-  color: white;
+  background: var(--workspace-accent-soft);
+  color: var(--workspace-accent);
   font-size: 0.8rem;
   font-weight: 600;
 }
@@ -279,24 +285,29 @@ router.afterEach(refreshAuth)
 }
 
 .theme-toggle {
-  color: var(--text-secondary) !important;
+  color: var(--workspace-muted) !important;
+  background: transparent;
+  box-shadow: none;
   width: 32px;
   height: 32px;
+  padding: 0;
   display: flex;
   align-items: center;
   justify-content: center;
-  border-radius: var(--border-radius);
-  margin-left: 0.5rem;
+  border-radius: 8px;
+  margin-left: 8px;
   transition: color var(--duration-fast) var(--ease-out),
-    background-color var(--duration-fast) var(--ease-out),
-    transform var(--duration-base) var(--ease-out);
+    background-color var(--duration-fast) var(--ease-out);
 }
+
+.theme-toggle:focus-visible, .user-avatar-btn:focus-visible { outline-color: var(--workspace-accent); }
 
 @media (hover: hover) and (pointer: fine) {
   .theme-toggle:hover {
-    color: var(--primary-color) !important;
-    background: rgba(59, 130, 246, 0.08);
-    transform: rotate(15deg);
+    color: var(--workspace-accent) !important;
+    background: var(--workspace-soft);
+    transform: none;
+    box-shadow: none;
   }
 }
 
@@ -306,34 +317,33 @@ router.afterEach(refreshAuth)
 }
 
 @media (max-width: 768px) {
-  .nav-container {
-    padding: 0 12px;
-  }
+  .navbar { padding: 9px var(--page-gutter); }
+  .nav-link { padding: 7px 12px; }
+  .nav-link-primary, .user-avatar-btn, .theme-toggle { margin-left: 4px; }
+  .user-name { max-width: 60px; }
+}
 
-  .logo-text {
-    font-size: 1.4rem;
-  }
+@media (max-width: 480px) {
+  .navbar { padding: 9px var(--page-gutter); }
+  .nav-container { gap: 8px; }
+  .nav-logo { gap: 5px; }
+  .logo-icon { width: 27px; height: 29px; font-size: 17px; border-radius: 7px; }
+  .logo-text { font-size: 17px; }
+  .nav-menu { gap: 0; }
+  .nav-link { padding: 7px 6px; font-size: 12px; }
+  .user-avatar-btn { padding: 0 4px; }
+  .user-name { display: none; }
+  .theme-toggle { width: 28px; margin-left: 2px; }
+}
 
-  .nav-link {
-    padding: 0.45rem 0.8rem;
-    font-size: 0.9rem;
-  }
+@media (max-width: 400px) {
+  .nav-logo .logo-text { display: none; }
+  .nav-logo { gap: 0; }
+}
 
-  .nav-link-primary {
-    margin-left: 0.25rem;
-  }
-
-  .user-avatar-btn {
-    margin-left: 0.25rem;
-    padding: 0 0.5rem;
-  }
-
-  .user-name {
-    max-width: 60px;
-  }
-
-  .theme-toggle {
-    margin-left: 0.25rem;
-  }
+@media (max-width: 360px) {
+  .navbar { padding-left: var(--page-gutter); padding-right: var(--page-gutter); }
+  .nav-link { padding-left: 5px; padding-right: 5px; }
+  .logo-dot { display: none; }
 }
 </style>

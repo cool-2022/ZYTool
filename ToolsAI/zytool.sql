@@ -137,3 +137,74 @@ CREATE INDEX idx_ai_message_feedbacks_message ON public.ai_message_feedbacks USI
 
 CREATE TABLE ai_session_archives ( id bigserial NOT NULL, session_id int8 NOT NULL, session_uuid uuid NOT NULL, user_id int8 NOT NULL, title varchar(255) DEFAULT ''::character varying NOT NULL, message_count int4 DEFAULT 0 NOT NULL, total_tokens int4 DEFAULT 0 NOT NULL, messages jsonb DEFAULT '[]'::jsonb NOT NULL, deleted_at timestamptz DEFAULT now() NOT NULL, CONSTRAINT ai_session_archives_pkey PRIMARY KEY (id));
 CREATE INDEX idx_ai_session_archives_user ON public.ai_session_archives USING btree (user_id, deleted_at DESC);
+
+-- public.field_roots 定义（后台管理·字段字根表/数据字典，2026-11-05 新增；替代已废弃的 input_roots 五笔字根表）
+
+DROP TABLE IF EXISTS input_roots;
+CREATE TABLE field_roots (
+    id bigserial NOT NULL,
+    field_name varchar(63) NOT NULL,
+    data_type varchar(32) DEFAULT ''::character varying NOT NULL,
+    data_length int4 NULL,
+    data_precision int4 NULL,
+    data_scale int4 NULL,
+    comment text DEFAULT ''::text NOT NULL,
+    remark text DEFAULT ''::text NOT NULL,
+    created_by varchar(64) DEFAULT 'admin'::character varying NOT NULL,
+    updated_by varchar(64) NULL,
+    created_at timestamptz DEFAULT now() NOT NULL,
+    updated_at timestamptz DEFAULT now() NOT NULL,
+    CONSTRAINT field_roots_pkey PRIMARY KEY (id),
+    CONSTRAINT uk_field_roots_field_name UNIQUE (field_name),
+    CONSTRAINT ck_field_roots_length CHECK (data_length IS NULL OR data_length > 0),
+    CONSTRAINT ck_field_roots_precision CHECK (data_precision IS NULL OR data_precision BETWEEN 0 AND 1000),
+    CONSTRAINT ck_field_roots_scale CHECK (data_scale IS NULL OR (data_precision IS NOT NULL AND data_scale BETWEEN 0 AND data_precision))
+);
+COMMENT ON TABLE public.field_roots IS '字段字根表（数据字典）：字段名与现有表字段按名自动关联，注释/类型可手动同步到引用表字段';
+COMMENT ON COLUMN public.field_roots.data_type IS '基础类型名（PostgreSQL 短名，如 varchar/numeric/int8/timestamptz，数组加 []），不含长度精度';
+COMMENT ON COLUMN public.field_roots.data_length IS '字符长度，仅 varchar/bpchar';
+COMMENT ON COLUMN public.field_roots.data_precision IS 'numeric 总位数；时间类型为秒的小数位数';
+COMMENT ON COLUMN public.field_roots.data_scale IS 'numeric 小数位数，0 至 data_precision';
+COMMENT ON COLUMN public.field_roots.created_by IS '创建人';
+COMMENT ON COLUMN public.field_roots.updated_by IS '修改人，未修改时为空';
+
+-- 已存在 field_roots 的库增量补字段（2026-11-06）
+-- ALTER TABLE field_roots ADD COLUMN IF NOT EXISTS created_by varchar(64) DEFAULT 'admin' NOT NULL;
+-- ALTER TABLE field_roots ADD COLUMN IF NOT EXISTS updated_by varchar(64);
+
+-- 旧类型表达式拆分迁移（仅旧库执行；本库 2026-11-06 已完成，不要重跑建表/迁移）
+-- BEGIN;
+-- ALTER TABLE public.field_roots ADD COLUMN data_length int4;
+-- ALTER TABLE public.field_roots ADD COLUMN data_precision int4;
+-- ALTER TABLE public.field_roots ADD COLUMN data_scale int4;
+-- WITH specs AS (
+--     SELECT r.id, COALESCE(et.typname, t.typname)::text AS base_type,
+--            t.typcategory = 'A' AS is_array,
+--            regexp_match(r.data_type, '\(([0-9]+)(?:,\s*([0-9]+))?\)') AS modifiers
+--     FROM public.field_roots r
+--     LEFT JOIN pg_type t ON t.oid = NULLIF(btrim(r.data_type), '')::regtype
+--     LEFT JOIN pg_type et ON t.typcategory = 'A' AND et.oid = t.typelem
+-- )
+-- UPDATE public.field_roots r
+-- SET data_type = COALESCE(s.base_type, '') || CASE WHEN s.is_array THEN '[]' ELSE '' END,
+--     data_length = CASE WHEN s.base_type IN ('varchar', 'bpchar') THEN s.modifiers[1]::int END,
+--     data_precision = CASE WHEN s.base_type IN ('numeric', 'time', 'timetz', 'timestamp', 'timestamptz', 'interval')
+--                           THEN s.modifiers[1]::int END,
+--     data_scale = CASE WHEN s.base_type = 'numeric' AND s.modifiers[1] IS NOT NULL
+--                       THEN COALESCE(s.modifiers[2]::int, 0) END
+-- FROM specs s WHERE r.id = s.id;
+-- ALTER TABLE public.field_roots ALTER COLUMN data_type TYPE varchar(32);
+-- ALTER TABLE public.field_roots ADD CONSTRAINT ck_field_roots_length CHECK (data_length IS NULL OR data_length > 0);
+-- ALTER TABLE public.field_roots ADD CONSTRAINT ck_field_roots_precision CHECK (data_precision IS NULL OR data_precision BETWEEN 0 AND 1000);
+-- ALTER TABLE public.field_roots ADD CONSTRAINT ck_field_roots_scale CHECK (data_scale IS NULL OR (data_precision IS NOT NULL AND data_scale BETWEEN 0 AND data_precision));
+-- COMMENT ON COLUMN public.field_roots.data_type IS '基础类型名（PostgreSQL 短名，如 varchar/numeric/int8/timestamptz，数组加 []），不含长度精度';
+-- COMMENT ON COLUMN public.field_roots.data_length IS '字符长度，仅 varchar/bpchar';
+-- COMMENT ON COLUMN public.field_roots.data_precision IS 'numeric 总位数；时间类型为秒的小数位数';
+-- COMMENT ON COLUMN public.field_roots.data_scale IS 'numeric 小数位数，0 至 data_precision';
+-- COMMIT;
+
+-- 字段物理顺序重排说明（本库 2026-11-06 已执行；仅旧库在上方增量迁移后出现类型参数列排在末尾时需要）
+-- PostgreSQL 不支持 ALTER COLUMN 直接调整物理列顺序。按上方 CREATE TABLE 的目标顺序
+-- （id、field_name、类型四列、comment/remark、created_by/updated_by、created_at/updated_at），
+-- 在事务中新建 field_roots_reordered、显式列清单复制、setval id 序列、重建主键/唯一约束/CHECK/注释，
+-- 核验行数与行内容摘要后 DROP 旧表并 RENAME；失败必须整体回滚。

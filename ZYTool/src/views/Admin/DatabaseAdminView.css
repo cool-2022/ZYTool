@@ -1,0 +1,57 @@
+/* 数据库管理面板（页面级变量、头部、权限不足、工具条样式见 AdminView.css） */
+
+/* 工作区布局 */
+.admin-workspace { display: grid; grid-template-columns: 264px minmax(0, 1fr); gap: 16px; margin-top: 12px; align-items: start; }
+.table-sidebar { background: var(--admin-surface); border: 1px solid var(--admin-line); border-radius: 13px; padding: 12px; position: sticky; top: 156px; }
+.sidebar-search { margin-bottom: 10px; }
+.table-list { display: flex; flex-direction: column; gap: 4px; max-height: calc(100vh - 320px); overflow-y: auto; }
+.list-spin { display: flex; justify-content: center; padding: 24px 0; }
+.table-item { display: flex; flex-direction: column; align-items: flex-start; gap: 2px; width: 100%; padding: 8px 11px; border: 0; border-radius: 9px; background: transparent; color: var(--admin-ink); text-align: left; cursor: pointer; transition: background-color var(--duration-fast) var(--ease-out), transform var(--duration-press) var(--ease-out); }
+@media (hover: hover) and (pointer: fine) {
+  .table-item:hover { background: var(--admin-soft); }
+}
+.table-item.selected { background: var(--admin-accent-soft); }
+.table-item.selected .table-name { color: var(--admin-coral); font-weight: 600; }
+.table-name { font-size: 13px; font-weight: 500; font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace; overflow-wrap: anywhere; }
+.table-comment { font-size: 11px; color: var(--admin-caption); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 100%; }
+.list-empty { display: flex; flex-direction: column; align-items: center; gap: 8px; padding: 26px 0; color: var(--admin-caption); font-size: 12px; }
+
+/* 内容区 */
+.table-content { min-width: 0; background: var(--admin-surface); border: 1px solid var(--admin-line); border-radius: 13px; padding: 16px 18px 18px; }
+.content-placeholder { display: flex; flex-direction: column; align-items: center; gap: 10px; padding: 70px 0; color: var(--admin-caption); font-size: 13px; }
+.placeholder-icon { font-size: 32px; color: var(--admin-accent-line); }
+.content-heading { display: flex; align-items: center; justify-content: space-between; gap: 14px; flex-wrap: wrap; padding-bottom: 12px; border-bottom: 1px solid var(--admin-line); }
+.heading-text h2 { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; font-size: 18px; font-weight: 600; font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace; }
+.heading-comment { font-size: 12px; font-weight: 400; color: var(--admin-muted); font-family: inherit; }
+.heading-text p { color: var(--admin-caption); font-size: 12px; margin-top: 4px; }
+.content-tabs { display: flex; gap: 5px; }
+.content-tabs :deep(.ant-btn) { border: 0; background: transparent; color: var(--admin-muted); box-shadow: none; height: 36px; padding: 0 15px; }
+.content-tabs :deep(.selected) { color: var(--admin-coral); background: var(--admin-accent-soft); font-weight: 600; }
+
+/* 数据浏览 */
+.rows-tools { display: flex; justify-content: flex-end; margin: 14px 0 12px; }
+.rows-search { max-width: 340px; }
+.cell-null { color: var(--admin-null); font-style: italic; font-size: 12px; }
+.cell-bool { display: inline-block; padding: 1px 8px; border-radius: 5px; font-size: 12px; background: var(--admin-soft); color: var(--admin-muted); }
+.cell-bool.on { background: var(--admin-green-soft); color: var(--admin-green); }
+.cell-json { font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace; font-size: 12px; color: var(--admin-muted); }
+.table-empty { display: flex; flex-direction: column; align-items: center; gap: 8px; padding: 30px 0; color: var(--admin-caption); font-size: 13px; }
+
+/* 表结构 */
+.columns-panel { margin-top: 14px; }
+.col-name { font-weight: 600; font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace; }
+.pk-badge { display: inline-flex; align-items: center; gap: 4px; margin-left: 8px; padding: 1px 8px; border-radius: 5px; font-size: 11px; background: var(--admin-sand-soft); color: var(--admin-sand); }
+.col-type { padding: 1px 7px; border-radius: 5px; font-size: 12px; background: var(--admin-code-bg); color: var(--admin-muted); }
+.col-not-null { color: var(--admin-ink); font-size: 13px; }
+
+@media (max-width: 900px) {
+  .admin-workspace { grid-template-columns: minmax(0, 1fr); }
+  .table-sidebar { position: static; }
+  .table-list { max-height: 240px; }
+}
+
+@media (max-width: 768px) {
+  .table-content { padding: 14px 12px; }
+  .rows-tools { justify-content: stretch; }
+  .rows-search { max-width: none; width: 100%; }
+}

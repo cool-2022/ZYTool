@@ -6,7 +6,7 @@
                 <a-typography-paragraph>在前端静态判断输入的 SQL 是否可以直接运行（基于启发式检查）</a-typography-paragraph>
             </div>
 
-            <a-row :gutter="24">
+            <a-row :gutter="{ xs: 16, sm: 24 }">
                 <a-col :xs="24" :lg="12">
                     <a-card title="输入 SQL" :bordered="false">
                         <a-textarea class="sql-insert-textarea" v-model:value="sqlText"
@@ -243,13 +243,13 @@ function clearAll() {
 .tool-page {
     min-height: 100vh;
     background: var(--gradient-bg);
-    padding: 2rem 0;
+    padding: 2rem var(--page-gutter);
 }
 
 .container {
-    max-width: 1200px;
+    max-width: var(--page-max-width);
     margin: 0 auto;
-    padding: 0 20px;
+    padding: 0;
 }
 
 .page-header {

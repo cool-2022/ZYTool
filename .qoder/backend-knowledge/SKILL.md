@@ -15,7 +15,7 @@ Rust 主后端 + Python 兜底后端的统一知识入口。
 
 ## 模块地图
 
-- `Backup/tools_project_rust/`：Rust axum 主后端（端口 8000）
+- `Backup/tools_project_rust/`：Rust axum 主后端（.env `PORT=10003`，源码默认 8000）
 - `Backup/tools_project_py/`：Python FastAPI 部分兜底后端（部署预期 8001，源码默认 8000）
 
 核心原则：**目标上两端接口路径与响应结构应保持一致**，但当前 Python 仅部分兼容；改动时同时维护目标契约、实际差异与路由覆盖矩阵。

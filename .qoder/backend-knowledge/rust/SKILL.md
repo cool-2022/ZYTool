@@ -1,6 +1,6 @@
 # Rust 后端知识库（backend-knowledge/rust）
 
-位置：`Backup/tools_project_rust/`（axum，默认端口 8000）
+位置：`Backup/tools_project_rust/`（axum，源码默认端口 8000；当前 .env `PORT=10003`）
 
 双端目标契约与当前差异见 `../common/01-api-contract.md`；完整路由、认证要求和 Python 覆盖情况见 `../common/03-route-coverage.md`。
 
@@ -12,13 +12,17 @@ src/
 ├── core/              # config.rs（Settings/envy）、auth.rs（JWT/CurrentUser）、
 │                      # db.rs（sqlx 连接池）、crypto.rs（模型密钥加解密）、
 │                      # error.rs（AppError）、middleware.rs
-├── models/            # 请求/响应模型（serde），按域分文件（agents/auth/text/...）
+├── models/            # 请求/响应模型（serde），按域分文件（agents/auth/text/...）；
+│                      #   ei.rs 为 EI 平台 EiInfo 数据交换结构（blocks: meta.columns+rows、
+│                      #   EDInfo 定长数组、三段式 get/set），与前端 ZYTool/src/utils/ei/ 对应；
+│                      #   预留未接线，文件级 #![allow(dead_code)]，接入后移除
 ├── routes/            # 路由层
 │   ├── agents/        #   AI 助手：mod.rs（挂载）、sessions.rs（会话/模型）、chat.rs（流式/同步）
 │   ├── tools/         #   工具路由（按工具分文件，mod.rs 挂载）
-│   └── auth.rs / health.rs / protected.rs
+│   └── admin.rs / auth.rs / health.rs / protected.rs   # admin.rs 为后台管理（表只读浏览 + 字根 CRUD + 服务状态）
 └── services/          # 业务逻辑
     ├── agents/        #   AI 助手：store.rs（DB 持久化）、llm.rs（模型客户端）
+    ├── admin.rs       #   后台管理：表清单/表结构/分页行查询（sqlx json feature）、field_roots 字段字根（基础短名+长度/精度/小数位、type_expr、逐属性差异、扫描过滤超范围精度/按名关联引用/父表优先及继承列重读/按表事务手动同步）、服务状态（进程运行时长 START_TIME + DB ping）
     └── tools/         #   工具服务（map/password/regex/text/timestamp）
 ```
 

@@ -1,6 +1,8 @@
+pub mod admin;
 pub mod agents;
 pub mod auth;
 pub mod base;
+pub mod ei;
 pub mod health;
 pub mod map;
 pub mod misc;

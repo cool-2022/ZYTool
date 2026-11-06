@@ -76,11 +76,12 @@ textarea:focus {
   box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.12);
 }
 
-/* 容器样式 */
+/* 内容容器：左右边距由页面外层统一承担，避免重复留白 */
 .container {
-  max-width: 1200px;
+  width: 100%;
+  max-width: var(--page-max-width);
   margin: 0 auto;
-  padding: 0 20px;
+  padding: 0;
 }
 
 /* 页面标题区域 */

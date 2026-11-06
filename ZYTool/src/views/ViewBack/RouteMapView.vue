@@ -470,13 +470,13 @@ onUnmounted(() => {
 .tool-page {
     min-height: 100vh;
     background: var(--gradient-bg);
-    padding: 2rem 0;
+    padding: 2rem var(--page-gutter);
 }
 
 .container {
-    max-width: 1400px;
+    max-width: var(--page-max-width);
     margin: 0 auto;
-    padding: 0 20px;
+    padding: 0;
 }
 
 .page-header {

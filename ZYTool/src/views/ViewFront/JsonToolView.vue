@@ -8,7 +8,7 @@
             </div>
 
             <!-- 工具内容 -->
-            <a-row :gutter="24">
+            <a-row :gutter="{ xs: 16, sm: 24 }">
                 <a-col :xs="24" :lg="12">
                     <a-card title="输入JSON" :bordered="false">
                         <a-textarea v-model:value="inputText" placeholder="请输入JSON文本..." :rows="15"
@@ -203,13 +203,13 @@ inputText.value = exampleJson
 .tool-page {
     min-height: 100vh;
     background: var(--gradient-bg);
-    padding: 2rem 0;
+    padding: 2rem var(--page-gutter);
 }
 
 .container {
-    max-width: 1200px;
+    max-width: var(--page-max-width);
     margin: 0 auto;
-    padding: 0 20px;
+    padding: 0;
 }
 
 .page-header {
@@ -351,11 +351,11 @@ inputText.value = exampleJson
 
 @media (max-width: 768px) {
     .tool-page {
-        padding: 1rem 0;
+        padding: 1rem var(--page-gutter);
     }
 
     .container {
-        padding: 0 10px;
+        padding: 0;
     }
 
     .tool-icon {

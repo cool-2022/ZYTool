@@ -36,8 +36,8 @@ export function useChatView() {
     const chatModels = ref<ChatModel[]>([])
     const selectedModelId = ref<number | undefined>(undefined)
 
-    // 侧边栏是否折叠
-    const sidebarCollapsed = ref(false)
+    // 移动端默认收起侧栏，避免遮挡聊天内容
+    const sidebarCollapsed = ref(window.innerWidth <= 768)
 
     // 加载模型列表
     async function loadModels() {
@@ -83,6 +83,9 @@ export function useChatView() {
         // 会话有记录的模型则跟随会话，否则保持当前选择
         if (session.model_id) {
             selectedModelId.value = session.model_id
+        }
+        if (window.innerWidth <= 768) {
+            sidebarCollapsed.value = true
         }
         await loadMessages(session.id)
     }
@@ -299,7 +302,8 @@ export function useChatView() {
         if (index === -1) return
 
         // 乐观删除：立即从列表移除，失败再回滚
-        const [removed] = chatSessions.value.splice(index, 1)
+        const removed = chatSessions.value[index]!
+        chatSessions.value.splice(index, 1)
         if (currentSession.value?.id === sessionId) {
             currentSession.value = null
             messages.value = []
