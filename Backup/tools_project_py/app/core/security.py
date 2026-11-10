@@ -1,3 +1,6 @@
+# 内存滑动窗口限流中间件。
+# 现状：main.py 清理后已不再挂载本中间件，仅经 app.core.__init__ 导出以兼容旧引用；
+# 进程内存计数，多实例部署下不共享，超限以 429 + Retry-After 响应。
 import time
 from collections import defaultdict
 from fastapi import Request, HTTPException
@@ -9,7 +12,8 @@ logger = get_logger(__name__)
 
 
 class RateLimitMiddleware(BaseHTTPMiddleware):
-    
+    """按客户端 IP 的滑动窗口限流；当前未在 main.py 挂载，保留供需要时启用"""
+
     def __init__(self, app):
         super().__init__(app)
         self.requests: Dict[str, list] = defaultdict(list)

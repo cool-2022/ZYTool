@@ -1,3 +1,9 @@
+// ============================================================================
+// 加密模块 —— 模型 API Key 的 AES-256-GCM 加解密
+// 职责：加密存储第三方模型 API Key（如 Kimi/Moonshot），防止数据库泄露明文。
+// 约定：密钥 = SHA-256(SECRET_KEY)，密文格式为 v1:base64(nonce + 密文)；
+//       无 v1: 前缀的历史明文数据解密时原样返回（兼容兜底）。
+// ============================================================================
 use aes_gcm::{
     aead::{Aead, KeyInit},
     Aes256Gcm, Nonce,
@@ -17,6 +23,7 @@ fn cipher() -> Aes256Gcm {
 
 /// 加密为 `v1:base64(nonce + 密文)` 格式
 pub fn encrypt(plaintext: &str) -> String {
+    // 每次加密使用随机 12 字节 nonce：同一明文每次密文不同，nonce 无需保密但绝不复用
     let mut nonce_bytes = [0u8; 12];
     use rand::RngCore;
     rand::rng().fill_bytes(&mut nonce_bytes);

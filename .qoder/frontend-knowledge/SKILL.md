@@ -24,7 +24,7 @@ src/
 │   ├── api.ts           # rustApi/pythonApi + requestWithFallback + ApiService（唯一后端入口）
 │   └── frontendTools.ts # 纯前端 JSON/Base64/URL/RGB/HEX 函数（按需命名导出，勿加默认导出）
 ├── config/appConfig.ts  # 双后端地址、apiPrefix、高德 Key
-├── router/index.ts      # 路由 + beforeEach 认证守卫（meta.requiresAuth）
+├── router/index.ts      # 动态注册路由：`import.meta.glob('../views/**/*.vue')` 收集组件（懒加载），routeDefs 元数据数组循环 addRoute；新页面只登记一行（view 为 views/ 相对路径）；beforeEach 认证守卫（meta.requiresAuth）
 ├── styles/index.css     # variables → base → components → utilities
 ├── Mock/                # Mock 数据与类型（ChatData/GCPMRuleData/SqlRation）
 └── utils/
@@ -68,13 +68,19 @@ src/
 - **前端组件优先使用 Ant Design Vue（4.x）**：新增 UI 组件先查 antd，能用 antd 实现的不手写、不引入其他组件库
 - **动效必须走全局 token**（`src/styles/variables.css`）：`--ease-out/--ease-in-out/--ease-drawer` + `--duration-press(160ms)/fast(150ms)/base(200ms)/slow(250ms)/enter(300ms)`；禁止 `transition: all`、UI 禁 `ease-in`；按压反馈 `:active { transform: scale(0.97) }`；hover 动效用 `@media (hover: hover) and (pointer: fine)` 门控；reduced-motion 降级非归零；全局按压/reduced-motion 基座在 `styles/utilities.css`
 - 组件逻辑复用：`XxxView.vue` + `XxxView.ts`（`useXxxView()`）+ `XxxView.css` 三件套，参照 Agents/ 与 MES/
-- 新工具除页面、路由和 API 外，还需检查后端 `/tools/categories` 数据及 `ToolView.vue` 中按**工具名称**匹配的 `routeMap`/`backendRouteMap`；未映射只显示“开发中”，后端工具跳转前还会执行 `healthCheck()`
+- 新工具除页面、路由和 API 外，还需在 `tools` 表登记数据（含 `route`）；`ToolView.vue` 跳转优先读工具数据里的 `route`，缺失时回退按**工具 ID** 的 `frontendRouteMap`/`backendRouteMap`；未映射只显示“开发中”，后端工具跳转前还会执行 `healthCheck()`
+- 工具页额外追加了本地“财务工具”分类（ID 4），其中“小账本”（ID 16）作为前端工具直接打开 `/finance/ledger`；接口数据和备用数据都会合并该分类。分类加载完成后还会移除地图 ID 13/15 并补回唯一的 ID 13，避免后端进程数据未刷新导致重复或缺失
 - Vite 仅配置 Vue 插件和 `@ → src` alias，没有 dev proxy；开发端口来自 package script，history 路由部署需 SPA fallback
 - 当前没有 test、lint 或独立 typecheck 脚本，`yarn build` 是唯一类型检查入口；`start` 脚本存在 `yarn rnu dev` 拼写错误，使用 `yarn dev`
 
 ## 主题与样式
 
-- 样式入口顺序固定为 `variables → base → components → utilities`；`base.css`、`components.css` 同时承担 Ant Design 深色适配
+- 样式入口顺序固定为 `variables → base → components → formStyles → toolStyles → utilities`；`base.css`、`components.css` 同时承担 Ant Design 深色适配
+- 后续所有新增画面保持暖色工作区风格，复用 `--workspace-*` 变量；`formStyles.css` 提供仅映射暖色变量的 `warm-theme`，以及 `warm-form-page`、`warm-form-card`、`warm-form`、`warm-form-submit`、`warm-form-secondary`、`warm-form-link` 和 `warm-form-note`。首页、工具、聊天、小账本、后台管理与顶栏通过 `warm-theme` 接入，登录和设置复用完整表单类，避免另起蓝紫或其他独立配色
+- 所有工具详情页根节点使用 `.tool-page.warm-theme`，共享 `toolStyles.css` 的页面、卡片、控件、结果区、上传区、地图和响应式样式；差异行、颜色预览、SQL 三列布局等业务专属样式保留在页面内，新增工具页不得重新引入蓝紫卡片头或硬编码橙色文案
+- `JsonToolView.vue` 使用顶部集中工具栏＋双栏等高编辑器布局，输入/结果卡片带字符计数，支持格式化、压缩、填入示例、复制与清空；小屏收为单列，保留浏览器本地处理
+- 其他工具页沿用 JSON 页视觉结构：`toolStyles.css` 统一提供 `has-tool-badge`、`tool-badge`、`tool-action-bar`、`tool-action-group`、`tool-panel-row/col/card`、`tool-card-meta`、`text-tool-input/result` 等类。Base64、URL、SQL 使用双栏编辑器；时间、颜色、文本对比和地图使用集中操作栏＋业务卡片，保留各自转换、上传、定位与路线功能
+- `RouteMapView.vue` 的起点区域使用独立“当前位置”按钮；定位成功后清除旧路线与标记，写入起点地址，并在地图上添加当前位置标记、以缩放 16 居中。按钮带 loading，路线信息卡提供暖色空状态
 - 滚动条统一由 `utilities.css` 控制，使用 `variables.css` 的 `--scrollbar-size/--scrollbar-thumb/--scrollbar-thumb-hover`：WebKit/Chromium 横纵均为 4px、暖灰圆角滑块及透明轨道，Firefox 使用原生 thin；支持 WebKit 伪元素时将标准 scrollbar 属性重置为 auto，避免覆盖精确宽度。深色同步暖灰值，高对比度模式回退系统尺寸/配色；聊天区、工具和设置菜单不再单独覆盖滚动条。
 - 浅色/深色通过 `:root[data-theme="dark"]` 切换；主题存于 localStorage `zytool-theme`，无存储值时跟随系统偏好，并通过 `provide/inject` 共享
 - Ant Design Vue 在 `main.ts` 全量注册并引入 reset.css

@@ -1,3 +1,8 @@
+# 全局配置（pydantic-settings）。
+# 加载约定：本文件只读项目根目录 .env（PORT=10004 等服务级配置）；
+# 另有一套 .env.development 由 app/services/Agents/deepseek_client.py 单独加载，
+# 仅承载 KIMI_*（优先）/ DeepSeek（回退）等 Agent 模型密钥，两处互不影响。
+# 环境变量优先级高于 .env，字段默认值仅为兜底。
 import os
 from typing import List, Optional
 from pydantic_settings import BaseSettings, SettingsConfigDict
@@ -37,6 +42,7 @@ class Settings(BaseSettings):
     rate_limit_period: int = Field(default=60, env="RATE_LIMIT_PERIOD")
 
     # JWT 配置
+    # 隐藏约束：默认值仅为开发占位，生产必须经环境变量/.env 覆盖 SECRET_KEY
     secret_key: str = Field(
         default="your-secret-key-change-this-in-production-09d25e094faa6ca2556c818166b7a9563b93f7099f6f0f4caa6cf63b88e8d3e7",
         env="SECRET_KEY"
@@ -45,7 +51,12 @@ class Settings(BaseSettings):
     access_token_expire_minutes: int = Field(default=30, env="ACCESS_TOKEN_EXPIRE_MINUTES")
 
     # 数据库（PostgreSQL，后台管理接口使用；与 Rust 后端同库）
+    # 留空即无 DB 模式：db.get_pool() 返回 None，仅 admin 接口受影响（返回 500「数据库连接池未初始化」）
     database_url: str = Field(default="", env="DATABASE_URL")
+
+    # Redis（缓存/限流等；REDIS_HOST 为空时保持无 Redis 模式，redis_client.get_redis() 返回 None）
+    redis_host: str = Field(default="", env="REDIS_HOST")
+    redis_port: int = Field(default=6379, env="REDIS_PORT")
 
     # 和风天气 API 配置
     qweather_key: str = Field(default="", env="QWEATHER_API_KEY")

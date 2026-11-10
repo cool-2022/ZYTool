@@ -1,5 +1,5 @@
 <template>
-  <div class="tools-page">
+  <div class="tools-page warm-theme">
     <header class="page-hero">
       <div class="page-hero-content">
         <span class="page-hero-mark" aria-hidden="true"><AppstoreOutlined /></span>
@@ -81,17 +81,43 @@ import { ref, onMounted, computed } from 'vue'
 import { ApiService, type Category } from '../services/api'
 import { message } from 'ant-design-vue'
 import router from '../router'
-import { AppstoreOutlined, CodeOutlined, InboxOutlined, PictureOutlined, SettingOutlined } from '@ant-design/icons-vue'
+import { AppstoreOutlined, CodeOutlined, InboxOutlined, PictureOutlined, SettingOutlined, WalletOutlined } from '@ant-design/icons-vue'
 
 // 工具分类数据
 const categories = ref<Category[]>([])
 const loading = ref(false)
 const activeCategoryId = ref<number | null>(null)
 
+const financeCategory: Category = {
+  id: 4,
+  name: '财务工具',
+  description: '个人收支与预算管理',
+  tools: [
+    { id: 16, name: '小账本', icon: '¥', description: '记录日常收支，管理个人预算', type: 'frontend' }
+  ]
+}
+
+const withSingleMapTool = (items: Category[]) => {
+  const normalized = items.map(category => ({
+    ...category,
+    tools: category.tools.filter(tool => tool.id !== 13 && tool.id !== 15)
+  }))
+  const backendCategory = normalized.find(category => category.id === 2)
+  backendCategory?.tools.push({
+    id: 13,
+    name: '地图导航',
+    icon: '🗺',
+    description: '显示当前位置地图',
+    type: 'backend'
+  })
+  return normalized
+}
+
 const getCategoryIcon = (name: string) => {
   if (name === '前端工具') return CodeOutlined
   if (name === '后端工具') return SettingOutlined
   if (name === '图片工具') return PictureOutlined
+  if (name === '财务工具') return WalletOutlined
   return AppstoreOutlined
 }
 
@@ -129,7 +155,7 @@ const loadCategories = async () => {
   try {
     loading.value = true
     const response = await ApiService.getCategories()
-    categories.value = response.categories
+    categories.value = [...response.categories, financeCategory]
   } catch (error) {
     console.error('加载工具分类失败:', error)
     message.error('加载工具分类失败，请检查后端服务是否启动')
@@ -168,55 +194,49 @@ const loadCategories = async () => {
           { id: 7, name: '二维码生成', icon: '📱', description: '生成二维码', type: 'frontend' },
           { id: 8, name: '图片水印', icon: '💧', description: '添加图片水印', type: 'backend' }
         ]
-      }
+      },
+      financeCategory
     ]
   } finally {
+    categories.value = withSingleMapTool(categories.value)
     loading.value = false
   }
 }
 
-// 打开工具
-const openTool = async (tool: any) => {
-  // 前端工具直接跳转，不需要检查后端
-  if (tool.type === 'frontend') {
-    const routeMap: Record<string, string> = {
-      'JSON格式化': '/tools/json',
-      'Base64编码': '/tools/base64',
-      'URL编码': '/tools/url',
-      '颜色选择器': '/tools/color',
-      '时间戳转换': '/tools/timestamp'
-    }
+const frontendRouteMap: Record<number, string> = {
+  1: '/tools/json',
+  2: '/tools/base64',
+  3: '/tools/url',
+  10: '/tools/color',
+  11: '/tools/timestamp',
+  16: '/finance/ledger'
+}
 
-    const route = routeMap[tool.name]
-    if (route) {
-      router.push({ path: route })
+const backendRouteMap: Record<number, string> = {
+  4: '/tools/diff',
+  13: '/tools/map',
+  14: '/tools/sql'
+}
+
+// 打开工具（优先使用后端下发的 route，缺失时回退 id 映射）
+const openTool = async (tool: any) => {
+  const route = tool.route || (tool.type === 'frontend' ? frontendRouteMap[tool.id] : backendRouteMap[tool.id])
+  if (!route) {
+    message.info(`${tool.name} 工具正在开发中...`)
+    return
+  }
+
+  // 前端工具直接跳转；后端工具先检查服务
+  if (tool.type === 'backend') {
+    try {
+      await ApiService.healthCheck()
+    } catch (error) {
+      console.error('后端服务不可用:', error)
+      message.warning(`后端服务不可用，${tool.name} 工具暂时无法使用`)
       return
     }
-
-    message.info(`${tool.name} 工具正在开发中...`)
-    return
   }
-
-  // 后端工具需要检查服务，然后跳转到对应页面
-  const backendRouteMap: Record<string, string> = {
-    '文本对比': '/tools/diff',
-    '地图导航': '/tools/map',
-    'Sql合理性检查': '/tools/sql'
-  }
-
-  const backendRoute = backendRouteMap[tool.name]
-  if (!backendRoute) {
-    message.info(`${tool.name} 工具正在开发中...`)
-    return
-  }
-
-  try {
-    await ApiService.healthCheck()
-    router.push({ path: backendRoute })
-  } catch (error) {
-    console.error('后端服务不可用:', error)
-    message.warning(`后端服务不可用，${tool.name} 工具暂时无法使用`)
-  }
+  await router.push({ path: route })
 }
 
 // 组件挂载时加载数据

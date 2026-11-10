@@ -1,6 +1,6 @@
 <template>
     <a-config-provider :theme="chatTheme">
-    <div class="chat-view-page">
+    <div class="chat-view-page warm-theme">
         <header class="chat-page-header">
             <div class="chat-page-brand">
                 <span class="chat-page-mark" aria-hidden="true"><RobotOutlined /></span>

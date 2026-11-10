@@ -13,7 +13,7 @@ const {
   rowsData, rowsLoading, keyword, rowTableColumns, tableRows,
   pageSize, pageSizeOptions,
   forbidden,
-  selectTable, searchRows, changePage, refresh,
+  selectTable, changePage, refresh,
 } = useDatabaseAdminView()
 </script>
 

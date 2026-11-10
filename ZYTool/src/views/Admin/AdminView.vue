@@ -49,7 +49,7 @@ const adminTheme = computed(() => {
 
 <template>
   <a-config-provider :theme="adminTheme">
-    <main class="admin-page">
+    <main class="admin-page warm-theme">
       <div class="admin-shell">
         <header class="admin-header">
           <div class="admin-brand">

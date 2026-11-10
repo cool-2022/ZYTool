@@ -1,7 +1,9 @@
 use axum::{routing::get, Extension, Json, Router};
 use sysinfo::{Disks, System};
+use tracing::warn;
 
 use crate::core::config::SETTINGS;
+use crate::core::db::{self, DbPool};
 use crate::models::{
     BaseInfo, BaseResponse, CategoriesResponse, Category, ResourceInfo, RuntimeInfo, SystemInfo,
     SystemInfoResponse, ToolItem,
@@ -13,52 +15,112 @@ pub fn router() -> Router {
         .route("/system-info", get(system_info))
 }
 
+/// 工具分类优先读库（tool_categories/tools 表），无 DB 或查询失败回退硬编码
 async fn get_categories(
     Extension(base): Extension<Option<BaseInfo>>,
 ) -> Json<BaseResponse<CategoriesResponse>> {
-    Json(BaseResponse::ok(
-        CategoriesResponse {
-            categories: vec![
-                Category {
-                    id: 1,
-                    name: "前端工具".to_string(),
-                    description: "浏览器直接处理，无需后端".to_string(),
-                    tools: vec![
-                        ToolItem { id: 1, name: "JSON格式化".to_string(), icon: "{}".to_string(), description: "JSON数据格式化美化".to_string(), tool_type: "frontend".to_string() },
-                        ToolItem { id: 2, name: "Base64编码".to_string(), icon: "64".to_string(), description: "Base64编码解码".to_string(), tool_type: "frontend".to_string() },
-                        ToolItem { id: 3, name: "URL编码".to_string(), icon: "%".to_string(), description: "URL编码解码".to_string(), tool_type: "frontend".to_string() },
-                        ToolItem { id: 10, name: "颜色选择器".to_string(), icon: "🎨".to_string(), description: "选择颜色代码".to_string(), tool_type: "frontend".to_string() },
-                        ToolItem { id: 11, name: "时间戳转换".to_string(), icon: "⏰".to_string(), description: "时间戳转换工具".to_string(), tool_type: "frontend".to_string() },
-                    ],
-                },
-                Category {
-                    id: 2,
-                    name: "后端工具".to_string(),
-                    description: "需要服务器处理的复杂功能".to_string(),
-                    tools: vec![
-                        ToolItem { id: 4, name: "文本对比".to_string(), icon: "≈".to_string(), description: "对比两个文本的差异".to_string(), tool_type: "backend".to_string() },
-                        ToolItem { id: 9, name: "正则测试".to_string(), icon: ".*".to_string(), description: "测试正则表达式".to_string(), tool_type: "backend".to_string() },
-                        ToolItem { id: 12, name: "密码生成器".to_string(), icon: "🔐".to_string(), description: "生成安全密码".to_string(), tool_type: "backend".to_string() },
-                        ToolItem { id: 13, name: "地图导航".to_string(), icon: "🗺".to_string(), description: "显示当前位置地图".to_string(), tool_type: "backend".to_string() },
-                        ToolItem { id: 15, name: "地图导航".to_string(), icon: "🦌".to_string(), description: "显示路径".to_string(), tool_type: "backend".to_string() },
-                        ToolItem { id: 14, name: "Sql合理性检查".to_string(), icon: "🔍".to_string(), description: "比对输入的语句是否合理".to_string(), tool_type: "backend".to_string() },
-                    ],
-                },
-                Category {
-                    id: 3,
-                    name: "图片工具".to_string(),
-                    description: "图片处理和转换工具（待开发）".to_string(),
-                    tools: vec![
-                        ToolItem { id: 5, name: "图片压缩".to_string(), icon: "📷".to_string(), description: "压缩图片文件大小".to_string(), tool_type: "frontend".to_string() },
-                        ToolItem { id: 6, name: "格式转换".to_string(), icon: "🔄".to_string(), description: "转换图片格式".to_string(), tool_type: "frontend".to_string() },
-                        ToolItem { id: 7, name: "二维码生成".to_string(), icon: "📱".to_string(), description: "生成二维码".to_string(), tool_type: "frontend".to_string() },
-                        ToolItem { id: 8, name: "图片水印".to_string(), icon: "💧".to_string(), description: "添加图片水印".to_string(), tool_type: "backend".to_string() },
-                    ],
-                },
+    let categories = match db::get_pool() {
+        Some(pool) => match load_categories_from_db(pool).await {
+            Ok(c) => c,
+            Err(e) => {
+                warn!("工具分类读库失败，回退硬编码: {}", e);
+                fallback_categories()
+            }
+        },
+        None => fallback_categories(),
+    };
+    Json(BaseResponse::ok(CategoriesResponse { categories }, base))
+}
+
+async fn load_categories_from_db(pool: &DbPool) -> Result<Vec<Category>, sqlx::Error> {
+    let rows = sqlx::query_as::<
+        _,
+        (
+            i64,
+            String,
+            String,
+            Option<i64>,
+            Option<String>,
+            Option<String>,
+            Option<String>,
+            Option<String>,
+            Option<String>,
+        ),
+    >(
+        "SELECT c.id, c.name, c.description,
+                t.id, t.name, t.icon, t.description, t.type, t.route
+         FROM tool_categories c
+         LEFT JOIN tools t ON t.category_id = c.id AND t.is_enabled
+         WHERE c.is_enabled
+         ORDER BY c.sort_order, c.id, t.sort_order, t.id",
+    )
+    .fetch_all(pool)
+    .await?;
+
+    let mut categories: Vec<Category> = Vec::new();
+    for (cid, cname, cdesc, tid, tname, ticon, tdesc, ttype, troute) in rows {
+        if categories.last().map(|c| c.id) != Some(cid) {
+            categories.push(Category {
+                id: cid,
+                name: cname,
+                description: cdesc,
+                tools: vec![],
+            });
+        }
+        if let (Some(id), Some(name)) = (tid, tname) {
+            if let Some(cat) = categories.last_mut() {
+                cat.tools.push(ToolItem {
+                    id,
+                    name,
+                    icon: ticon.unwrap_or_default(),
+                    description: tdesc.unwrap_or_default(),
+                    tool_type: ttype.unwrap_or_default(),
+                    route: troute.unwrap_or_default(),
+                });
+            }
+        }
+    }
+    Ok(categories)
+}
+
+fn fallback_categories() -> Vec<Category> {
+    vec![
+        Category {
+            id: 1,
+            name: "前端工具".to_string(),
+            description: "浏览器直接处理，无需后端".to_string(),
+            tools: vec![
+                ToolItem { id: 1, name: "JSON格式化".to_string(), icon: "{}".to_string(), description: "JSON数据格式化美化".to_string(), tool_type: "frontend".to_string(), route: "/tools/json".to_string() },
+                ToolItem { id: 2, name: "Base64编码".to_string(), icon: "64".to_string(), description: "Base64编码解码".to_string(), tool_type: "frontend".to_string(), route: "/tools/base64".to_string() },
+                ToolItem { id: 3, name: "URL编码".to_string(), icon: "%".to_string(), description: "URL编码解码".to_string(), tool_type: "frontend".to_string(), route: "/tools/url".to_string() },
+                ToolItem { id: 10, name: "颜色选择器".to_string(), icon: "🎨".to_string(), description: "选择颜色代码".to_string(), tool_type: "frontend".to_string(), route: "/tools/color".to_string() },
+                ToolItem { id: 11, name: "时间戳转换".to_string(), icon: "⏰".to_string(), description: "时间戳转换工具".to_string(), tool_type: "frontend".to_string(), route: "/tools/timestamp".to_string() },
             ],
         },
-        base,
-    ))
+        Category {
+            id: 2,
+            name: "后端工具".to_string(),
+            description: "需要服务器处理的复杂功能".to_string(),
+            tools: vec![
+                ToolItem { id: 4, name: "文本对比".to_string(), icon: "≈".to_string(), description: "对比两个文本的差异".to_string(), tool_type: "backend".to_string(), route: "/tools/diff".to_string() },
+                ToolItem { id: 9, name: "正则测试".to_string(), icon: ".*".to_string(), description: "测试正则表达式".to_string(), tool_type: "backend".to_string(), route: String::new() },
+                ToolItem { id: 12, name: "密码生成器".to_string(), icon: "🔐".to_string(), description: "生成安全密码".to_string(), tool_type: "backend".to_string(), route: String::new() },
+                ToolItem { id: 13, name: "地图导航".to_string(), icon: "🗺".to_string(), description: "显示当前位置地图".to_string(), tool_type: "backend".to_string(), route: "/tools/map".to_string() },
+                ToolItem { id: 14, name: "Sql合理性检查".to_string(), icon: "🔍".to_string(), description: "比对输入的语句是否合理".to_string(), tool_type: "backend".to_string(), route: "/tools/sql".to_string() },
+            ],
+        },
+        Category {
+            id: 3,
+            name: "图片工具".to_string(),
+            description: "图片处理和转换工具（待开发）".to_string(),
+            tools: vec![
+                ToolItem { id: 5, name: "图片压缩".to_string(), icon: "📷".to_string(), description: "压缩图片文件大小".to_string(), tool_type: "frontend".to_string(), route: String::new() },
+                ToolItem { id: 6, name: "格式转换".to_string(), icon: "🔄".to_string(), description: "转换图片格式".to_string(), tool_type: "frontend".to_string(), route: String::new() },
+                ToolItem { id: 7, name: "二维码生成".to_string(), icon: "📱".to_string(), description: "生成二维码".to_string(), tool_type: "frontend".to_string(), route: String::new() },
+                ToolItem { id: 8, name: "图片水印".to_string(), icon: "💧".to_string(), description: "添加图片水印".to_string(), tool_type: "backend".to_string(), route: String::new() },
+            ],
+        },
+    ]
 }
 
 async fn system_info(

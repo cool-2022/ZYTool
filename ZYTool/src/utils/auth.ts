@@ -1,6 +1,10 @@
 /**
  * Token 认证工具
  * 提供 token 的存储、获取、删除功能
+ *
+ * 登录态统一存 localStorage（JWT token / 用户信息 / 基础信息三个 key），
+ * api.ts 的请求拦截器读取 token 注入 Authorization 头；
+ * 401 或退出登录时通过 clearAuth 一次性清空。
  */
 
 const TOKEN_KEY = 'zy_tool_token'

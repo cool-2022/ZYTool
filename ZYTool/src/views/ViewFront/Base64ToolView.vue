@@ -1,61 +1,54 @@
 <template>
-    <div class="tool-page">
+    <div class="tool-page warm-theme">
         <div class="container">
-            <!-- 页面标题 -->
-            <div class="page-header">
-                <a-typography-title :level="2">Base64编码工具（前端处理）</a-typography-title>
-                <a-typography-paragraph>Base64编码解码，浏览器本地处理，数据不上传</a-typography-paragraph>
+            <div class="page-header has-tool-badge">
+                <div>
+                    <a-typography-title :level="2">Base64 编码工具</a-typography-title>
+                    <a-typography-paragraph>编码或解码文本，数据仅在浏览器中处理</a-typography-paragraph>
+                </div>
+                <span class="tool-badge"><SafetyOutlined /> 本地处理</span>
             </div>
 
-            <!-- 工具内容 -->
-            <a-row :gutter="{ xs: 16, sm: 24 }">
-                <a-col :xs="24" :lg="12">
-                    <a-card title="输入文本" :bordered="false">
-                        <a-textarea v-model:value="inputText" placeholder="请输入要编码或解码的文本..." :rows="15"
-                            @change="handleInputChange" />
+            <div class="tool-action-bar">
+                <div class="tool-action-group">
+                    <a-button type="primary" @click="encode"><CodeOutlined /> 编码</a-button>
+                    <a-button @click="decode"><UnlockOutlined /> 解码</a-button>
+                    <a-button @click="loadExample('hello')"><FileTextOutlined /> 填入示例</a-button>
+                </div>
+                <div class="tool-action-group">
+                    <a-button :disabled="!result" @click="copyResult"><CopyOutlined /> 复制结果</a-button>
+                    <a-button :disabled="!inputText && !result" @click="clearAll"><ClearOutlined /> 清空</a-button>
+                </div>
+            </div>
+
+            <a-row :gutter="{ xs: 16, sm: 20 }" class="tool-panel-row">
+                <a-col :xs="24" :lg="12" class="tool-panel-col">
+                    <a-card :bordered="false" class="tool-panel-card text-editor-card">
+                        <template #title><span class="tool-card-title"><span class="tool-status-dot"></span>输入文本</span></template>
+                        <template #extra><span class="tool-card-meta">{{ inputText.length }} 字符</span></template>
+                        <a-textarea v-model:value="inputText" class="text-tool-input"
+                            placeholder="请输入要编码或解码的文本..." :rows="16" />
                     </a-card>
                 </a-col>
-                <a-col :xs="24" :lg="12">
-                    <a-card title="处理结果" :bordered="false">
-                        <template #extra>
-                            <a-space>
-                                <a-button @click="encode" type="primary">
-                                    编码
-                                </a-button>
-                                <a-button @click="decode">
-                                    解码
-                                </a-button>
-                                <a-button @click="copyResult">复制</a-button>
-                                <a-button @click="clearAll">清空</a-button>
-                            </a-space>
-                        </template>
-                        <div class="result-container">
+                <a-col :xs="24" :lg="12" class="tool-panel-col">
+                    <a-card :bordered="false" class="tool-panel-card text-editor-card">
+                        <template #title><span class="tool-card-title"><span class="tool-status-dot output"></span>处理结果</span></template>
+                        <template #extra><span class="tool-card-meta">{{ result.length }} 字符</span></template>
+                        <div class="text-tool-result" :class="{ empty: !result }">
                             <pre v-if="result" class="result-text">{{ result }}</pre>
-                            <a-empty v-else description="暂无结果" />
+                            <a-empty v-else description="编码或解码后，结果会显示在这里" />
                         </div>
                     </a-card>
                 </a-col>
             </a-row>
 
-            <!-- 使用说明 -->
-            <a-divider>使用说明</a-divider>
-            <a-card :bordered="false">
+            <a-card title="使用说明" :bordered="false" class="tool-help-card">
                 <a-descriptions :column="1">
-                    <a-descriptions-item label="什么是Base64">
-                        Base64是一种用64个字符来表示任意二进制数据的方法，常用于在URL、Cookie、网页中传输少量二进制数据
-                    </a-descriptions-item>
-                    <a-descriptions-item label="使用场景">
-                        图片转文本、邮件附件编码、URL安全字符串、数据传输等
-                    </a-descriptions-item>
-                    <a-descriptions-item label="示例">
-                        <a-space>
-                            <a-button size="small" @click="loadExample('hello')">示例1: Hello World</a-button>
-                            <a-button size="small" @click="loadExample('chinese')">示例2: 中文文本</a-button>
-                            <a-button size="small" @click="loadExample('encoded')">示例3: 已编码文本</a-button>
-                        </a-space>
-                    </a-descriptions-item>
+                    <a-descriptions-item label="什么是 Base64">Base64 使用 64 个字符表示二进制数据，常用于文本与数据传输。</a-descriptions-item>
+                    <a-descriptions-item label="使用场景">图片转文本、邮件附件编码、URL 安全字符串等。</a-descriptions-item>
                 </a-descriptions>
             </a-card>
+            <div class="tool-page-note"><SafetyOutlined /> 输入内容不会上传到服务器</div>
         </div>
     </div>
 </template>
@@ -63,6 +56,7 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 import { message } from 'ant-design-vue'
+import { SafetyOutlined, CodeOutlined, UnlockOutlined, FileTextOutlined, CopyOutlined, ClearOutlined } from '@ant-design/icons-vue'
 import { base64Encode, base64Decode } from '../../services/frontendTools'
 
 const inputText = ref('')
@@ -120,11 +114,6 @@ const clearAll = () => {
     result.value = ''
 }
 
-// 处理输入变化
-const handleInputChange = () => {
-    // 可以添加实时验证
-}
-
 // 加载示例
 const loadExample = (type: string) => {
     switch (type) {
@@ -138,6 +127,7 @@ const loadExample = (type: string) => {
             inputText.value = 'SGVsbG8gV29ybGQhIOS9oOWlveS4lueVjO+8gQ=='
             break
     }
+    result.value = ''
 }
 </script>
 

@@ -17,7 +17,7 @@ const {
 </script>
 
 <template>
-  <div class="roots-panel">
+  <div class="roots-panel warm-theme">
     <div v-if="forbidden" class="forbidden-panel">
       <LockOutlined class="forbidden-icon" />
       <h2>权限不足</h2>

@@ -1,0 +1,193 @@
+:where(.warm-theme, .warm-form-page, .warm-form-card, .warm-form) {
+  --primary-color: var(--workspace-accent);
+  --primary-dark: var(--workspace-accent-hover);
+  --primary-light: var(--workspace-accent-line);
+  --primary-lighter: var(--workspace-accent-line);
+  --accent-color: var(--workspace-sand);
+  --bg-primary: var(--workspace-surface);
+  --bg-secondary: var(--workspace-bg);
+  --bg-tertiary: var(--workspace-soft);
+  --text-primary: var(--workspace-text);
+  --text-secondary: var(--workspace-muted);
+  --text-tertiary: var(--workspace-caption);
+  --border-color: var(--workspace-line);
+  --border-light: var(--workspace-line);
+  --gradient-primary: linear-gradient(135deg, var(--workspace-accent), var(--workspace-sand));
+  --gradient-primary-hover: linear-gradient(135deg, var(--workspace-accent-hover), var(--workspace-accent));
+  --shadow-primary: 0 4px 14px color-mix(in srgb, var(--workspace-accent) 24%, transparent);
+  --shadow-primary-hover: 0 6px 20px color-mix(in srgb, var(--workspace-accent) 30%, transparent);
+}
+
+.warm-form-page {
+  position: relative;
+  min-height: calc(100vh - 64px);
+  min-height: calc(100dvh - 64px);
+  padding: 36px var(--page-gutter);
+  color: var(--workspace-text);
+  background:
+    radial-gradient(circle at 78% 12%, color-mix(in srgb, var(--workspace-sand) 10%, transparent), transparent 30%),
+    radial-gradient(circle at 30% 88%, color-mix(in srgb, var(--workspace-accent) 9%, transparent), transparent 32%),
+    var(--workspace-bg);
+}
+
+.warm-form-card {
+  padding: 30px;
+  background: color-mix(in srgb, var(--workspace-surface) 94%, transparent);
+  border: 1px solid var(--workspace-line);
+  border-radius: var(--border-radius-xl);
+  box-shadow:
+    0 16px 44px color-mix(in srgb, var(--workspace-text) 9%, transparent),
+    0 3px 10px color-mix(in srgb, var(--workspace-text) 4%, transparent);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+}
+
+.warm-form .ant-form-item {
+  margin-bottom: 18px;
+}
+
+.warm-form .ant-form-item-label {
+  padding-bottom: 6px;
+}
+
+.warm-form .ant-form-item-label > label {
+  height: auto;
+  color: var(--workspace-muted);
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.warm-form .ant-input,
+.warm-form .ant-input-affix-wrapper,
+.warm-form .ant-select-selector,
+.warm-form .ant-input-number {
+  color: var(--workspace-text);
+  font-size: 14px;
+  background: var(--workspace-bg);
+  border-color: var(--workspace-line);
+  border-radius: 12px;
+  transition:
+    border-color var(--duration-fast) var(--ease-out),
+    box-shadow var(--duration-fast) var(--ease-out),
+    background-color var(--duration-fast) var(--ease-out);
+}
+
+.warm-form .ant-input-affix-wrapper {
+  min-height: 44px;
+  padding: 0 12px;
+}
+
+.warm-form .ant-input::placeholder,
+.warm-form .ant-select-selection-placeholder {
+  color: var(--workspace-caption);
+}
+
+.warm-form .ant-input-prefix {
+  margin-right: 9px;
+  color: var(--workspace-caption);
+}
+
+.warm-form .ant-input:focus,
+.warm-form .ant-input-affix-wrapper-focused,
+.warm-form .ant-select-focused .ant-select-selector,
+.warm-form .ant-input-number-focused {
+  background: var(--workspace-surface);
+  border-color: var(--workspace-accent-line);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--workspace-accent) 12%, transparent);
+}
+
+.warm-form .ant-input-affix-wrapper .ant-input {
+  min-height: 0;
+  background: transparent;
+  border: 0;
+  box-shadow: none;
+}
+
+.warm-form .ant-input:disabled,
+.warm-form .ant-select-disabled .ant-select-selector {
+  color: var(--workspace-caption);
+  background: var(--workspace-soft);
+  cursor: not-allowed;
+}
+
+.warm-form-submit.ant-btn,
+.warm-form .warm-form-submit {
+  min-height: 44px;
+  color: var(--workspace-bg);
+  font-size: 14px;
+  font-weight: 600;
+  background: var(--gradient-primary);
+  border: 0;
+  border-radius: 12px;
+  box-shadow: 0 5px 14px color-mix(in srgb, var(--workspace-accent) 20%, transparent);
+  transition:
+    box-shadow var(--duration-base) var(--ease-out),
+    transform var(--duration-press) var(--ease-out);
+}
+
+.warm-form-secondary.ant-btn,
+.warm-form .warm-form-secondary {
+  min-height: 42px;
+  color: var(--workspace-muted);
+  font-size: 13px;
+  font-weight: 500;
+  background: var(--workspace-surface);
+  border: 1px solid var(--workspace-line);
+  border-radius: 12px;
+  transition:
+    color var(--duration-fast) var(--ease-out),
+    border-color var(--duration-fast) var(--ease-out),
+    background-color var(--duration-fast) var(--ease-out),
+    transform var(--duration-press) var(--ease-out);
+}
+
+.warm-form-link {
+  color: var(--workspace-accent);
+  font-weight: 500;
+  cursor: pointer;
+  transition: color var(--duration-fast) var(--ease-out);
+}
+
+.warm-form-note {
+  color: var(--workspace-caption);
+  font-size: 12px;
+  line-height: 1.7;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .warm-form .ant-input:hover,
+  .warm-form .ant-input-affix-wrapper:hover,
+  .warm-form .ant-select:hover .ant-select-selector,
+  .warm-form .ant-input-number:hover {
+    border-color: var(--workspace-accent-line);
+  }
+
+  .warm-form-submit.ant-btn:hover,
+  .warm-form .warm-form-submit:hover {
+    background: var(--gradient-primary-hover);
+    box-shadow: var(--shadow-primary-hover);
+    transform: translateY(-1px);
+  }
+
+  .warm-form-secondary.ant-btn:hover,
+  .warm-form .warm-form-secondary:hover {
+    color: var(--workspace-accent);
+    background: var(--workspace-bg);
+    border-color: var(--workspace-accent-line);
+  }
+
+  .warm-form-link:hover {
+    color: var(--workspace-accent-hover);
+  }
+}
+
+@media (max-width: 480px) {
+  .warm-form-page {
+    padding: 24px 16px;
+  }
+
+  .warm-form-card {
+    padding: 24px 20px;
+    border-radius: 18px;
+  }
+}

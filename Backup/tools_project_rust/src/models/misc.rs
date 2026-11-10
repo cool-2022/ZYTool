@@ -8,6 +8,9 @@ pub struct ToolItem {
     pub description: String,
     #[serde(rename = "type")]
     pub tool_type: String,
+    /// 前端路由（如 /tools/json）；空串表示未接入页面
+    #[serde(default)]
+    pub route: String,
 }
 
 #[derive(Debug, Serialize, Deserialize)]

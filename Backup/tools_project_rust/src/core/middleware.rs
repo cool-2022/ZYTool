@@ -1,3 +1,8 @@
+// ============================================================================
+// 中间件模块 —— 请求日志与前端基础信息解析
+// 职责：记录请求/响应耗时日志（4xx/5xx 升级为 warn），解析 X-Base-Info 头注入扩展上下文。
+// 约定：在 main.rs 中以 from_fn 方式全局挂载，对所有路由生效。
+// ============================================================================
 use axum::{
     body::Body,
     http::{Request, StatusCode},
@@ -9,6 +14,7 @@ use tracing::{info, warn};
 
 use crate::models::BaseInfo;
 
+/// 请求日志中间件：记录方法与路径，响应头附加 X-Process-Time，错误状态用 warn 级别
 pub async fn request_logging_middleware(req: Request<Body>, next: Next) -> Response {
     let method = req.method().clone();
     let path = req.uri().path().to_string();
@@ -66,6 +72,7 @@ pub async fn base_info_middleware(mut req: Request<Body>, next: Next) -> Respons
     next.run(req).await
 }
 
+/// tower 服务错误的兜底处理（当前未挂载，保留备用）
 #[allow(dead_code)]
 pub async fn handle_error(err: tower::BoxError) -> (StatusCode, String) {
     warn!("Unhandled error: {}", err);

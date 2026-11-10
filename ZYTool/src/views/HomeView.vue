@@ -1,5 +1,5 @@
 <template>
-  <main class="home">
+  <main class="home warm-theme">
     <div class="home-shell">
       <section class="hero-section" aria-labelledby="home-title">
         <div class="hero-copy">

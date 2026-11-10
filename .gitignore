@@ -29,6 +29,8 @@ dist-ssr
 .env
 .env.*
 !.env.example
+# 项目级数据库/Redis 连接配置（含明文密码，禁止提交）
+Config/database.env
 .gitignore
 
 yalc.lock

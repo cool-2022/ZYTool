@@ -15,6 +15,7 @@
 | `KIMI_BASE_URL` | Kimi API 地址 | https://api.moonshot.cn/v1 |
 | `KIMI_MODEL` | Kimi 模型 | kimi-k2-0905-preview |
 | `RUST_LOG` / `LOG_LEVEL` | tracing 日志过滤 | `RUST_LOG` 优先；守护模式文件日志来自 shell 重定向 |
+| `REDIS_HOST` / `REDIS_PORT` | Redis 连接 | HOST 留空即关闭（无 Redis 模式）；启动时初始化，失败仅告警不退出；见 `core/redis.rs` |
 
 常用默认值：`host=0.0.0.0`、`port=8000`（当前 .env 显式 `PORT=10003`，避开本机 8000 被微信等占用）。CORS 使用精确清单 + 本机/私网/`.local` 来源规则，见后端公共契约。
 
@@ -28,6 +29,7 @@ Python 有两套配置加载路径：
 - `services/Agents/deepseek_client.py` 另行从 `.env.development` 和环境变量读取 `KIMI_API_KEY/KIMI_BASE_URL/KIMI_MODEL`，未配置密钥时回退 `DEEPSEEK_API_KEY`
 - `PORT` 默认 8000；当前 .env 显式 `PORT=10004`，与 Rust（10003）并行
 - `RATE_LIMIT_*`、`MAX_REQUEST_SIZE` 未接入有效中间件；`LOG_DIR` 未传入日志初始化
+- `REDIS_HOST` / `REDIS_PORT`：Redis 连接；HOST 留空即关闭；`app/core/redis_client.py` 懒加载 + ping 验证，失败返回 None 由业务降级
 
 ## 前端（ZYTool/，Vite 环境变量）
 
@@ -41,9 +43,17 @@ Python 有两套配置加载路径：
 
 `.env.example` 中的 `VITE_MAP_CENTER` 当前未被源码读取，设置它不会改变地图中心；两个地图页面的默认中心点仍在组件内。
 
+## 项目级连接配置（Config/database.env）
+
+独立于三端 `.env` 的项目级连接配置文件，供外部工具/脚本（如 Java + DBeaver JDBC 核验数据库）直接读取，**当前不被 Rust/Python/前端代码加载**：
+
+- Oracle/PostgreSQL 连接分项（`ORACLE_TEST_*`、字符集、超时、SQL 日志开关），实际指向 zytool PostgreSQL 库
+- **Redis**（2026-11-10 新增）：`REDIS_HOST` / `REDIS_PORT`，无密码；双端代码已接入客户端（Rust `core/redis.rs`、Python `app/core/redis_client.py`，读取各自 `.env` 中的同名变量），**业务尚无消费**
+
 ## 敏感文件位置（仅记录位置，禁止复制内容）
 
 - `Backup/tools_project_rust/.env`：Rust 后端密钥（DB、QQ、Kimi 等）
 - `Backup/tools_project_py/.env`：Python 应用/JWT/天气配置
 - `Backup/tools_project_py/.env.development`：Python LLM 密钥与模型配置
 - `ZYTool/.env`：前端本地 Vite 配置（可能包含高德 Key）
+- `Config/database.env`：项目级 DB/Redis 连接信息（含明文密码，禁止复制内容）

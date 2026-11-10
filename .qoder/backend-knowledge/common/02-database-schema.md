@@ -18,6 +18,8 @@ PostgreSQL（`zytool` 库），DDL 源文件：`ToolsAI/zytool.sql`，当前仅 
 | `ai_message_feedbacks` | 消息反馈（点赞/点踩） | AI |
 | `ai_session_archives` | 会话物理删除时的精简快照 | AI |
 | `field_roots` | 字段字根表（数据字典），按字段名自动关联各表字段 | 后台管理 |
+| `tool_categories` | 工具分类（工具中心展示） | 工具 |
+| `tools` | 工具（含 route 驱动前端跳转） | 工具 |
 
 ## 当前数据库核验
 
@@ -32,6 +34,8 @@ PostgreSQL（`zytool` 库），DDL 源文件：`ToolsAI/zytool.sql`，当前仅 
 - 对上述字段执行「同步」（`POST /admin/roots/{id}/sync`）会把字典的类型/注释覆盖到所有同名列，执行前须确认
 
 2026-11-06 类型拆分后再次使用 Java + DBeaver JDBC 只读核验：field_roots 共 69 条，四个类型属性均匹配至少一个真实引用列；全部创建人为 admin、修改人 NULL。本次连接配置由 Java 直接读取 `Config/database.env`（仅记录位置与用途，不记录连接参数/凭据），Rust 的系统目录查询 SQL 已在数据库执行验证。同日又在单事务中按语义分组重建物理列顺序，重排前后 69 行内容摘要一致，id 序列、主键/唯一/CHECK 约束与表列注释均已核验。
+
+注：`Config/database.env` 自 2026-11-10 起同时登记 Redis 连接配置（无密码）；同日双端已接入 Redis 客户端（Rust `core/redis.rs`、Python `app/core/redis_client.py`，读取各自 `.env`），但业务尚无消费，详见 `../../common-knowledge/resources/04-env-vars.md`。
 
 数据库对象中保存的表注释如下（不是根据代码推测的说明）：
 
@@ -127,6 +131,13 @@ PostgreSQL（`zytool` 库），DDL 源文件：`ToolsAI/zytool.sql`，当前仅 
 - **同步**：`sync_root` 手动触发，注释与完整类型规格分开选择，只对所选属性有差异的列执行 `COMMENT ON COLUMN` / `ALTER COLUMN TYPE`；按继承深度先父表后子表，父表变更会由 PostgreSQL 递归传播，处理继承列前重新读取规格以避免重复直接 ALTER；每次表操作独立事务，失败回滚且其他独立表继续，结果含变更属性。目标显式为 public，表名/列名双引号转义，类型短名采用白名单（支持单层 []）并校验参数范围后拼接，注释用单引号转义；空类型不能同步类型，不能两项均不选
 - **边界**：不管理 PostgreSQL numeric 负 scale/scale 大于 precision，也不保存 interval 的范围限定（如 YEAR TO MONTH）或数组维数；遇到特殊类型规范先人工确认，不宜盲目全局同步。继承/分区父表 ALTER TYPE 会影响全部后代（包括其他 schema），父子之间不具备逐表隔离，执行前需确认整棵继承树
 - DDL 在 `ToolsAI/zytool.sql` 末尾（含 `DROP TABLE IF EXISTS input_roots`），需手工执行（Rust 不做 migration）
+
+## 工具域
+
+### tool_categories / tools（工具中心展示数据，2026-11-06 新增）
+- `tool_categories`：`id bigserial PK`、`name`、`description`、`sort_order`、`is_enabled`
+- `tools`：`id bigserial PK`、`category_id FK→tool_categories CASCADE`、`name`、`icon`、`description`、`type`（frontend/backend）、`route`（前端路由，空串=未接入页面）、`sort_order`、`is_enabled`；唯一约束 `(category_id, name)`
+- 初始数据 id 沿用原硬编码散值（1~14），序列已 setval；`/tools/categories` 双端均为读库优先（`is_enabled` 过滤、sort_order 排序），无 DB/查询失败回退硬编码
 
 ## 代码对应关系
 

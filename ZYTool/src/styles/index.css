@@ -1,7 +1,9 @@
 /* 统一样式入口文件 */
-/* 导入顺序：变量 -> 基础 -> 组件 -> 工具类 */
+/* 导入顺序：变量 -> 基础 -> 组件 -> 暖色表单 -> 工具详情 -> 工具类 */
 
 @import "./variables.css";
 @import "./base.css";
 @import "./components.css";
+@import "./formStyles.css";
+@import "./toolStyles.css";
 @import "./utilities.css";

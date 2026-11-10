@@ -208,3 +208,16 @@ COMMENT ON COLUMN public.field_roots.updated_by IS '修改人，未修改时为�
 -- （id、field_name、类型四列、comment/remark、created_by/updated_by、created_at/updated_at），
 -- 在事务中新建 field_roots_reordered、显式列清单复制、setval id 序列、重建主键/唯一约束/CHECK/注释，
 -- 核验行数与行内容摘要后 DROP 旧表并 RENAME；失败必须整体回滚。
+
+-- public.tool_categories / public.tools 定义（工具中心分类与工具展示数据，2026-11-06 新增）
+
+CREATE TABLE tool_categories ( id bigserial NOT NULL, name varchar(64) NOT NULL, description text DEFAULT ''::text NOT NULL, sort_order int4 DEFAULT 0 NOT NULL, is_enabled bool DEFAULT true NOT NULL, created_at timestamptz DEFAULT now() NOT NULL, updated_at timestamptz DEFAULT now() NOT NULL, CONSTRAINT tool_categories_pkey PRIMARY KEY (id));
+CREATE TABLE tools ( id bigserial NOT NULL, category_id int8 NOT NULL, name varchar(64) NOT NULL, icon varchar(64) DEFAULT ''::character varying NOT NULL, description text DEFAULT ''::text NOT NULL, type varchar(16) DEFAULT 'frontend'::character varying NOT NULL, route varchar(128) DEFAULT ''::character varying NOT NULL, sort_order int4 DEFAULT 0 NOT NULL, is_enabled bool DEFAULT true NOT NULL, created_at timestamptz DEFAULT now() NOT NULL, updated_at timestamptz DEFAULT now() NOT NULL, CONSTRAINT tools_pkey PRIMARY KEY (id), CONSTRAINT uk_tools_category_name UNIQUE (category_id, name), CONSTRAINT tools_category_id_fkey FOREIGN KEY (category_id) REFERENCES tool_categories(id) ON DELETE CASCADE);
+COMMENT ON TABLE public.tool_categories IS '工具分类表（工具中心展示）';
+COMMENT ON TABLE public.tools IS '工具表（工具中心展示，route 驱动前端跳转）';
+
+-- 初始数据（id 沿用原硬编码值，含 route 映射）
+INSERT INTO tool_categories (id, name, description, sort_order) VALUES (1, '前端工具', '浏览器直接处理，无需后端', 1), (2, '后端工具', '需要服务器处理的复杂功能', 2), (3, '图片工具', '图片处理和转换工具（待开发）', 3);
+INSERT INTO tools (id, category_id, name, icon, description, type, route, sort_order) VALUES (1, 1, 'JSON格式化', '{}', 'JSON数据格式化美化', 'frontend', '/tools/json', 1), (2, 1, 'Base64编码', '64', 'Base64编码解码', 'frontend', '/tools/base64', 2), (3, 1, 'URL编码', '%', 'URL编码解码', 'frontend', '/tools/url', 3), (10, 1, '颜色选择器', '🎨', '选择颜色代码', 'frontend', '/tools/color', 4), (11, 1, '时间戳转换', '⏰', '时间戳转换工具', 'frontend', '/tools/timestamp', 5), (4, 2, '文本对比', '≈', '对比两个文本的差异', 'backend', '/tools/diff', 1), (9, 2, '正则测试', '.*', '测试正则表达式', 'backend', '', 2), (12, 2, '密码生成器', '🔐', '生成安全密码', 'backend', '', 3), (13, 2, '地图导航', '🗺', '显示当前位置地图', 'backend', '/tools/map', 4), (14, 2, 'Sql合理性检查', '🔍', '比对输入的语句是否合理', 'backend', '/tools/sql', 5), (5, 3, '图片压缩', '📷', '压缩图片文件大小', 'frontend', '', 1), (6, 3, '格式转换', '🔄', '转换图片格式', 'frontend', '', 2), (7, 3, '二维码生成', '📱', '生成二维码', 'frontend', '', 3), (8, 3, '图片水印', '💧', '添加图片水印', 'backend', '', 4);
+SELECT setval('tool_categories_id_seq', 3);
+SELECT setval('tools_id_seq', 14);

@@ -1,100 +1,92 @@
 <template>
-    <div class="tool-page">
+    <div class="tool-page warm-theme">
         <div class="container">
-            <div class="page-header">
-                <a-typography-title :level="2">SQL 可执行性判断</a-typography-title>
-                <a-typography-paragraph>在前端静态判断输入的 SQL 是否可以直接运行（基于启发式检查）</a-typography-paragraph>
+            <div class="page-header has-tool-badge">
+                <div>
+                    <a-typography-title :level="2">SQL 可执行性判断</a-typography-title>
+                    <a-typography-paragraph>通过前端启发式规则检查 SQL，辅助识别高风险语句</a-typography-paragraph>
+                </div>
+                <span class="tool-badge static"><SafetyOutlined /> 静态检查</span>
             </div>
 
-            <a-row :gutter="{ xs: 16, sm: 24 }">
-                <a-col :xs="24" :lg="12">
-                    <a-card title="输入 SQL" :bordered="false">
-                        <a-textarea class="sql-insert-textarea" v-model:value="sqlText"
-                            placeholder="请输入或粘贴 SQL 语句（支持多条，用分号分隔）" :rows="15" />
-                        <template #extra>
-                            <a-space>
-                                <a-button type="primary" @click="analyzeSql" :loading="loading">检查是否可直接运行</a-button>
-                                <a-button @click="fillExample">示例</a-button>
-                                <a-button @click="clearAll">清空</a-button>
-                            </a-space>
-                        </template>
+            <div class="tool-action-bar">
+                <div class="tool-action-group">
+                    <a-button type="primary" @click="analyzeSql" :loading="loading"><CheckCircleOutlined /> 检查语句</a-button>
+                    <a-button @click="fillExample"><FileTextOutlined /> 填入示例</a-button>
+                </div>
+                <div class="tool-action-group">
+                    <a-button :disabled="!sqlText && !results.length" @click="clearAll"><ClearOutlined /> 清空</a-button>
+                </div>
+            </div>
+
+            <a-row :gutter="{ xs: 16, sm: 20 }" class="tool-panel-row">
+                <a-col :xs="24" :lg="12" class="tool-panel-col">
+                    <a-card :bordered="false" class="tool-panel-card text-editor-card">
+                        <template #title><span class="tool-card-title"><span class="tool-status-dot"></span>输入 SQL</span></template>
+                        <template #extra><span class="tool-card-meta">{{ sqlText.length }} 字符</span></template>
+                        <a-textarea class="sql-insert-textarea text-tool-input" v-model:value="sqlText"
+                            placeholder="请输入或粘贴 SQL 语句，支持多条分号分隔" :rows="16" />
                     </a-card>
                 </a-col>
-
-                <a-col :xs="24" :lg="12">
-                    <a-card title="检查结果" :bordered="false">
+                <a-col :xs="24" :lg="12" class="tool-panel-col">
+                    <a-card :bordered="false" class="tool-panel-card text-editor-card">
+                        <template #title><span class="tool-card-title"><span class="tool-status-dot output"></span>检查结果</span></template>
+                        <template #extra><span class="tool-card-meta">{{ results.length }} 条语句</span></template>
                         <a-spin :spinning="loading" tip="检查中...">
-                            <div v-if="results.length" class="result-list">
-                                <div v-for="(r, idx) in results" :key="idx" class="result-item">
-                                    <div class="result-header">
-                                        <a-typography-text strong>语句 {{ idx + 1 }}：</a-typography-text>
-                                        <a-tag
-                                            :color="r.severity === 'safe' ? 'green' : r.severity === 'warn' ? 'orange' : 'red'">{{
-                                                r.severityLabel }}</a-tag>
-                                    </div>
-                                    <pre class="sql-snippet">{{ r.statement }}</pre>
-                                    <div class="advice">
-                                        <div v-for="(m, i) in r.messages" :key="i">- {{ m }}</div>
+                            <div class="text-tool-result" :class="{ empty: !results.length }">
+                                <div v-if="results.length" class="result-list">
+                                    <div v-for="(r, idx) in results" :key="idx" class="result-item">
+                                        <div class="result-header">
+                                            <a-typography-text strong>语句 {{ idx + 1 }}</a-typography-text>
+                                            <a-tag :color="r.severity === 'safe' ? 'green' : r.severity === 'warn' ? 'orange' : 'red'">{{ r.severityLabel }}</a-tag>
+                                        </div>
+                                        <pre class="sql-snippet">{{ r.statement }}</pre>
+                                        <div class="advice"><div v-for="(m, i) in r.messages" :key="i">- {{ m }}</div></div>
                                     </div>
                                 </div>
+                                <a-empty v-else description="检查完成后，结果会显示在这里" />
                             </div>
-                            <a-empty v-else description="暂无检查结果" />
                         </a-spin>
                     </a-card>
                 </a-col>
             </a-row>
 
-            <!-- 单独的数据库表/字段/运算符 卡片（位于输入卡片下方） -->
-            <a-card title="配置区域" style="margin-top:12px" :bordered="false">
+            <a-card title="配置区域" :bordered="false" class="tool-help-card">
                 <div class="db-panel">
                     <div class="db-col db-tables">
                         <div class="col-title">表名</div>
                         <div class="col-body">
-                            <div v-for="t in tables" :key="t.name" class="item"
-                                :class="{ active: selectedTable === t.name }" @click="selectTable(t)">{{ t.name
-                                }}
-                            </div>
+                            <div v-for="t in tables" :key="t.name" class="item" :class="{ active: selectedTable === t.name }" @click="selectTable(t)">{{ t.name }}</div>
                         </div>
                     </div>
-
                     <div class="db-col db-columns">
                         <div class="col-title">列名</div>
                         <div class="col-body">
                             <div v-if="selectedColumns.length" class="col-cards">
-                                <a-card v-for="c in selectedColumns" :key="c" class="col-card" hoverable
-                                    @click="insertColumn(c)">
-                                    <div class="col-card-content">
-                                        <span class="col-label">{{ c }}</span>
-                                    </div>
+                                <a-card v-for="c in selectedColumns" :key="c" class="col-card" hoverable @click="insertColumn(c)">
+                                    <div class="col-card-content"><span class="col-label">{{ c }}</span></div>
                                 </a-card>
                             </div>
                             <div v-else class="empty">请选择左侧表以显示列</div>
                         </div>
                     </div>
-
                     <div class="db-col db-ops">
                         <div class="col-title">运算符</div>
-                        <div class="col-body">
-                            <div v-for="op in operators" :key="op" class="item op-item" @click="insertOperator(op)">{{
-                                op }}</div>
-                        </div>
+                        <div class="col-body"><div v-for="op in operators" :key="op" class="item op-item" @click="insertOperator(op)">{{ op }}</div></div>
                     </div>
                 </div>
             </a-card>
-            <a-divider>说明</a-divider>
-            <a-row>
-                <a-col :xs="24">
-                    <a-card>
-                        <p>该工具在前端做静态启发式检查：</p>
-                        <ul>
-                            <li>识别语句类型（SELECT/INSERT/UPDATE/DELETE/DROP/ALTER/CREATE 等）</li>
-                            <li>对 UPDATE/DELETE 检查是否带有 WHERE 子句以避免全表修改/删除</li>
-                            <li>标记 DDL（例如 DROP/TRUNCATE/ALTER）为高风险，建议不要直接在生产环境运行</li>
-                        </ul>
-                        <p>注意：该工具并不真正解析所有 SQL 细节，也不连接数据库；仅作为辅助判断。若需要更严格检查，请在后端或使用数据库的 EXPLAIN/事务回滚机制进行验证。</p>
-                    </a-card>
-                </a-col>
-            </a-row>
+
+            <a-card title="检查说明" :bordered="false" class="tool-help-card">
+                <p>该工具在前端做静态启发式检查：</p>
+                <ul>
+                    <li>识别 SELECT、INSERT、UPDATE、DELETE、DROP、ALTER、CREATE 等语句类型</li>
+                    <li>检查 UPDATE / DELETE 是否带有 WHERE，提示全表修改风险</li>
+                    <li>标记 DDL 等高风险操作，建议先在测试环境验证</li>
+                </ul>
+                <p>该工具不连接数据库，也不能替代严格的 SQL 解析与数据库安全审查。</p>
+            </a-card>
+            <div class="tool-page-note"><SafetyOutlined /> 静态分析仅在浏览器中完成，不会执行输入的 SQL</div>
         </div>
     </div>
 </template>
@@ -102,6 +94,7 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 import { message } from 'ant-design-vue'
+import { SafetyOutlined, CheckCircleOutlined, FileTextOutlined, ClearOutlined } from '@ant-design/icons-vue'
 
 const sqlText = ref('')
 const loading = ref(false)

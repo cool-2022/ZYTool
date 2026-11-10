@@ -1,3 +1,9 @@
+// ============================================================================
+// ZYTool Rust 主后端 —— 服务入口
+// 职责：初始化日志/配置/数据库连接池，组装 axum 路由与中间件，启动 HTTP 服务。
+// 角色：双后端架构中的主后端（.env PORT=10003），Python FastAPI 仅为部分兜底。
+// 约定：数据库连接失败时以「无 DB 模式」继续启动，业务接口通过 get_pool() 判空降级。
+// ============================================================================
 mod core;
 mod models;
 mod routes;
@@ -21,6 +27,7 @@ use crate::core::middleware::{base_info_middleware, request_logging_middleware};
 use crate::models::{BaseInfo, BaseResponse};
 use crate::routes::{api_router, auth::init_user_cache};
 
+/// 程序入口：日志初始化 → DB 连接池（失败降级）→ 用户缓存 → 路由装配 → 启动监听
 #[tokio::main]
 async fn main() {
     tracing_subscriber::fmt()
@@ -45,10 +52,16 @@ async fn main() {
             info!("Database connection pool initialized");
             warn_plaintext_api_keys().await;
         }
+        // 无 DB 模式兜底：连接失败仅警告、不退出，依赖 DB 的接口需自行判空
         Err(e) => warn!("Database not connected: {}. Server will continue without DB.", e),
     }
 
     init_user_cache().await;
+
+    match core::redis::init_redis().await {
+        Ok(_) => info!("Redis connection initialized"),
+        Err(e) => warn!("Redis not connected: {}. Server will continue without Redis.", e),
+    }
 
     let app = create_app();
 
@@ -67,6 +80,7 @@ async fn main() {
     .expect("Server error");
 }
 
+/// 组装根路由：/health + /api/v1 子路由，全局挂载 BaseInfo/请求日志/CORS/Trace 中间件
 fn create_app() -> Router {
     let allowed_origins = SETTINGS.cors_origins.clone();
     let cors = CorsLayer::new()
@@ -116,6 +130,7 @@ fn is_private_origin(origin: &str) -> bool {
     }
 }
 
+/// 根级健康检查接口（/health），返回版本号
 async fn root_health_check(
     axum::Extension(base): axum::Extension<Option<BaseInfo>>,
 ) -> Json<BaseResponse<serde_json::Value>> {
@@ -128,6 +143,7 @@ async fn root_health_check(
     ))
 }
 
+/// 未匹配路由的统一 404 兜底，保持统一响应结构
 async fn handler_404(axum::Extension(base): axum::Extension<Option<BaseInfo>>) -> Response {
     let body = BaseResponse::err("资源未找到", base);
     (StatusCode::NOT_FOUND, Json(body)).into_response()

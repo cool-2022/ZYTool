@@ -172,7 +172,7 @@ onMounted(loadBindings)
 
 <template>
   <a-config-provider :theme="settingsTheme">
-    <main class="settings-page">
+    <main class="settings-page warm-form-page">
       <div class="settings-shell">
         <header class="settings-header">
           <div class="settings-brand">
@@ -209,7 +209,7 @@ onMounted(loadBindings)
                 <h2 id="account-title">账号信息</h2>
                 <p>查看你的基本资料与联系方式</p>
               </div>
-              <a-button class="secondary-button" @click="activeTab = 'bindings'"><LinkOutlined /> 管理绑定</a-button>
+              <a-button class="secondary-button warm-form-secondary" @click="activeTab = 'bindings'"><LinkOutlined /> 管理绑定</a-button>
             </div>
             <div class="profile-summary">
               <a-avatar :size="48" class="profile-avatar">
@@ -260,14 +260,14 @@ onMounted(loadBindings)
                   </div>
                 </div>
                 <p class="bind-description">{{ bindings.phone ? `当前号码：${bindings.phone}` : '绑定常用手机号，方便管理账号信息。' }}</p>
-                <div class="bind-form">
+                <div class="bind-form warm-form">
                   <div class="bind-field">
                     <label for="settings-phone">手机号</label>
                     <a-input id="settings-phone" v-model:value="bindForms.phone" placeholder="请输入 11 位手机号"
                       maxlength="11" inputmode="tel" autocomplete="tel" :disabled="bindLoading.phone" />
                   </div>
                   <p class="field-note">填写新号码后可更换现有绑定。</p>
-                  <a-button type="primary" class="save-button" :loading="bindLoading.phone" @click="handleBindPhone">
+                  <a-button type="primary" class="save-button warm-form-submit" :loading="bindLoading.phone" @click="handleBindPhone">
                     {{ bindings.phone ? '更换手机号' : '立即绑定' }}
                   </a-button>
                 </div>
@@ -282,7 +282,7 @@ onMounted(loadBindings)
                   </div>
                 </div>
                 <p class="bind-description">填写 QQ 标识完成关联，不会跳转授权。</p>
-                <div class="bind-form">
+                <div class="bind-form warm-form">
                   <div class="bind-field">
                     <label for="settings-qq-openid">OpenID</label>
                     <a-input id="settings-qq-openid" v-model:value="bindForms.qqOpenId" placeholder="QQ openid" :disabled="bindLoading.qq" />
@@ -291,7 +291,7 @@ onMounted(loadBindings)
                     <label for="settings-qq-nickname">昵称<span>可选</span></label>
                     <a-input id="settings-qq-nickname" v-model:value="bindForms.qqNickname" placeholder="QQ 昵称" :disabled="bindLoading.qq" />
                   </div>
-                  <a-button type="primary" class="save-button" :loading="bindLoading.qq" @click="handleBindQQ">
+                  <a-button type="primary" class="save-button warm-form-submit" :loading="bindLoading.qq" @click="handleBindQQ">
                     {{ qqBound ? '更新绑定' : '立即绑定' }}
                   </a-button>
                 </div>
@@ -306,7 +306,7 @@ onMounted(loadBindings)
                   </div>
                 </div>
                 <p class="bind-description">填写微信标识完成关联，不会跳转授权。</p>
-                <div class="bind-form">
+                <div class="bind-form warm-form">
                   <div class="bind-field">
                     <label for="settings-wx-openid">OpenID</label>
                     <a-input id="settings-wx-openid" v-model:value="bindForms.wxOpenId" placeholder="微信 openid" :disabled="bindLoading.wx" />
@@ -319,7 +319,7 @@ onMounted(loadBindings)
                     <label for="settings-wx-nickname">昵称<span>可选</span></label>
                     <a-input id="settings-wx-nickname" v-model:value="bindForms.wxNickname" placeholder="微信昵称" :disabled="bindLoading.wx" />
                   </div>
-                  <a-button type="primary" class="save-button" :loading="bindLoading.wx" @click="handleBindWechat">
+                  <a-button type="primary" class="save-button warm-form-submit" :loading="bindLoading.wx" @click="handleBindWechat">
                     {{ wechatBound ? '更新绑定' : '立即绑定' }}
                   </a-button>
                 </div>

@@ -1,25 +1,20 @@
 <template>
-  <div class="login-page">
-    <div class="login-background">
-      <div class="bg-shape shape-1"></div>
-      <div class="bg-shape shape-2"></div>
-      <div class="bg-shape shape-3"></div>
-    </div>
-
+  <div class="login-page warm-form-page">
     <div class="login-container">
-      <div class="login-card">
+      <div class="login-card warm-form-card">
         <div class="login-header">
           <div class="login-logo">
-            <span class="logo-icon">⚡</span>
+            <span class="logo-icon"><ThunderboltOutlined /></span>
             <span class="logo-text">ZYTool</span>
           </div>
-          <h2 class="login-title">{{ isLogin ? '欢迎回来' : '创建账号' }}</h2>
+          <div class="login-eyebrow">ZYTOOL WORKSPACE</div>
+          <h1 class="login-title">{{ isLogin ? '欢迎回来' : '创建账号' }}</h1>
           <p class="login-subtitle">
-            {{ isLogin ? '登录以访问所有工具' : '注册开始使用 ZYTool' }}
+            {{ isLogin ? '登录后继续你的创作与高效工作' : '注册账号，开始探索 ZYTool 的全部能力' }}
           </p>
         </div>
 
-        <a-form :model="formState" @finish="handleSubmit" layout="vertical" class="login-form">
+        <a-form :model="formState" @finish="handleSubmit" layout="vertical" class="login-form warm-form">
           <a-form-item label="用户名" name="username"
             :rules="[{ required: true, message: '请输入用户名' }, { min: 3, message: '用户名至少3个字符' }]">
             <a-input v-model:value="formState.username" placeholder="请输入用户名" size="large">
@@ -46,8 +41,8 @@
             </a-input>
           </a-form-item>
 
-          <a-form-item>
-            <a-button type="primary" html-type="submit" :loading="loading" block size="large" class="submit-btn">
+          <a-form-item class="submit-item">
+            <a-button type="primary" html-type="submit" :loading="loading" block size="large" class="submit-btn warm-form-submit">
               {{ isLogin ? '登录' : '注册' }}
             </a-button>
           </a-form-item>
@@ -58,16 +53,16 @@
               <span class="divider-text">或使用</span>
               <span class="divider-line"></span>
             </div>
-            <a-button type="default" block size="large" class="qq-login-btn" @click="handleQQLogin"
+            <a-button type="default" block size="large" class="qq-login-btn warm-form-secondary" @click="handleQQLogin"
               :loading="qqLoading">
-              <span class="qq-icon">🐧</span>
+              <QqOutlined class="qq-icon" />
               <span>QQ 关联登录</span>
             </a-button>
           </div>
         </a-form>
 
         <div class="login-footer">
-          <a class="toggle-link" @click="toggleMode">
+          <a class="toggle-link warm-form-link" @click="toggleMode">
             {{ isLogin ? '还没有账号？去注册' : '已有账号？去登录' }}
           </a>
 
@@ -86,6 +81,7 @@
           </div>
         </div>
       </div>
+      <div class="login-note">安全登录 · 高效工具 · 智能助手</div>
     </div>
   </div>
 </template>
@@ -94,7 +90,7 @@
 import { reactive, ref, onMounted } from 'vue'
 import { message } from 'ant-design-vue'
 import { useRouter, useRoute } from 'vue-router'
-import { UserOutlined, LockOutlined, MailOutlined } from '@ant-design/icons-vue'
+import { UserOutlined, LockOutlined, MailOutlined, ThunderboltOutlined, QqOutlined } from '@ant-design/icons-vue'
 import { ApiService } from '../services/api'
 import { setToken, setUserInfo } from '../utils/auth'
 
@@ -184,55 +180,10 @@ onMounted(() => {
 
 <style scoped>
 .login-page {
-  min-height: 100vh;
   display: flex;
   align-items: center;
   justify-content: center;
-  background: var(--gradient-bg);
-  position: relative;
   overflow: hidden;
-  padding: 24px var(--page-gutter);
-}
-
-.login-background {
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-  overflow: hidden;
-}
-
-.bg-shape {
-  position: absolute;
-  border-radius: 50%;
-  filter: blur(80px);
-  opacity: 0.5;
-}
-
-.shape-1 {
-  width: 320px;
-  height: 320px;
-  top: -100px;
-  right: 5%;
-  background: var(--primary-color);
-  animation: float 10s ease-in-out infinite;
-}
-
-.shape-2 {
-  width: 260px;
-  height: 260px;
-  bottom: -80px;
-  left: 5%;
-  background: var(--accent-color);
-  animation: float 12s ease-in-out infinite reverse;
-}
-
-.shape-3 {
-  width: 220px;
-  height: 220px;
-  top: 55%;
-  left: 55%;
-  background: linear-gradient(135deg, var(--primary-light), var(--accent-light));
-  animation: float 8s ease-in-out infinite 2s;
 }
 
 .login-container {
@@ -243,124 +194,91 @@ onMounted(() => {
 }
 
 .login-card {
-  background: var(--glass-bg);
-  backdrop-filter: var(--glass-blur);
-  -webkit-backdrop-filter: var(--glass-blur);
-  border: 1px solid var(--glass-border);
-  border-radius: var(--border-radius-xl);
-  padding: 1.75rem 1.5rem;
-  box-shadow: var(--shadow-xl);
   animation: loginCardIn var(--duration-slow) var(--ease-out) both;
 }
 
 @keyframes loginCardIn {
   from {
     opacity: 0;
-    transform: scale(0.96);
+    transform: translateY(8px);
   }
   to {
     opacity: 1;
-    transform: scale(1);
+    transform: translateY(0);
   }
 }
 
 .login-header {
+  margin-bottom: 24px;
   text-align: center;
-  margin-bottom: 1.25rem;
 }
 
 .login-logo {
   display: inline-flex;
   align-items: center;
-  gap: 0.5rem;
-  margin-bottom: 0.75rem;
+  gap: 10px;
+  margin-bottom: 16px;
 }
 
 .logo-icon {
-  font-size: 1.5rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  color: #fff;
+  font-size: 20px;
+  background: var(--gradient-primary);
+  border-radius: 12px;
+  box-shadow: 0 6px 16px color-mix(in srgb, var(--workspace-accent) 22%, transparent);
 }
 
 .logo-text {
-  font-size: 1.5rem;
-  font-weight: 800;
-  background: var(--gradient-primary);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
+  color: var(--text-primary);
+  font-size: 23px;
+  font-weight: 750;
+  letter-spacing: -0.035em;
+}
+
+.login-eyebrow {
+  margin-bottom: 8px;
+  color: var(--primary-color);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.18em;
 }
 
 .login-title {
-  font-size: 1.75rem;
-  font-weight: 800;
+  margin: 0;
   color: var(--text-primary);
-  margin: 0 0 0.5rem;
+  font-size: 28px;
+  font-weight: 720;
+  line-height: 1.3;
+  letter-spacing: -0.035em;
 }
 
 .login-subtitle {
-  font-size: 0.95rem;
+  margin: 9px 0 0;
   color: var(--text-secondary);
-  margin: 0;
+  font-size: 13px;
+  line-height: 1.7;
 }
 
-.login-form :deep(.ant-form-item-label > label) {
-  color: var(--text-secondary);
-  font-weight: 500;
-}
-
-.login-form :deep(.ant-input),
-.login-form :deep(.ant-input-affix-wrapper) {
-  background: var(--bg-primary);
-  border-color: var(--border-color);
-  color: var(--text-primary);
-  border-radius: var(--border-radius);
-}
-
-.login-form :deep(.ant-input:hover),
-.login-form :deep(.ant-input-affix-wrapper:hover) {
-  border-color: var(--primary-light);
-}
-
-.login-form :deep(.ant-input:focus),
-.login-form :deep(.ant-input-affix-wrapper-focused) {
-  border-color: var(--primary-color);
-  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
-}
-
-.login-form :deep(.ant-input-prefix) {
-  color: var(--text-tertiary);
-  margin-right: 0.5rem;
-}
-
-.submit-btn {
-  background: var(--gradient-primary);
-  border: none;
-  border-radius: var(--border-radius);
-  height: 46px;
-  font-weight: 600;
-  font-size: 1rem;
-  box-shadow: var(--shadow-primary);
-  transition: box-shadow var(--duration-base) var(--ease-out),
-    transform var(--duration-press) var(--ease-out);
-}
-
-@media (hover: hover) and (pointer: fine) {
-  .submit-btn:hover {
-    background: var(--gradient-primary-hover);
-    box-shadow: var(--shadow-primary-hover);
-    transform: translateY(-1px);
-  }
+.login-form :deep(.submit-item) {
+  margin-top: 22px;
+  margin-bottom: 0;
 }
 
 .social-login {
-  margin-top: 1rem;
+  margin-top: 20px;
 }
 
 .social-divider {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 0.75rem;
-  margin-bottom: 0.75rem;
+  gap: 12px;
+  margin-bottom: 14px;
 }
 
 .divider-line {
@@ -370,87 +288,60 @@ onMounted(() => {
 }
 
 .divider-text {
-  font-size: 0.85rem;
   color: var(--text-tertiary);
+  font-size: 11px;
 }
 
 .qq-login-btn {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 0.5rem;
-  background: var(--bg-secondary);
-  border: 1px solid var(--border-color);
-  border-radius: var(--border-radius);
-  height: 46px;
-  font-weight: 500;
-  font-size: 0.95rem;
-  color: var(--text-primary);
-  transition: box-shadow var(--duration-base) var(--ease-out),
-    border-color var(--duration-fast) var(--ease-out),
-    color var(--duration-fast) var(--ease-out),
-    transform var(--duration-press) var(--ease-out);
-}
-
-@media (hover: hover) and (pointer: fine) {
-  .qq-login-btn:hover {
-    background: #f5f5f5;
-    border-color: #1da1f2;
-    box-shadow: var(--shadow-md);
-    color: #1da1f2;
-  }
+  gap: 8px;
 }
 
 .qq-icon {
-  font-size: 1.25rem;
+  color: var(--primary-color);
+  font-size: 17px;
 }
 
 .login-footer {
-  margin-top: 1.5rem;
+  margin-top: 20px;
   text-align: center;
 }
 
 .toggle-link {
-  color: var(--primary-color);
-  font-weight: 500;
-  cursor: pointer;
-  transition: color var(--duration-fast) var(--ease-out);
-}
-
-.toggle-link:hover {
-  color: var(--primary-dark);
-  text-decoration: underline;
+  font-size: 12px;
 }
 
 .demo-accounts {
-  margin-top: 1.5rem;
-  padding: 1rem;
+  margin-top: 20px;
+  padding: 13px 14px;
+  text-align: left;
   background: var(--bg-secondary);
   border: 1px solid var(--border-color);
-  border-radius: var(--border-radius-lg);
-  text-align: left;
+  border-radius: 14px;
 }
 
 .demo-title {
-  font-size: 0.8rem;
-  font-weight: 600;
-  color: var(--text-secondary);
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-  margin-bottom: 0.75rem;
+  margin-bottom: 9px;
+  color: var(--text-tertiary);
+  font-size: 10px;
+  font-weight: 650;
+  letter-spacing: 0.08em;
 }
 
 .demo-list {
   display: flex;
   flex-direction: column;
-  gap: 0.5rem;
+  gap: 7px;
 }
 
 .demo-item {
   display: flex;
-  justify-content: space-between;
   align-items: center;
-  font-size: 0.85rem;
+  justify-content: space-between;
+  gap: 12px;
+  font-size: 12px;
 }
 
 .demo-label {
@@ -459,51 +350,47 @@ onMounted(() => {
 }
 
 .demo-value {
+  padding: 2px 7px;
   color: var(--text-primary);
-  font-family: 'SF Mono', monospace;
+  font-family: 'SF Mono', Consolas, monospace;
+  font-size: 11px;
+  background: var(--bg-primary);
+  border: 1px solid var(--border-light);
+  border-radius: 6px;
+}
+
+.login-note {
+  margin-top: 16px;
+  color: var(--text-tertiary);
+  font-size: 10px;
+  letter-spacing: 0.08em;
+  text-align: center;
+}
+
+:global(:root[data-theme='dark']) .demo-value,
+:global(:root[data-theme='dark']) .qq-login-btn {
   background: var(--bg-tertiary);
-  padding: 0.2rem 0.5rem;
-  border-radius: 4px;
 }
 
-@keyframes float {
-
-  0%,
-  100% {
-    transform: translateY(0) scale(1);
-  }
-
-  50% {
-    transform: translateY(-20px) scale(1.05);
-  }
-}
-
-/* 减弱动态：卡片只淡入，背景形状静止 */
 @media (prefers-reduced-motion: reduce) {
   .login-card {
     animation-name: none;
     opacity: 1;
     transform: none;
   }
-
-  .bg-shape {
-    animation: none;
-  }
 }
 
 @media (max-width: 480px) {
-  .login-card {
-    padding: 1.5rem 1.25rem;
+  .login-header {
+    margin-bottom: 22px;
   }
 
   .login-title {
-    font-size: 1.5rem;
+    font-size: 25px;
   }
 
   .demo-item {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 0.25rem;
+    gap: 8px;
   }
 }
 </style>

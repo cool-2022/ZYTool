@@ -1,14 +1,27 @@
 <template>
-    <div class="tool-page">
+    <div class="tool-page warm-theme">
         <div class="container">
-            <!-- 页面标题 -->
-            <div class="page-header">
-                <a-typography-title :level="2">时间戳转换工具（前端处理）</a-typography-title>
-                <a-typography-paragraph>时间戳与日期时间互相转换，浏览器本地处理</a-typography-paragraph>
+            <div class="page-header has-tool-badge">
+                <div>
+                    <a-typography-title :level="2">时间戳转换工具</a-typography-title>
+                    <a-typography-paragraph>时间戳与日期时间互相转换，支持毫秒和秒</a-typography-paragraph>
+                </div>
+                <span class="tool-badge"><SafetyOutlined /> 本地处理</span>
             </div>
 
-            <!-- 当前时间 -->
-            <a-card title="当前时间" :bordered="false" style="margin-bottom: 24px;">
+            <div class="tool-action-bar">
+                <div class="tool-action-group">
+                    <a-button type="primary" @click="setTimestampNow"><ClockCircleOutlined /> 当前时间</a-button>
+                    <a-button @click="setTimestampYesterday">昨天</a-button>
+                    <a-button @click="setTimestampTomorrow">明天</a-button>
+                    <a-button @click="setTimestampWeekAgo">一周前</a-button>
+                </div>
+                <span class="tool-card-meta">快捷填充两种转换输入</span>
+            </div>
+
+            <a-card :bordered="false" class="current-time-card">
+                <template #title><span class="tool-card-title"><span class="tool-status-dot output"></span>当前时间</span></template>
+                <template #extra><span class="tool-card-meta">实时更新</span></template>
                 <a-descriptions :column="{ xs: 1, sm: 2, md: 2 }" bordered>
                     <a-descriptions-item label="当前时间戳（毫秒）">
                         <a-space>
@@ -39,10 +52,11 @@
             </a-card>
 
             <!-- 转换工具 -->
-            <a-row :gutter="{ xs: 16, sm: 24 }">
+            <a-row :gutter="{ xs: 16, sm: 20 }" class="tool-panel-row">
                 <!-- 时间戳转日期 -->
-                <a-col :xs="24" :lg="12">
-                    <a-card title="时间戳 → 日期时间" :bordered="false">
+                <a-col :xs="24" :lg="12" class="tool-panel-col">
+                    <a-card title="时间戳 → 日期时间" :bordered="false" class="tool-panel-card conversion-card">
+                        <template #extra><span class="tool-card-meta">毫秒 / 秒</span></template>
                         <a-space direction="vertical" style="width: 100%">
                             <div>
                                 <label>时间戳：</label>
@@ -83,8 +97,9 @@
                 </a-col>
 
                 <!-- 日期转时间戳 -->
-                <a-col :xs="24" :lg="12">
-                    <a-card title="日期时间 → 时间戳" :bordered="false">
+                <a-col :xs="24" :lg="12" class="tool-panel-col">
+                    <a-card title="日期时间 → 时间戳" :bordered="false" class="tool-panel-card conversion-card">
+                        <template #extra><span class="tool-card-meta">日期 → 时间戳</span></template>
                         <a-space direction="vertical" style="width: 100%">
                             <div>
                                 <label>日期时间：</label>
@@ -119,9 +134,7 @@
                 </a-col>
             </a-row>
 
-            <!-- 使用说明 -->
-            <a-divider>使用说明</a-divider>
-            <a-card :bordered="false">
+            <a-card title="使用说明" :bordered="false" class="tool-help-card">
                 <a-descriptions :column="1">
                     <a-descriptions-item label="什么是时间戳">
                         时间戳是指从1970年1月1日00:00:00 UTC到现在的总秒数或毫秒数
@@ -132,14 +145,6 @@
                     <a-descriptions-item label="使用场景">
                         数据库存储、日志记录、API接口、缓存过期时间、性能分析等
                     </a-descriptions-item>
-                    <a-descriptions-item label="快捷操作">
-                        <a-space>
-                            <a-button size="small" @click="setTimestampNow">当前时间</a-button>
-                            <a-button size="small" @click="setTimestampYesterday">昨天</a-button>
-                            <a-button size="small" @click="setTimestampTomorrow">明天</a-button>
-                            <a-button size="small" @click="setTimestampWeekAgo">一周前</a-button>
-                        </a-space>
-                    </a-descriptions-item>
                 </a-descriptions>
             </a-card>
         </div>
@@ -149,6 +154,7 @@
 <script setup lang="ts">
 import { ref, onMounted, onUnmounted, computed } from 'vue'
 import { message } from 'ant-design-vue'
+import { SafetyOutlined, ClockCircleOutlined } from '@ant-design/icons-vue'
 import dayjs, { Dayjs } from 'dayjs'
 
 const currentTimestamp = ref(Date.now())

@@ -1,3 +1,9 @@
+/**
+ * 应用配置（config/appConfig.ts）
+ * 集中管理后端 API 地址与第三方 Key。API 地址默认按当前访问的 hostname 自适应拼接：
+ * localhost 访问指向 localhost，局域网 IP 访问指向同 IP（IP 变化无需改配置）；
+ * 如需固定地址，用 VITE_RUST_API_BASE_URL / VITE_PYTHON_API_BASE_URL / VITE_AMAP_KEY 覆盖。
+ */
 // API 地址默认跟随当前访问的 hostname：
 // localhost 打开 → localhost:10003/10004；局域网 IP 打开 → 同 IP:10003/10004（IP 变化不受影响）
 // 如需固定地址，用 VITE_RUST_API_BASE_URL / VITE_PYTHON_API_BASE_URL 覆盖

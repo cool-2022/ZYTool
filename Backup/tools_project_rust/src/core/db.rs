@@ -1,10 +1,18 @@
+// ============================================================================
+// 数据库模块 —— PostgreSQL 连接池全局单例
+// 职责：构建连接串、初始化并全局持有 sqlx PgPool，提供健康 ping。
+// 约定：连接池只在启动时初始化一次；init_pool 失败时服务以无 DB 模式运行，
+//       业务代码一律用 get_pool() 判空降级，不得假设池必然存在。
+// ============================================================================
 use crate::core::config::SETTINGS;
 use once_cell::sync::OnceCell;
 use sqlx::postgres::{PgPool, PgPoolOptions};
 use std::time::Duration;
 
+/// 连接池类型别名（sqlx PostgreSQL）
 pub type DbPool = PgPool;
 
+// 全局单例连接池：仅 init_pool 写入一次，之后全程只读
 static DB_POOL: OnceCell<DbPool> = OnceCell::new();
 
 /// 构造 PostgreSQL 连接字符串
@@ -56,6 +64,7 @@ pub async fn init_pool() -> Result<&'static DbPool, sqlx::Error> {
 }
 
 /// 获取全局数据库连接池
+/// 未初始化（无 DB 模式）时返回 None，调用方需自行降级处理。
 pub fn get_pool() -> Option<&'static DbPool> {
     DB_POOL.get()
 }

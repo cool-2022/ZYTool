@@ -101,4 +101,4 @@ Rust 用户数据依赖 PostgreSQL；Python 不与该用户库同步。
 | POST | `/tools/map/route` |
 | GET | `/tools/map/route/test` |
 
-`GET /tools/categories` 是硬编码展示目录，包含纯前端及待开发条目，不能当作后端已实现能力清单。两端地图路线均为 mock 直线插值，`waypoints` 不参与计算；SQL 合理性检查在前端本地执行，没有对应后端路由。
+`GET /tools/categories` 自 2026-11-06 起读 `tool_categories`/`tools` 表（含 `route` 字段驱动前端跳转，is_enabled+sort_order 过滤排序），无 DB 或失败时回退硬编码；包含纯前端及待开发条目，不能当作后端已实现能力清单。两端地图路线均为 mock 直线插值，`waypoints` 不参与计算；SQL 合理性检查在前端本地执行，没有对应后端路由。

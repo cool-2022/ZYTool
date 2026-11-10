@@ -1,3 +1,5 @@
+# 日志初始化：root logger 统一配置控制台 + 滚动文件双输出（默认 logs/app.log）。
+# 约定：由 app/main.py 在装配早期调用一次；各模块仅 logging.getLogger(__name__)，勿重复 addHandler。
 import logging
 import sys
 from pathlib import Path

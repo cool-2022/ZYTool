@@ -1,16 +1,27 @@
 <template>
-    <div class="tool-page">
+    <div class="tool-page warm-theme">
         <div class="container">
-            <!-- 页面标题 -->
-            <div class="page-header">
-                <a-typography-title :level="2">文本比对工具</a-typography-title>
-                <a-typography-paragraph>支持文本文件比对，快速发现差异</a-typography-paragraph>
+            <div class="page-header has-tool-badge">
+                <div>
+                    <a-typography-title :level="2">文本比对工具</a-typography-title>
+                    <a-typography-paragraph>上传两个文本文件，快速查看各自独有的内容</a-typography-paragraph>
+                </div>
+                <span class="tool-badge backend"><CloudOutlined /> 后端处理</span>
             </div>
 
-            <!-- 上传区域 -->
-            <a-row :gutter="{ xs: 16, sm: 24 }">
-                <a-col :xs="24" :lg="12">
-                    <a-card title="A 侧文件" :bordered="false">
+            <div class="tool-action-bar">
+                <div class="tool-action-group">
+                    <a-button type="primary" @click="compareFiles" :loading="comparing"><DiffOutlined /> 开始比对</a-button>
+                    <a-button :disabled="!fileListA.length" @click="clearA"><ClearOutlined /> 清空 A</a-button>
+                    <a-button :disabled="!fileListB.length" @click="clearB">清空 B</a-button>
+                </div>
+                <span class="tool-card-meta">A {{ fileListA.length }} 个文件 · B {{ fileListB.length }} 个文件</span>
+            </div>
+
+            <a-row :gutter="{ xs: 16, sm: 20 }" class="tool-panel-row">
+                <a-col :xs="24" :lg="12" class="tool-panel-col">
+                    <a-card title="A 侧文件" :bordered="false" class="tool-panel-card upload-panel">
+                        <template #extra><span class="tool-card-meta">{{ fileListA.length }} 个文件</span></template>
                         <a-space direction="vertical" style="width: 100%" :size="16">
                             <a-upload-dragger v-model:fileList="fileListA" :before-upload="beforeUploadA"
                                 :customRequest="() => { }" @change="handleChangeA" :multiple="false">
@@ -22,14 +33,13 @@
                                     仅支持单个文本文件上传
                                 </p>
                             </a-upload-dragger>
-
-                            <a-button @click="clearA" block>清空</a-button>
                         </a-space>
                     </a-card>
                 </a-col>
 
-                <a-col :xs="24" :lg="12">
-                    <a-card title="B 侧文件" :bordered="false">
+                <a-col :xs="24" :lg="12" class="tool-panel-col">
+                    <a-card title="B 侧文件" :bordered="false" class="tool-panel-card upload-panel">
+                        <template #extra><span class="tool-card-meta">{{ fileListB.length }} 个文件</span></template>
                         <a-space direction="vertical" style="width: 100%" :size="16">
                             <a-upload-dragger v-model:fileList="fileListB" :before-upload="beforeUploadB"
                                 :customRequest="() => { }" @change="handleChangeB" :multiple="false">
@@ -41,19 +51,10 @@
                                     仅支持单个文本文件上传
                                 </p>
                             </a-upload-dragger>
-
-                            <a-button @click="clearB" block>清空</a-button>
                         </a-space>
                     </a-card>
                 </a-col>
             </a-row>
-
-            <!-- 比对按钮 -->
-            <div style="text-align: center; margin: 24px 0;">
-                <a-button type="primary" size="large" @click="compareFiles" :loading="comparing">
-                    开始比对
-                </a-button>
-            </div>
 
             <!-- 比对结果 -->
             <a-card v-if="diffResult" title="比对结果" :bordered="false" style="margin-top: 24px;">
@@ -61,7 +62,7 @@
                 <div v-if="compareMode === 'file' && diffResult && 'onlyInA' in diffResult">
                     <a-row :gutter="{ xs: 16, sm: 24 }">
                         <!-- A文件差异 -->
-                        <a-col :xs="24" :lg="12">
+                        <a-col :xs="24" :lg="12" class="tool-panel-col">
                             <a-card title="A 文件独有的行" :bordered="false" size="small">
                                 <div class="diff-content">
                                     <div v-for="(line, index) in diffResult.onlyInA" :key="'a-' + index"
@@ -75,7 +76,7 @@
                         </a-col>
 
                         <!-- B文件差异 -->
-                        <a-col :xs="24" :lg="12">
+                        <a-col :xs="24" :lg="12" class="tool-panel-col">
                             <a-card title="B 文件独有的行" :bordered="false" size="small">
                                 <div class="diff-content">
                                     <div v-for="(line, index) in diffResult.onlyInB" :key="'b-' + index"
@@ -91,9 +92,7 @@
                 </div>
             </a-card>
 
-            <!-- 使用说明 -->
-            <a-divider>使用说明</a-divider>
-            <a-card :bordered="false">
+            <a-card title="使用说明" :bordered="false" class="tool-help-card">
                 <a-descriptions :column="1">
                     <a-descriptions-item label="文件比对">
                         分别上传两个文本文件进行逐行比对，显示各自独有的行
@@ -113,7 +112,7 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 import { message } from 'ant-design-vue'
-import { InboxOutlined } from '@ant-design/icons-vue'
+import { InboxOutlined, CloudOutlined, DiffOutlined, ClearOutlined } from '@ant-design/icons-vue'
 import type { UploadProps } from 'ant-design-vue'
 import type { DiffResult, FileDiffResult } from '../../services/api'
 import { ApiService } from '../../services/api'

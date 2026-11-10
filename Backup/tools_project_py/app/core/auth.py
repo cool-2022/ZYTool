@@ -3,6 +3,10 @@ JWT 认证模块
 提供 token 生成、验证和用户认证功能
 """
 
+# 角色：JWT 签发/校验与受保护端点依赖注入（get_current_user）。
+# 约定：密钥/算法/过期时间全部来自 app.core.config.settings（.env 注入）；
+# 本兜底端不查用户表，用户信息直接取自 token payload（见 get_current_user 内注释）。
+
 from datetime import datetime, timedelta
 from typing import Optional
 from jose import JWTError, jwt

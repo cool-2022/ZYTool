@@ -55,7 +55,7 @@ const popupContainer = (trigger: HTMLElement) => trigger.parentElement ?? trigge
 
 <template>
   <a-config-provider :theme="ledgerTheme">
-    <main class="ledger-page">
+    <main class="ledger-page warm-theme">
       <div class="ledger-shell">
         <header class="ledger-header">
           <div class="ledger-brand">

@@ -7,6 +7,10 @@ ZYTool Backend 启动脚本
     python -m run
 """
 
+# 项目角色：ZYTool Python 兜底后端（FastAPI）的启动入口。
+# 与 Rust 主后端（10003）并行运行，仅覆盖其部分接口且响应结构有差异；
+# 端口等配置统一来自 app/core/config.py（.env 中 PORT=10004），此处不硬编码。
+
 import sys
 import os
 from pathlib import Path

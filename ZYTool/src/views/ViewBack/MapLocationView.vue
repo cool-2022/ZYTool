@@ -1,27 +1,24 @@
 <template>
-    <div class="tool-page">
+    <div class="tool-page warm-theme">
         <div class="container">
-            <!-- 页面标题 -->
-            <div class="page-header">
-                <a-typography-title :level="2">地图定位工具</a-typography-title>
-                <a-typography-paragraph>获取当前位置并在地图上显示</a-typography-paragraph>
+            <div class="page-header has-tool-badge">
+                <div>
+                    <a-typography-title :level="2">地图定位工具</a-typography-title>
+                    <a-typography-paragraph>获取当前位置，或通过地址和经纬度手动定位</a-typography-paragraph>
+                </div>
+                <span class="tool-badge"><SafetyOutlined /> 浏览器定位</span>
             </div>
 
-            <!-- 控制面板 -->
-            <a-card title="位置信息" :bordered="false" style="margin-bottom: 24px;">
+            <div class="tool-action-bar">
+                <div class="tool-action-group">
+                    <a-button type="primary" @click="getCurrentLocation" :loading="loading"><EnvironmentOutlined /> 获取当前位置</a-button>
+                    <a-button @click="showManualInput = !showManualInput"><EditOutlined /> {{ showManualInput ? '隐藏' : '显示' }}手动输入</a-button>
+                </div>
+                <span class="tool-card-meta">支持地址搜索与经纬度输入</span>
+            </div>
+
+            <a-card title="位置信息" :bordered="false" class="current-time-card">
                 <a-space direction="vertical" style="width: 100%" :size="16">
-                    <a-row :gutter="16">
-                        <a-col :xs="24" :md="12">
-                            <a-button type="primary" @click="getCurrentLocation" :loading="loading" size="large" block>
-                                <environment-outlined /> 获取当前位置
-                            </a-button>
-                        </a-col>
-                        <a-col :xs="24" :md="12">
-                            <a-button @click="showManualInput = !showManualInput" size="large" block>
-                                <edit-outlined /> {{ showManualInput ? '隐藏' : '显示' }}手动输入
-                            </a-button>
-                        </a-col>
-                    </a-row>
 
                     <!-- 手动输入区域 -->
                     <a-card v-if="showManualInput" size="small" title="手动输入位置" :bordered="false"
@@ -106,13 +103,12 @@
 
             <!-- 地图显示区域 -->
             <a-card title="地图显示" :bordered="false">
+                <template #extra><span class="tool-card-meta">{{ mapLoaded ? '地图已加载' : '地图加载中' }}</span></template>
                 <div id="map-container" class="map-container"></div>
                 <a-alert v-if="!mapLoaded" type="warning" message="地图加载中..." show-icon style="margin-top: 16px;" />
             </a-card>
 
-            <!-- 使用说明 -->
-            <a-divider>使用说明</a-divider>
-            <a-card :bordered="false">
+            <a-card title="使用说明" :bordered="false" class="tool-help-card">
                 <a-descriptions :column="1">
                     <a-descriptions-item label="功能说明">
                         使用浏览器的地理位置API获取当前位置，支持地址搜索和手动输入经纬度定位
@@ -141,7 +137,7 @@
 <script setup lang="ts">
 import { ref, onMounted, onUnmounted } from 'vue'
 import { message } from 'ant-design-vue'
-import { EnvironmentOutlined, EditOutlined, SearchOutlined, AimOutlined } from '@ant-design/icons-vue'
+import { EnvironmentOutlined, EditOutlined, SearchOutlined, AimOutlined, SafetyOutlined } from '@ant-design/icons-vue'
 
 interface LocationInfo {
     longitude: string

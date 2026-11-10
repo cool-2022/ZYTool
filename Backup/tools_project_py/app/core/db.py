@@ -3,6 +3,9 @@
 后台管理接口使用；DATABASE_URL 未配置时保持无 DB 模式（接口返回 500 提示）
 """
 
+# 约定：连接池为进程级单例、懒加载（2026-11-06 起引入），首次 get_pool() 时才建连；
+# 建连失败静默降级为 None，由调用方（admin 接口）转换为 500「数据库连接池未初始化」。
+
 import json
 from typing import Optional
 
@@ -40,6 +43,7 @@ async def get_pool() -> Optional[asyncpg.Pool]:
             init=_init_connection,
         )
     except Exception:
+        # 刻意吞掉建连异常：启动期不因 DB 不可达而崩溃，保持兜底服务可用
         _pool = None
     return _pool
 

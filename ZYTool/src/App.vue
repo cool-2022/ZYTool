@@ -73,7 +73,7 @@ router.afterEach(refreshAuth)
 <template>
   <div id="app">
     <!-- 导航栏 -->
-    <nav class="navbar">
+    <nav class="navbar warm-theme">
       <div class="nav-container">
         <router-link to="/home" class="nav-logo" aria-label="ZYTool 首页">
           <span class="logo-icon"><ThunderboltOutlined /></span>
@@ -83,7 +83,6 @@ router.afterEach(refreshAuth)
           <router-link to="/home" class="nav-link">首页</router-link>
           <router-link to="/tools" class="nav-link">工具</router-link>
           <router-link to="/agents/chat" class="nav-link">AI 助手</router-link>
-          <router-link to="/finance/ledger" class="nav-link finance-nav-link">财务</router-link>
           <router-link v-if="isAdmin" to="/admin" class="nav-link">管理</router-link>
 
           <!-- 未登录：显示登录按钮 -->

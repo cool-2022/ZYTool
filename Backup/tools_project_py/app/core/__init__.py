@@ -1,3 +1,5 @@
+# core 包聚合导出：配置(settings)、异常与处理器、日志、中间件。
+# 注意：RateLimitMiddleware 仍导出仅为兼容旧代码，main.py 已清理后不再挂载限流中间件。
 from .exceptions import (
     AppException,
     ValidationException,

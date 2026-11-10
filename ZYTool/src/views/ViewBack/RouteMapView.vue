@@ -1,68 +1,67 @@
 <template>
-    <div class="tool-page">
+    <div class="tool-page warm-theme">
         <div class="container">
-            <!-- 页面标题 -->
-            <div class="page-header">
-                <a-typography-title :level="2">地图路径规划</a-typography-title>
-                <a-typography-paragraph>输入起点和终点获取导航路线</a-typography-paragraph>
+            <div class="page-header has-tool-badge">
+                <div>
+                    <a-typography-title :level="2">地图路径规划</a-typography-title>
+                    <a-typography-paragraph>输入起点和终点，查看导航路线与详细指引</a-typography-paragraph>
+                </div>
+                <span class="tool-badge backend"><CloudOutlined /> 后端处理</span>
             </div>
 
-            <!-- 控制面板 -->
-            <a-card title="路径规划" :bordered="false" style="margin-bottom: 24px;">
+            <div class="tool-action-bar">
+                <div class="tool-action-group">
+                    <a-button type="primary" @click="searchRoute" :loading="searching"><SearchOutlined /> 搜索路线</a-button>
+                    <a-button :disabled="!routeInfo" @click="clearRoute">清除路线</a-button>
+                </div>
+                <span class="tool-card-meta">{{ searching ? '正在规划路线' : '支持手动地址与当前位置' }}</span>
+            </div>
+
+            <a-card title="路径规划" :bordered="false" class="current-time-card">
                 <a-space direction="vertical" style="width: 100%" :size="16">
                     <a-row :gutter="16">
                         <a-col :xs="24" :md="12">
-                            <a-form layout="vertical">
+                            <a-form layout="vertical" class="route-form">
                                 <a-form-item label="起点">
-                                    <a-input-group compact>
-                                        <a-input v-model:value="startAddress" placeholder="请输入起点地址"
-                                            style="width: calc(100% - 32px)" />
-                                        <a-button @click="getCurrentLocation('start')" type="default">
-                                            <environment-outlined />
+                                    <div class="route-input-row">
+                                        <a-input v-model:value="startAddress" placeholder="请输入起点地址" size="large">
+                                            <template #prefix><EnvironmentOutlined /></template>
+                                        </a-input>
+                                        <a-button class="current-location-button" :loading="locating"
+                                            @click="getCurrentLocation('start')">
+                                            <EnvironmentOutlined /> 当前位置
                                         </a-button>
-                                    </a-input-group>
+                                    </div>
                                 </a-form-item>
 
                                 <a-form-item label="终点">
-                                    <a-input v-model:value="endAddress" placeholder="请输入终点地址"
-                                        @pressEnter="searchRoute" />
-                                </a-form-item>
-
-                                <a-form-item>
-                                    <a-button type="primary" @click="searchRoute" :loading="searching" size="large"
-                                        block>
-                                        <search-outlined /> 搜索路线
-                                    </a-button>
+                                    <a-input v-model:value="endAddress" placeholder="请输入终点地址" size="large"
+                                        @pressEnter="searchRoute">
+                                        <template #prefix><AimOutlined /></template>
+                                    </a-input>
                                 </a-form-item>
                             </a-form>
                         </a-col>
 
                         <a-col :xs="24" :md="12">
-                            <a-card title="路线信息" :bordered="false" size="small"
-                                style="background: var(--bg-secondary);">
+                            <a-card title="路线信息" :bordered="false" size="small" class="route-summary-card">
+                                <template #extra><span class="tool-card-meta">{{ routeInfo ? '已生成' : '待规划' }}</span></template>
                                 <div v-if="routeInfo" class="route-info">
                                     <a-descriptions :column="1" bordered size="small">
-                                        <a-descriptions-item label="总距离">
-                                            {{ formatDistance(routeInfo.distance) }}
-                                        </a-descriptions-item>
-                                        <a-descriptions-item label="预计耗时">
-                                            {{ formatDuration(routeInfo.duration) }}
-                                        </a-descriptions-item>
+                                        <a-descriptions-item label="总距离">{{ formatDistance(routeInfo.distance) }}</a-descriptions-item>
+                                        <a-descriptions-item label="预计耗时">{{ formatDuration(routeInfo.duration) }}</a-descriptions-item>
                                         <a-descriptions-item label="起点坐标">
-                                            {{ routeInfo.startLocation.lat.toFixed(6) }}, {{
-                                                routeInfo.startLocation.lng.toFixed(6) }}
+                                            {{ routeInfo.startLocation.lat.toFixed(6) }}, {{ routeInfo.startLocation.lng.toFixed(6) }}
                                         </a-descriptions-item>
                                         <a-descriptions-item label="终点坐标">
-                                            {{ routeInfo.endLocation.lat.toFixed(6) }}, {{
-                                                routeInfo.endLocation.lng.toFixed(6) }}
+                                            {{ routeInfo.endLocation.lat.toFixed(6) }}, {{ routeInfo.endLocation.lng.toFixed(6) }}
                                         </a-descriptions-item>
                                     </a-descriptions>
-
-                                    <a-button type="primary" @click="clearRoute" size="small" style="margin-top: 16px;">
-                                        清除路线
-                                    </a-button>
                                 </div>
-                                <a-alert v-else type="info" message="请输入起点和终点地址" show-icon />
+                                <div v-else class="route-empty">
+                                    <EnvironmentOutlined />
+                                    <div><strong>等待规划路线</strong><p>填写起点和终点后，点击“搜索路线”</p></div>
+                                </div>
                             </a-card>
                         </a-col>
                     </a-row>
@@ -71,6 +70,7 @@
 
             <!-- 地图显示区域 -->
             <a-card title="路线地图" :bordered="false">
+                <template #extra><span class="tool-card-meta">{{ mapLoaded ? '地图已加载' : '地图加载中' }}</span></template>
                 <div id="route-map-container" class="map-container"></div>
                 <a-alert v-if="!mapLoaded" type="warning" message="地图加载中..." show-icon style="margin-top: 16px;" />
             </a-card>
@@ -83,9 +83,7 @@
                 }))" direction="vertical" size="small" />
             </a-card>
 
-            <!-- 使用说明 -->
-            <a-divider style="margin-top: 32px;">使用说明</a-divider>
-            <a-card :bordered="false">
+            <a-card title="使用说明" :bordered="false" class="tool-help-card">
                 <a-descriptions :column="1">
                     <a-descriptions-item label="功能说明">
                         输入起点和终点地址，获取导航路线并在地图上显示
@@ -111,7 +109,7 @@
 <script setup lang="ts">
 import { ref, onMounted, onUnmounted } from 'vue'
 import { message } from 'ant-design-vue'
-import { EnvironmentOutlined, SearchOutlined } from '@ant-design/icons-vue'
+import { EnvironmentOutlined, SearchOutlined, CloudOutlined, AimOutlined } from '@ant-design/icons-vue'
 import { ApiService } from '../../services/api'
 import { AppConfig } from '../../config/appConfig'
 
@@ -139,6 +137,7 @@ interface RouteInfo {
 }
 
 const searching = ref(false)
+const locating = ref(false)
 const mapLoaded = ref(false)
 const startAddress = ref('')
 const endAddress = ref('')
@@ -227,6 +226,28 @@ const formatDuration = (duration: number): string => {
     return `${hours} 小时 ${remainingMinutes} 分钟`
 }
 
+const showCurrentLocation = (target: 'start' | 'end', latitude: number, longitude: number) => {
+    if (!map || !AMap) return
+
+    clearPreviousMarkers()
+    routeInfo.value = null
+
+    const marker = new AMap.Marker({
+        position: new AMap.LngLat(longitude, latitude),
+        icon: 'https://webapi.amap.com/theme/v1.3/markers/n/mark_b.png',
+        title: '当前位置'
+    })
+
+    if (target === 'start') {
+        startMarker = marker
+    } else {
+        endMarker = marker
+    }
+
+    map.add(marker)
+    map.setZoomAndCenter(16, [longitude, latitude])
+}
+
 // 获取当前位置
 const getCurrentLocation = (target: 'start' | 'end') => {
     if (!navigator.geolocation) {
@@ -239,6 +260,7 @@ const getCurrentLocation = (target: 'start' | 'end') => {
         return
     }
 
+    locating.value = true
     navigator.geolocation.getCurrentPosition(
         async (position) => {
             const { latitude, longitude } = position.coords
@@ -249,7 +271,9 @@ const getCurrentLocation = (target: 'start' | 'end') => {
                 endAddress.value = `我的位置 (${latitude.toFixed(6)}, ${longitude.toFixed(6)})`
             }
 
-            message.success('位置获取成功')
+            showCurrentLocation(target, latitude, longitude)
+            locating.value = false
+            message.success('已定位到当前位置')
         },
         (error) => {
             let errorMessage = '定位失败'
@@ -265,6 +289,7 @@ const getCurrentLocation = (target: 'start' | 'end') => {
                     break
             }
 
+            locating.value = false
             message.error(errorMessage)
             console.error('定位错误:', error)
         },
@@ -580,5 +605,126 @@ onUnmounted(() => {
 
 .tool-page :deep(.ant-steps-item-title) {
     color: var(--text-primary);
+}
+
+.route-form {
+    padding: 4px 0;
+}
+
+.route-form :deep(.ant-form-item) {
+    margin-bottom: 16px;
+}
+
+.route-form :deep(.ant-form-item:last-child) {
+    margin-bottom: 0;
+}
+
+.route-form :deep(.ant-form-item-label > label) {
+    color: var(--workspace-muted);
+    font-size: 12px;
+    font-weight: 600;
+}
+
+.route-input-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.route-input-row :deep(.ant-input-affix-wrapper) {
+    flex: 1;
+    min-width: 0;
+}
+
+.route-input-row :deep(.ant-input-prefix) {
+    color: var(--workspace-accent);
+}
+
+.current-location-button {
+    display: inline-flex !important;
+    flex-shrink: 0;
+    align-items: center;
+    gap: 5px;
+    height: 40px !important;
+    color: var(--workspace-accent) !important;
+    white-space: nowrap;
+    background: var(--workspace-accent-soft) !important;
+    border-color: var(--workspace-accent-line) !important;
+}
+
+.route-summary-card {
+    height: 100%;
+    background: var(--workspace-bg) !important;
+    border: 1px solid var(--workspace-line) !important;
+    box-shadow: none !important;
+}
+
+.route-summary-card :deep(.ant-card-head) {
+    min-height: 44px;
+    background: var(--workspace-soft);
+}
+
+.route-summary-card :deep(.ant-card-body) {
+    padding: 14px;
+}
+
+.route-summary-card .route-info {
+    padding: 0;
+    background: transparent;
+    border: 0;
+}
+
+.route-empty {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    min-height: 136px;
+    padding: 18px;
+    color: var(--workspace-caption);
+    text-align: left;
+    background: var(--workspace-surface);
+    border: 1px dashed var(--workspace-accent-line);
+    border-radius: 10px;
+}
+
+.route-empty > :deep(.anticon) {
+    color: var(--workspace-accent);
+    font-size: 26px;
+}
+
+.route-empty strong {
+    display: block;
+    margin-bottom: 4px;
+    color: var(--workspace-text);
+    font-size: 13px;
+    font-weight: 600;
+}
+
+.route-empty p {
+    margin: 0;
+    color: var(--workspace-muted);
+    font-size: 11px;
+    line-height: 1.6;
+}
+
+@media (hover: hover) and (pointer: fine) {
+    .current-location-button:hover {
+        color: var(--workspace-accent-hover) !important;
+        background: var(--workspace-accent-soft) !important;
+        border-color: var(--workspace-accent) !important;
+    }
+}
+
+@media (max-width: 640px) {
+    .route-input-row {
+        align-items: stretch;
+        flex-direction: column;
+    }
+
+    .current-location-button {
+        justify-content: center;
+        width: 100%;
+    }
 }
 </style>

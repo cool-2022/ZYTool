@@ -1,16 +1,31 @@
 <template>
-    <div class="tool-page">
+    <div class="tool-page warm-theme">
         <div class="container">
-            <!-- 页面标题 -->
-            <div class="page-header">
-                <a-typography-title :level="2">颜色选择器（前端处理）</a-typography-title>
-                <a-typography-paragraph>RGB、HEX颜色转换，浏览器本地处理</a-typography-paragraph>
+            <div class="page-header has-tool-badge">
+                <div>
+                    <a-typography-title :level="2">颜色选择器</a-typography-title>
+                    <a-typography-paragraph>选择颜色并获取 HEX、RGB、RGBA 数值</a-typography-paragraph>
+                </div>
+                <span class="tool-badge">
+                    <SafetyOutlined /> 本地处理
+                </span>
             </div>
 
-            <!-- 颜色选择器 -->
-            <a-row :gutter="{ xs: 16, sm: 24 }">
-                <a-col :xs="24" :lg="12">
-                    <a-card title="颜色选择" :bordered="false">
+            <div class="tool-action-bar">
+                <div class="tool-action-group">
+                    <a-button type="primary" @click="copyColor('hex')">
+                        <CopyOutlined /> 复制 HEX
+                    </a-button>
+                    <a-button @click="copyColor('rgb')">复制 RGB</a-button>
+                    <a-button @click="copyColor('rgba')">复制 RGBA</a-button>
+                </div>
+                <span class="tool-card-meta">当前颜色 {{ hexColor }}</span>
+            </div>
+
+            <a-row :gutter="{ xs: 16, sm: 20 }" class="tool-panel-row">
+                <a-col :xs="24" :lg="12" class="tool-panel-col">
+                    <a-card title="颜色选择" :bordered="false" class="tool-panel-card">
+                        <template #extra><span class="tool-card-meta">{{ hexColor }}</span></template>
                         <div class="color-preview" :style="{ backgroundColor: hexColor }"></div>
                         <a-divider />
 
@@ -51,25 +66,23 @@
                     </a-card>
                 </a-col>
 
-                <a-col :xs="24" :lg="12">
-                    <a-card title="颜色信息" :bordered="false">
+                <a-col :xs="24" :lg="12" class="tool-panel-col">
+                    <a-card title="颜色信息" :bordered="false" class="tool-panel-card">
+                        <template #extra><span class="tool-card-meta">HEX / RGB / RGBA</span></template>
                         <a-descriptions :column="1" bordered>
                             <a-descriptions-item label="HEX">
                                 <a-space>
                                     <span class="color-value">{{ hexColor }}</span>
-                                    <a-button size="small" @click="copyColor('hex')">复制</a-button>
                                 </a-space>
                             </a-descriptions-item>
                             <a-descriptions-item label="RGB">
                                 <a-space>
                                     <span class="color-value">{{ rgbString }}</span>
-                                    <a-button size="small" @click="copyColor('rgb')">复制</a-button>
                                 </a-space>
                             </a-descriptions-item>
                             <a-descriptions-item label="RGBA">
                                 <a-space>
                                     <span class="color-value">{{ rgbaString }}</span>
-                                    <a-button size="small" @click="copyColor('rgba')">复制</a-button>
                                 </a-space>
                             </a-descriptions-item>
                         </a-descriptions>
@@ -84,9 +97,7 @@
                 </a-col>
             </a-row>
 
-            <!-- 使用说明 -->
-            <a-divider>使用说明</a-divider>
-            <a-card :bordered="false">
+            <a-card title="使用说明" :bordered="false" class="tool-help-card">
                 <a-descriptions :column="1">
                     <a-descriptions-item label="HEX颜色">
                         十六进制颜色代码，格式为 #RRGGBB，例如 #FF0000 表示红色
@@ -106,17 +117,18 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue'
 import { message } from 'ant-design-vue'
+import { SafetyOutlined, CopyOutlined } from '@ant-design/icons-vue'
 import { rgbToHex, hexToRgb } from '../../services/frontendTools'
 
-const hexColor = ref('#63d2d2')
-const rgbColor = ref({ r: 99, g: 210, b: 210 })
+const hexColor = ref('#cf654a')
+const rgbColor = ref({ r: 207, g: 101, b: 74 })
 
 // 预设颜色
 const presetColors = [
     '#FF0000', '#00FF00', '#0000FF', '#FFFF00', '#FF00FF', '#00FFFF',
     '#000000', '#FFFFFF', '#808080', '#C0C0C0', '#800000', '#808000',
     '#008000', '#800080', '#008080', '#000080', '#FFA500', '#FFC0CB',
-    '#63d2d2', '#4fb8b8', '#3a9e9e', '#7de3e3', '#a8ecec', '#c5f3f3'
+    '#cf654a', '#b9553c', '#ed9b7e', '#5d8d74', '#95713f', '#f3e7dd'
 ]
 
 // RGB字符串

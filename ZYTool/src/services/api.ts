@@ -1,9 +1,18 @@
+/**
+ * 统一 API 服务层（services/api.ts）
+ * 项目所有后端请求的唯一出口，核心机制：
+ * - 双后端：rustApi（axum 主后端 :10003）+ pythonApi（FastAPI 兜底 :10004），均挂 /api/v1
+ * - requestWithFallback：仅网络错误/超时/5xx 时降级 Python，4xx 不降级
+ * - chatStream：axios + fetch adapter 手动解析 SSE 的流式聊天，支持 AbortSignal 中止
+ * - 401 统一拦截：clearAuth 后跳转 /?redirect=<当前路径>
+ */
 import axios, { type AxiosError, type AxiosInstance, type AxiosRequestConfig } from 'axios'
 import { getToken, clearAuth, getBaseInfo, buildDefaultBaseInfo } from '../utils/auth'
 import { AppConfig } from '../config/appConfig'
 
 // ===================== 双后端 axios 实例 =====================
 
+/** 创建一个 axios 实例（Rust / Python 各一个），统一注入 token、X-Base-Info 头与耗时日志拦截器 */
 function createApiInstance(baseURL: string): AxiosInstance {
     const instance = axios.create({
         baseURL,
@@ -13,10 +22,12 @@ function createApiInstance(baseURL: string): AxiosInstance {
         },
     })
 
-    // 请求拦截器 - 添加 token 和基础信息头
+    // 请求拦截器 - 添加 token 和基础信息头，并记录请求起始时间
     instance.interceptors.request.use(
         (config) => {
-            if (import.meta.env.DEV) console.log('发送请求:', config.method?.toUpperCase(), config.url)
+            if (import.meta.env.DEV) console.log('发送请求:', config.method?.toUpperCase(), config.url);
+
+            (config as any).__startTime = performance.now()
 
             const token = getToken()
             if (token) {
@@ -34,13 +45,24 @@ function createApiInstance(baseURL: string): AxiosInstance {
         }
     )
 
-    // 响应拦截器 - 处理 token 过期
+    // 响应拦截器 - 记录请求耗时（毫秒），处理 token 过期
     instance.interceptors.response.use(
         (response) => {
+
+            const startTime = (response.config as any).__startTime as number | undefined
+            const duration = startTime !== undefined ? `${(performance.now() - startTime).toFixed(1)} ms` : 'unknown'
+            console.log(
+                `[API] ${response.config.method?.toUpperCase()} ${response.config.baseURL}${response.config.url} 耗时 ${duration}`
+            )
             if (import.meta.env.DEV) console.log('收到响应:', response.status, response.data)
             return response
         },
         (error) => {
+            const startTime = (error.config as any)?.__startTime as number | undefined
+            const duration = startTime !== undefined ? `${(performance.now() - startTime).toFixed(1)} ms` : 'unknown'
+            console.error(
+                `[API] ${error.config?.method?.toUpperCase()} ${error.config?.baseURL}${error.config?.url} 耗时 ${duration}（失败）`
+            )
             if (import.meta.env.DEV) console.error('响应错误:', error.response?.status, error.response?.data)
 
             // 处理 401 未授权错误（token 过期或无效）：清除登录态并跳转登录页
@@ -68,6 +90,7 @@ export const pythonApi = createApiInstance(`${AppConfig.pythonApiBaseUrl}${AppCo
 
 // ===================== 统一响应结构 =====================
 
+/** 统一响应结构解包：仅当返回体同时含 success 和 data 字段（BaseResponse）时才取 data，否则原样返回 */
 function unwrapResponse<T>(data: any): T {
     if (data && typeof data === 'object' && 'success' in data && 'data' in data) {
         return data.data as T
@@ -117,6 +140,7 @@ export async function requestWithFallback<T>(
         return unwrapResponse<T>(response.data)
     } catch (err) {
         const axiosError = err as AxiosError
+        // 仅网络错误/超时/5xx 才降级 Python；4xx 属于业务错误，原样抛出
         if (!shouldFallbackToPython(axiosError)) {
             throw err
         }
@@ -145,6 +169,8 @@ export interface Tool {
     icon: string
     description: string
     type?: 'frontend' | 'backend'
+    /** 前端路由（后端数据驱动）；空串表示未接入页面 */
+    route?: string
 }
 
 export interface TextCompareRequest {
@@ -521,6 +547,7 @@ export class ApiService {
         try {
             stream = await requestChatStream(rustApi)
         } catch (err) {
+            // 流建立阶段失败直接降级（此时尚无响应体，无法区分 4xx/5xx）
             if (signal?.aborted) return
             if (import.meta.env.DEV) {
                 console.warn('[Fallback] Rust 流式后端不可用，降级到 Python 后端:', err)
@@ -545,13 +572,14 @@ export class ApiService {
 
                 buffer += decoder.decode(value, { stream: true })
 
-                // 处理 SSE 格式的数据
+                // 手动解析 SSE：按行切分，pop 出的末行可能不完整，留回 buffer 等下一片段拼接
                 const lines = buffer.split('\n')
                 buffer = lines.pop() || ''
 
                 for (const line of lines) {
                     if (line.startsWith('data: ')) {
                         const data = line.slice(6).trim()
+                        // 服务端以 data: [DONE] 作为流结束标记，跳过不 yield
                         if (data && data !== '[DONE]') {
                             yield data
                         }

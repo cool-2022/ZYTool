@@ -1,3 +1,4 @@
+# 请求日志中间件：记录每个请求的开始/结束与耗时，并在响应头写入 X-Process-Time（秒）。
 import time
 import logging
 from fastapi import Request
@@ -9,7 +10,8 @@ logger = logging.getLogger(__name__)
 
 
 class RequestLoggingMiddleware(BaseHTTPMiddleware):
-    
+    """逐请求记录路径/状态码/耗时，是唯一仍挂载的自定义中间件"""
+
     async def dispatch(self, request: Request, call_next: Callable) -> Response:
         start_time = time.time()
         

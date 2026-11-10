@@ -1,88 +1,71 @@
 <template>
-    <div class="tool-page">
+    <div class="tool-page warm-theme json-tool-page">
         <div class="container">
-            <!-- 页面标题 -->
-            <div class="page-header">
-                <a-typography-title :level="2">JSON格式化工具（前端处理）</a-typography-title>
-                <a-typography-paragraph>输入JSON文本，浏览器本地处理，无需后端</a-typography-paragraph>
+            <div class="page-header json-page-header">
+                <div>
+                    <a-typography-title :level="2">JSON 格式化工具</a-typography-title>
+                    <a-typography-paragraph>格式化、压缩和校验 JSON，数据仅在浏览器中处理</a-typography-paragraph>
+                </div>
+                <span class="local-badge"><SafetyOutlined /> 本地处理</span>
             </div>
 
-            <!-- 工具内容 -->
-            <a-row :gutter="{ xs: 16, sm: 24 }">
-                <a-col :xs="24" :lg="12">
-                    <a-card title="输入JSON" :bordered="false">
-                        <a-textarea v-model:value="inputText" placeholder="请输入JSON文本..." :rows="15"
-                            @change="handleInputChange" />
+            <div class="json-toolbar">
+                <div class="toolbar-primary">
+                    <a-button type="primary" :loading="loading" @click="formatJson">
+                        <AlignLeftOutlined /> 格式化
+                    </a-button>
+                    <a-button :loading="loading" @click="compressJson">
+                        <CompressOutlined /> 压缩
+                    </a-button>
+                    <a-button @click="loadExample">
+                        <FileTextOutlined /> 填入示例
+                    </a-button>
+                </div>
+                <div class="toolbar-secondary">
+                    <a-button :disabled="!formattedResult" @click="copyResult">
+                        <CopyOutlined /> 复制结果
+                    </a-button>
+                    <a-button :disabled="!inputText && !formattedResult" @click="clearAll">
+                        <ClearOutlined /> 清空
+                    </a-button>
+                </div>
+            </div>
+
+            <a-row :gutter="{ xs: 16, sm: 20 }" class="json-workspace">
+                <a-col :xs="24" :lg="12" class="json-editor-col">
+                    <a-card :bordered="false" class="json-editor-card">
+                        <template #title>
+                            <span class="editor-title"><span class="editor-dot input-dot"></span>输入 JSON</span>
+                        </template>
+                        <template #extra>
+                            <span class="character-count">{{ inputText.length }} 字符</span>
+                        </template>
+                        <a-textarea v-model:value="inputText" class="json-input"
+                            placeholder="请输入 JSON 文本，或点击“填入示例”..." :rows="18" />
                     </a-card>
                 </a-col>
-                <a-col :xs="24" :lg="12">
-                    <a-card title="格式化结果" :bordered="false">
-                        <div class="result-container">
-                            <a-spin :spinning="loading" tip="格式化中...">
-                                <pre v-if="formattedResult" class="formatted-json">{{ formattedResult }}</pre>
-                                <a-empty v-else description="暂无结果" />
-                            </a-spin>
-                        </div>
-                        <template #extra>
-                            <a-space>
-                                <a-button @click="formatJson" type="primary" :loading="loading">
-                                    格式化
-                                </a-button>
-                                <a-button @click="compressJson" :loading="loading">
-                                    压缩
-                                </a-button>
-                                <a-button @click="copyResult">
-                                    复制
-                                </a-button>
-                                <a-button @click="clearAll">清空</a-button>
-                            </a-space>
+
+                <a-col :xs="24" :lg="12" class="json-editor-col">
+                    <a-card :bordered="false" class="json-editor-card">
+                        <template #title>
+                            <span class="editor-title"><span class="editor-dot output-dot"></span>处理结果</span>
                         </template>
+                        <template #extra>
+                            <span class="character-count">{{ formattedResult.length }} 字符</span>
+                        </template>
+                        <a-spin :spinning="loading" tip="处理中..." class="result-spin">
+                            <div class="json-result" :class="{ empty: !formattedResult }">
+                                <pre v-if="formattedResult" class="formatted-json">{{ formattedResult }}</pre>
+                                <a-empty v-else description="格式化或压缩后，结果会显示在这里" />
+                            </div>
+                        </a-spin>
                     </a-card>
                 </a-col>
             </a-row>
 
-            <!-- 其他文本工具 -->
-            <a-divider>其他前端工具</a-divider>
-            <a-row :gutter="16">
-                <a-col :xs="24" :sm="12" :md="8" :lg="6">
-                    <a-card hoverable @click="openTool('base64')">
-                        <a-space direction="vertical" align="center" style="width:100%">
-                            <div class="tool-icon">64</div>
-                            <a-typography-title :level="5" style="margin:0">Base64编码</a-typography-title>
-                            <a-typography-paragraph
-                                style="margin:0;color:var(--primary-color)">前端处理</a-typography-paragraph>
-                        </a-space>
-                    </a-card>
-                </a-col>
-                <a-col :xs="24" :sm="12" :md="8" :lg="6">
-                    <a-card hoverable @click="openTool('url')">
-                        <a-space direction="vertical" align="center" style="width:100%">
-                            <div class="tool-icon">%</div>
-                            <a-typography-title :level="5" style="margin:0">URL编码</a-typography-title>
-                            <a-typography-paragraph
-                                style="margin:0;color:var(--primary-color)">前端处理</a-typography-paragraph>
-                        </a-space>
-                    </a-card>
-                </a-col>
-                <a-col :xs="24" :sm="12" :md="8" :lg="6">
-                    <a-card hoverable @click="openTool('regex')">
-                        <a-space direction="vertical" align="center" style="width:100%">
-                            <div class="tool-icon">.*</div>
-                            <a-typography-title :level="5" style="margin:0">正则测试</a-typography-title>
-                            <a-typography-paragraph style="margin:0;color:orange">后端处理</a-typography-paragraph>
-                        </a-space>
-                    </a-card>
-                </a-col>
-                <a-col :xs="24" :sm="12" :md="8" :lg="6">
-                    <a-card hoverable @click="openTool('password')">
-                        <a-space direction="vertical" align="center" style="width:100%">
-                            <div class="tool-icon">🔐</div>
-                            <a-typography-title :level="5" style="margin:0">密码生成</a-typography-title>
-                            <a-typography-paragraph style="margin:0;color:orange">后端处理</a-typography-paragraph>
-                        </a-space>
-                    </a-card>
-                </a-col>
-            </a-row>
+            <div class="json-note">
+                <SafetyOutlined /> 所有处理均在当前浏览器完成，输入内容不会上传到服务器
+            </div>
         </div>
     </div>
 </template>
@@ -90,6 +73,14 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 import { message } from 'ant-design-vue'
+import {
+    SafetyOutlined,
+    AlignLeftOutlined,
+    CompressOutlined,
+    CopyOutlined,
+    ClearOutlined,
+    FileTextOutlined
+} from '@ant-design/icons-vue'
 import { formatJSON, minifyJSON } from '../../services/frontendTools'
 
 // 响应式数据
@@ -146,9 +137,9 @@ const compressJson = () => {
     }, 300)
 }
 
-// 处理输入变化
-const handleInputChange = () => {
-    // 可以添加实时验证逻辑
+const loadExample = () => {
+    inputText.value = exampleJson
+    formattedResult.value = ''
 }
 
 // 清空所有内容
@@ -173,12 +164,6 @@ const copyResult = () => {
         })
 }
 
-// 打开其他工具
-const openTool = (toolType: string) => {
-    message.info(`正在打开${toolType}工具...`)
-    // 这里可以添加路由跳转或打开模态框
-}
-
 // 示例JSON数据
 const exampleJson = `{
   "name": "ZYTool",
@@ -190,7 +175,7 @@ const exampleJson = `{
     "正则测试"
   ],
   "config": {
-    "theme": "dark",
+    "theme": "warm",
     "language": "zh-CN"
   }
 }`
@@ -426,5 +411,204 @@ label {
     margin-bottom: 8px;
     font-weight: 600;
     color: var(--text-primary);
+}
+
+.json-page-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 20px;
+}
+
+.local-badge {
+    display: inline-flex;
+    flex-shrink: 0;
+    align-items: center;
+    gap: 6px;
+    padding: 5px 10px;
+    color: var(--workspace-green);
+    font-size: 11px;
+    font-weight: 600;
+    background: var(--workspace-green-soft);
+    border: 1px solid color-mix(in srgb, var(--workspace-green) 18%, transparent);
+    border-radius: 7px;
+}
+
+.json-toolbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    margin-bottom: 18px;
+    padding: 12px 14px;
+    background: var(--workspace-surface);
+    border: 1px solid var(--workspace-line);
+    border-radius: var(--workspace-radius);
+    box-shadow: var(--workspace-shadow);
+}
+
+.toolbar-primary,
+.toolbar-secondary {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.json-workspace {
+    align-items: stretch;
+}
+
+.json-editor-col {
+    display: flex;
+    margin-bottom: 20px;
+}
+
+.json-editor-card {
+    width: 100%;
+    height: 100%;
+}
+
+.editor-title {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.editor-dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+}
+
+.input-dot {
+    background: var(--workspace-accent);
+}
+
+.output-dot {
+    background: var(--workspace-green);
+}
+
+.character-count {
+    color: var(--workspace-caption);
+    font-size: 11px;
+    font-weight: 400;
+    font-variant-numeric: tabular-nums;
+}
+
+.json-editor-card :deep(.ant-card-body) {
+    padding: 0;
+}
+
+.json-editor-card :deep(.json-input) {
+    min-height: 480px;
+    padding: 18px;
+    color: var(--workspace-text);
+    font-family: 'SF Mono', Consolas, 'Courier New', monospace;
+    font-size: 13px;
+    line-height: 1.75;
+    background: var(--workspace-surface);
+    border: 0;
+    border-radius: 0;
+    resize: vertical;
+}
+
+.json-editor-card :deep(.json-input:focus) {
+    background: var(--workspace-surface);
+    box-shadow: inset 0 0 0 1px var(--workspace-accent-line);
+}
+
+.result-spin,
+.result-spin :deep(.ant-spin-nested-loading),
+.result-spin :deep(.ant-spin-container) {
+    display: block;
+    min-height: 480px;
+}
+
+.json-result {
+    min-height: 480px;
+    max-height: 640px;
+    padding: 18px;
+    overflow: auto;
+    background: var(--workspace-bg);
+}
+
+.json-result.empty {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.json-result .formatted-json {
+    min-height: 100%;
+    margin: 0;
+    padding: 0;
+    color: var(--workspace-text);
+    font-family: 'SF Mono', Consolas, 'Courier New', monospace;
+    font-size: 13px;
+    line-height: 1.75;
+    overflow-wrap: anywhere;
+    white-space: pre-wrap;
+    background: transparent;
+}
+
+.json-note {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 7px;
+    margin-top: 2px;
+    color: var(--workspace-caption);
+    font-size: 11px;
+    line-height: 1.6;
+    text-align: center;
+}
+
+@media (max-width: 768px) {
+    .json-toolbar {
+        align-items: flex-start;
+    }
+
+    .json-editor-card :deep(.json-input),
+    .result-spin,
+    .result-spin :deep(.ant-spin-nested-loading),
+    .result-spin :deep(.ant-spin-container),
+    .json-result {
+        min-height: 360px;
+    }
+}
+
+@media (max-width: 640px) {
+    .json-page-header {
+        align-items: flex-start;
+    }
+
+    .local-badge {
+        margin-top: 3px;
+    }
+
+    .json-toolbar {
+        flex-direction: column;
+        gap: 10px;
+    }
+
+    .toolbar-primary,
+    .toolbar-secondary {
+        width: 100%;
+    }
+
+    .toolbar-primary :deep(.ant-btn),
+    .toolbar-secondary :deep(.ant-btn) {
+        flex: 1;
+        padding-right: 10px;
+        padding-left: 10px;
+    }
+
+    .json-editor-card :deep(.json-input),
+    .result-spin,
+    .result-spin :deep(.ant-spin-nested-loading),
+    .result-spin :deep(.ant-spin-container),
+    .json-result {
+        min-height: 320px;
+    }
 }
 </style>

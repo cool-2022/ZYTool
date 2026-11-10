@@ -1,3 +1,9 @@
+// ============================================================================
+// 全局配置模块 —— Settings 结构体与 SETTINGS 单例
+// 职责：集中定义所有配置项（应用/HTTP/日志/限流/JWT/第三方 API/数据库/OAuth/Kimi）。
+// 约定：字段优先从环境变量读取（.env 经 dotenvy 加载），缺失时回落到本文件默认值；
+//       SETTINGS 为惰性初始化的全局单例，进程生命周期内只加载一次。
+// ============================================================================
 use once_cell::sync::Lazy;
 use serde::Deserialize;
 
@@ -71,6 +77,12 @@ pub struct Settings {
     #[serde(default = "default_db_pool_size")]
     pub db_pool_size: u32,
 
+    // ===== Redis 配置（缓存/限流等；redis_host 为空时保持无 Redis 模式） =====
+    #[serde(default)]
+    pub redis_host: String,
+    #[serde(default = "default_redis_port")]
+    pub redis_port: u16,
+
     // ===== QQ 互联 OAuth 配置 =====
     #[serde(default)]
     pub qq_app_id: String,
@@ -122,6 +134,8 @@ fn default_rate_limit_requests() -> u32 { 100 }
 fn default_rate_limit_period() -> u64 { 60 }
 
 // ===== JWT / 认证默认值 =====
+// 兜底默认密钥仅供开发使用：生产环境必须配置 SECRET_KEY
+// 注意：它同时是 JWT 签名密钥和 AES-GCM 密钥派生源（见 core/crypto.rs），改动会使历史 token 与密文全部失效
 fn default_secret_key() -> String { "your-secret-key-change-this-in-production-09d25e094faa6ca2556c818166b7a9563b93f7099f6f0f4caa6cf63b88e8d3e7".to_string() }
 fn default_algorithm() -> String { "HS256".to_string() }
 fn default_access_token_expire_minutes() -> i64 { 30 }
@@ -140,6 +154,9 @@ fn default_db_pool_size() -> u32 { 10 }
 
 // ===== QQ 互联 OAuth 默认值 =====
 fn default_qq_redirect_uri() -> String { "http://localhost:5173/login".to_string() }
+
+// ===== Redis 默认值 =====
+fn default_redis_port() -> u16 { 6379 }
 
 // ===== Kimi（Moonshot AI）默认值 =====
 fn default_kimi_base_url() -> String { "https://api.moonshot.cn/v1".to_string() }
@@ -179,6 +196,8 @@ pub static SETTINGS: Lazy<Settings> = Lazy::new(|| {
             db_password: default_db_password(),
             db_name: default_db_name(),
             db_pool_size: default_db_pool_size(),
+            redis_host: String::new(),
+            redis_port: default_redis_port(),
             qq_app_id: String::new(),
             qq_app_key: String::new(),
             qq_redirect_uri: default_qq_redirect_uri(),

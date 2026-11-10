@@ -35,6 +35,12 @@
 - 仅 Rust 接入 PostgreSQL（可选），表结构与初始化前置条件见 `../../backend-knowledge/common/02-database-schema.md`；Python 当前无 DB 接入
 - Rust 连接池只在启动时初始化一次，失败后打印警告并以无 DB 模式运行；DB 恢复后通常仍需重启进程
 
+## Redis
+
+- 2026-11-10 起项目新增 Redis 服务（连接配置登记在 `Config/database.env`，无密码，详见 `04-env-vars.md`）
+- 双端客户端已接入（2026-11-10）：Rust `core/redis.rs` 启动时初始化多路复用连接（`redis` crate，`get_connection()` 取用）；Python `app/core/redis_client.py` 懒加载（`redis.asyncio`，`get_redis()` 取用）
+- 降级约定与 DB 一致：两端 `REDIS_HOST` 留空或连接失败均打印警告、以无 Redis 模式继续运行；**业务尚未消费 Redis**（缓存/限流/会话等场景待接入）
+
 ## API 入口
 
 `/health`（根健康检查）+ `/api/v1` 下按模块 nest：`agents` / `auth` / `health` / `protected` / `tools`。完整方法、认证与双端覆盖见 `../../backend-knowledge/common/03-route-coverage.md`。
