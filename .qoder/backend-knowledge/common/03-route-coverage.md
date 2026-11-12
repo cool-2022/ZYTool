@@ -17,10 +17,10 @@
 
 | 方法 | 路径 | Rust 认证 | Python |
 |---|---|---|---|
-| POST | `/auth/login` | 公开 | 已实现；内存测试用户 |
+| POST | `/auth/login` | 公开；同用户名连续失败 5 次锁定 600s（Redis，无 Redis 不生效） | 已实现；内存测试用户 |
 | POST | `/auth/register` | 公开 | 已实现；进程内保存，重启丢失 |
 | GET | `/auth/me` | JWT | 已实现；原始用户结构 |
-| POST | `/auth/logout` | JWT；仅返回成功，无服务端撤销 | 已实现 |
+| POST | `/auth/logout` | JWT；token 摘要写 Redis 黑名单（TTL=剩余有效期），此后 Rust 侧请求 401 | 已实现 |
 | GET | `/auth/bindings` | JWT | 缺失 |
 | POST | `/auth/bind/phone` | JWT | 缺失 |
 | POST | `/auth/bind/qq` | JWT | 缺失 |
@@ -32,7 +32,7 @@ Rust 用户数据依赖 PostgreSQL；Python 不与该用户库同步。
 
 ## Agents
 
-以下 Rust 接口均要求 JWT 和 DB；Python 两个聊天接口当前不要求 JWT、不访问 DB。
+以下 Rust 接口均要求 JWT 和 DB；Python 两个聊天接口当前不要求 JWT、不访问 DB。Rust 侧 `/agents/chat` 与 `/agents/chat/sync` 按用户限流（默认 20 次/分钟，Redis 分钟桶，超限 429，无 Redis 放行）。Rust 两个聊天接口自 2026-11-10 起支持 Function Call（天气工具，流式端内部两轮请求对前端透明）。
 
 | 方法 | 路径 | Python |
 |---|---|
@@ -87,7 +87,7 @@ Rust 用户数据依赖 PostgreSQL；Python 不与该用户库同步。
 
 ## 工具
 
-以下 Rust 接口均为公开接口，不依赖用户登录；Python 已实现相同路径，但部分响应结构与模拟行为不同。
+以下 Rust 接口均为公开接口，不依赖用户登录；Python 已实现相同路径，但部分响应结构与模拟行为不同。Rust 侧 `/tools` 整体挂 IP 限流中间件（默认 60 次/分钟，Redis 分钟桶，超限 429，无 Redis 放行）。
 
 | 方法 | 路径 |
 |---|---|
@@ -101,4 +101,4 @@ Rust 用户数据依赖 PostgreSQL；Python 不与该用户库同步。
 | POST | `/tools/map/route` |
 | GET | `/tools/map/route/test` |
 
-`GET /tools/categories` 自 2026-11-06 起读 `tool_categories`/`tools` 表（含 `route` 字段驱动前端跳转，is_enabled+sort_order 过滤排序），无 DB 或失败时回退硬编码；包含纯前端及待开发条目，不能当作后端已实现能力清单。两端地图路线均为 mock 直线插值，`waypoints` 不参与计算；SQL 合理性检查在前端本地执行，没有对应后端路由。
+`GET /tools/categories` 自 2026-11-06 起读 `tool_categories`/`tools` 表（含 `route` 字段驱动前端跳转，is_enabled+sort_order 过滤排序），无 DB 或失败时回退硬编码；2026-11-10 起 Rust 侧优先读 Redis 缓存（`tools:categories`，TTL 300s，只缓存读库结果，改分类后最长 5 分钟生效）；包含纯前端及待开发条目，不能当作后端已实现能力清单。两端地图路线均为 mock 直线插值，`waypoints` 不参与计算；SQL 合理性检查在前端本地执行，没有对应后端路由。

@@ -4,7 +4,8 @@ use axum::{
     routing::{get, post},
     Extension, Json, Router,
 };
-use axum_extra::headers::UserAgent;
+use axum_extra::headers::authorization::Bearer;
+use axum_extra::headers::{Authorization, UserAgent};
 use axum_extra::TypedHeader;
 use once_cell::sync::Lazy;
 use regex::Regex;
@@ -14,7 +15,10 @@ use std::collections::HashMap;
 use std::net::SocketAddr;
 use tokio::sync::RwLock;
 
-use crate::core::auth::{create_access_token, get_password_hash, verify_password, CurrentUser};
+use crate::core::auth::{
+    blacklist_key, create_access_token, decode_access_token, get_password_hash, verify_password,
+    CurrentUser,
+};
 use crate::core::config::SETTINGS;
 use crate::core::db::{get_pool, DbPool};
 use crate::core::error::{bad_request, unauthorized, AppError, AppResult};
@@ -105,6 +109,17 @@ async fn login(
 ) -> AppResult<Json<BaseResponse<TokenResponse>>> {
     let pool = get_pool().ok_or_else(|| internal_error("数据库连接池未初始化"))?;
 
+    // 0) 防爆破锁定检查（Redis 计数，无 Redis 时返回 None 直接放行）
+    let fail_key = format!("login:fail:{}", req.username);
+    if let Some(count) = crate::core::redis::cache_get(&fail_key)
+        .await
+        .and_then(|v| v.parse::<u32>().ok())
+    {
+        if count >= SETTINGS.login_max_failures {
+            return Err(unauthorized("登录失败次数过多，账号已临时锁定，请稍后再试"));
+        }
+    }
+
     // 1) 优先读内存缓存，命中则完全避免数据库往返。
     let cached_user = {
         let cache = USER_CACHE.read().await;
@@ -113,10 +128,20 @@ async fn login(
 
     let user = match cached_user {
         Some(u) => u,
-        None => fetch_user_from_db(pool, &req.username)
-            .await
-            .map_err(|e| internal_error(format!("数据库查询失败: {}", e)))?
-            .ok_or_else(|| unauthorized("用户名或密码错误"))?,
+        None => {
+            let found = fetch_user_from_db(pool, &req.username)
+                .await
+                .map_err(|e| internal_error(format!("数据库查询失败: {}", e)))?;
+            match found {
+                Some(u) => u,
+                None => {
+                    // 用户不存在同样计数，防止枚举探测
+                    crate::core::redis::incr_with_ttl(&fail_key, SETTINGS.login_lockout_seconds)
+                        .await;
+                    return Err(unauthorized("用户名或密码错误"));
+                }
+            }
+        }
     };
 
     if user.status != 1 {
@@ -124,7 +149,8 @@ async fn login(
     }
 
     if !verify_password(&req.password, &user.password_hash) {
-        // 记录失败日志（异步，不阻塞登录响应）
+        // 失败计数 + 记录失败日志（计数同步执行保证锁定准确，日志异步不阻塞响应）
+        crate::core::redis::incr_with_ttl(&fail_key, SETTINGS.login_lockout_seconds).await;
         let pool = pool.clone();
         let ip = addr.ip().to_string();
         let ua = user_agent.map(|h| h.to_string()).unwrap_or_default();
@@ -133,6 +159,9 @@ async fn login(
         });
         return Err(unauthorized("用户名或密码错误"));
     }
+
+    // 登录成功：清除失败计数
+    crate::core::redis::cache_del(&fail_key).await;
 
     // 2) 登录成功：token 立即返回，数据库写操作（最近登录信息 + 日志）异步执行。
     let pool = pool.clone();
@@ -253,9 +282,17 @@ async fn me(
 }
 
 async fn logout(
+    TypedHeader(Authorization(bearer)): TypedHeader<Authorization<Bearer>>,
     Extension(base): Extension<Option<BaseInfo>>,
     current_user: CurrentUser,
 ) -> Json<BaseResponse<serde_json::Value>> {
+    // 服务端撤销：token 摘要写入黑名单，TTL 取剩余有效期，到期自动清除（无 Redis 时静默跳过）
+    if let Some(claims) = decode_access_token(bearer.token()) {
+        let ttl = claims.exp - chrono::Utc::now().timestamp();
+        if ttl > 0 {
+            crate::core::redis::cache_set(&blacklist_key(bearer.token()), "1", ttl as u64).await;
+        }
+    }
     Json(BaseResponse::ok_with_message(
         json!({ "user": current_user.username }),
         "登出成功",

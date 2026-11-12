@@ -9,14 +9,31 @@ use std::time::Duration;
 use tokio::sync::Mutex;
 
 use crate::core::auth::CurrentUser;
+use crate::core::config::SETTINGS;
 use crate::core::db::DbPool;
-use crate::core::error::{bad_request, unauthorized, AppResult};
+use crate::core::error::{bad_request, unauthorized, AppError, AppResult};
 use crate::models::{BaseInfo, BaseResponse, ChatRequest, ChatResponse};
 use crate::services::agents::{llm, store};
 
 use super::sessions::require_pool;
 
 const HISTORY_LIMIT: i64 = 20;
+
+/// LLM 调用有成本，按用户固定窗口限流（无 Redis 时放行）
+async fn check_chat_rate_limit(user_id: i64) -> AppResult<()> {
+    let key = format!(
+        "rl:chat:{}:{}",
+        user_id,
+        chrono::Utc::now().format("%Y%m%d%H%M")
+    );
+    if !crate::core::redis::rate_limit_hit(&key, SETTINGS.chat_rate_limit_per_minute, 70).await {
+        return Err(AppError::new(
+            "提问过于频繁，请稍后再试",
+            axum::http::StatusCode::TOO_MANY_REQUESTS,
+        ));
+    }
+    Ok(())
+}
 
 /// 解析会话：有 session_id 则校验归属，没有则自动创建；返回 (内部 session_id, 新会话 uuid)
 async fn resolve_session(
@@ -57,6 +74,7 @@ pub async fn chat(
 
     let pool = require_pool()?;
     let user_id = current_user.user_id.ok_or_else(|| unauthorized("无效的用户信息"))?;
+    check_chat_rate_limit(user_id).await?;
 
     let (session_id, new_session_uuid) =
         resolve_session(pool, user_id, req.session_id.as_deref()).await?;
@@ -81,7 +99,7 @@ pub async fn chat(
     // 生成回复流：Kimi 或占位
     let reply_stream: std::pin::Pin<Box<dyn Stream<Item = Result<String, crate::core::error::AppError>> + Send>> =
         match model {
-            Some(cfg) => Box::pin(llm::chat_stream(history, cfg).await?),
+            Some(cfg) => Box::pin(llm::chat_stream_with_tools(history, cfg).await?),
             None => Box::pin(stream::once(async move {
                 Ok(format!("AI 助手占位回复: {}", req.message))
             })),
@@ -137,6 +155,7 @@ pub async fn chat_sync(
 
     let pool = require_pool()?;
     let user_id = current_user.user_id.ok_or_else(|| unauthorized("无效的用户信息"))?;
+    check_chat_rate_limit(user_id).await?;
 
     let (session_id, new_session_uuid) =
         resolve_session(pool, user_id, req.session_id.as_deref()).await?;

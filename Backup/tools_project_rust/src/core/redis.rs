@@ -26,7 +26,6 @@ pub async fn init_redis() -> Result<&'static MultiplexedConnection, redis::Redis
 }
 
 /// 获取全局 Redis 连接；未初始化（未配置或连接失败）时返回 None
-#[allow(dead_code)] // 暂无业务消费，后续缓存/限流接入时使用
 pub fn get_connection() -> Option<MultiplexedConnection> {
     REDIS_CONN.get().cloned()
 }
@@ -35,6 +34,67 @@ pub fn get_connection() -> Option<MultiplexedConnection> {
 #[allow(dead_code)] // 暂无业务消费，后续健康检查接入时使用
 pub async fn ping(conn: &mut MultiplexedConnection) -> Result<(), redis::RedisError> {
     redis::cmd("PING").query_async::<()>(conn).await
+}
+
+// ===================== 通用缓存助手（全部静默降级：无 Redis 或出错时视为未命中/写入忽略） =====================
+
+/// 读取缓存字符串；未命中/无 Redis/出错均返回 None
+pub async fn cache_get(key: &str) -> Option<String> {
+    let mut conn = get_connection()?;
+    redis::cmd("GET")
+        .arg(key)
+        .query_async::<Option<String>>(&mut conn)
+        .await
+        .ok()
+        .flatten()
+}
+
+/// 写入缓存并设置 TTL（秒）；失败静默忽略
+pub async fn cache_set(key: &str, value: &str, ttl_secs: u64) {
+    let Some(mut conn) = get_connection() else { return };
+    let _ = redis::cmd("SET")
+        .arg(key)
+        .arg(value)
+        .arg("EX")
+        .arg(ttl_secs)
+        .query_async::<()>(&mut conn)
+        .await;
+}
+
+/// 删除缓存；失败静默忽略
+pub async fn cache_del(key: &str) {
+    let Some(mut conn) = get_connection() else { return };
+    let _ = redis::cmd("DEL")
+        .arg(key)
+        .query_async::<()>(&mut conn)
+        .await;
+}
+
+/// 计数器自增并在首次创建时设置 TTL（秒），返回自增后的值；无 Redis 或出错返回 None
+pub async fn incr_with_ttl(key: &str, ttl_secs: u64) -> Option<u32> {
+    let mut conn = get_connection()?;
+    let count = redis::cmd("INCR")
+        .arg(key)
+        .query_async::<u32>(&mut conn)
+        .await
+        .ok()?;
+    if count == 1 {
+        let _ = redis::cmd("EXPIRE")
+            .arg(key)
+            .arg(ttl_secs)
+            .query_async::<()>(&mut conn)
+            .await;
+    }
+    Some(count)
+}
+
+/// 固定窗口限流：key 在窗口内第 max+1 次起拒绝。返回 true 表示放行；
+/// 无 Redis 或出错时放行（可用性优先，限流静默失效）
+pub async fn rate_limit_hit(key: &str, max: u32, window_secs: u64) -> bool {
+    match incr_with_ttl(key, window_secs).await {
+        Some(count) => count <= max,
+        None => true,
+    }
 }
 
 fn config_error(msg: &'static str) -> redis::RedisError {

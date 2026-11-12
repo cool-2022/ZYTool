@@ -47,6 +47,16 @@ pub struct Settings {
     #[serde(default = "default_rate_limit_period")]
     pub rate_limit_period: u64,
 
+    // ===== Redis 限流/锁定配置（无 Redis 时自动失效） =====
+    #[serde(default = "default_login_max_failures")]
+    pub login_max_failures: u32,
+    #[serde(default = "default_login_lockout_seconds")]
+    pub login_lockout_seconds: u64,
+    #[serde(default = "default_chat_rate_limit_per_minute")]
+    pub chat_rate_limit_per_minute: u32,
+    #[serde(default = "default_tools_rate_limit_per_minute")]
+    pub tools_rate_limit_per_minute: u32,
+
     // ===== JWT / 认证配置 =====
     #[serde(default = "default_secret_key")]
     pub secret_key: String,
@@ -56,7 +66,8 @@ pub struct Settings {
     pub access_token_expire_minutes: i64,
 
     // ===== 和风天气 API 配置 =====
-    #[serde(default)]
+    // 环境变量名与 Python 端统一为 QWEATHER_API_KEY
+    #[serde(default, rename = "QWEATHER_API_KEY")]
     pub qweather_key: String,
     #[serde(default = "default_qweather_host")]
     pub qweather_host: String,
@@ -132,6 +143,10 @@ fn default_log_dir() -> String { "logs".to_string() }
 // ===== 限流默认值 =====
 fn default_rate_limit_requests() -> u32 { 100 }
 fn default_rate_limit_period() -> u64 { 60 }
+fn default_login_max_failures() -> u32 { 5 }
+fn default_login_lockout_seconds() -> u64 { 600 }
+fn default_chat_rate_limit_per_minute() -> u32 { 20 }
+fn default_tools_rate_limit_per_minute() -> u32 { 60 }
 
 // ===== JWT / 认证默认值 =====
 // 兜底默认密钥仅供开发使用：生产环境必须配置 SECRET_KEY
@@ -167,7 +182,15 @@ pub static SETTINGS: Lazy<Settings> = Lazy::new(|| {
     // 尝试加载项目根目录的 .env 文件，不存在或加载失败时忽略错误
     dotenvy::dotenv().ok();
     // 使用 envy 将环境变量反序列化为 Settings，失败时使用硬编码默认配置
-    envy::from_env::<Settings>().unwrap_or_else(|e| {
+    envy::from_env::<Settings>()
+        .map(|mut s| {
+            // 兜底：envy 版本差异可能导致 rename 字段读取不到，直接读环境变量
+            if s.qweather_key.is_empty() {
+                s.qweather_key = std::env::var("QWEATHER_API_KEY").unwrap_or_default();
+            }
+            s
+        })
+        .unwrap_or_else(|e| {
         eprintln!("配置加载失败: {}, 使用默认配置", e);
         Settings {
             app_name: default_app_name(),
@@ -184,6 +207,10 @@ pub static SETTINGS: Lazy<Settings> = Lazy::new(|| {
             rate_limit_enabled: true,
             rate_limit_requests: default_rate_limit_requests(),
             rate_limit_period: default_rate_limit_period(),
+            login_max_failures: default_login_max_failures(),
+            login_lockout_seconds: default_login_lockout_seconds(),
+            chat_rate_limit_per_minute: default_chat_rate_limit_per_minute(),
+            tools_rate_limit_per_minute: default_tools_rate_limit_per_minute(),
             secret_key: default_secret_key(),
             algorithm: default_algorithm(),
             access_token_expire_minutes: default_access_token_expire_minutes(),

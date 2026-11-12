@@ -208,12 +208,108 @@ pub async fn list_messages(
     Ok(rows.into_iter().map(into_message_response).collect())
 }
 
+// ===================== 热点会话历史缓存（Redis List） =====================
+// 聊天主流程是「写一条 → 读全部」交替，cache-aside 失效模式永远命中不了，
+// 因此用 Redis List 做增量缓存：读走 LRANGE，写时 RPUSH 追加并 LTRIM 保留窗口。
+// 无 Redis / 键缺失 / 解析失败均回源 DB 并回填，缓存仅作加速不视为事实源。
+
+const HISTORY_CACHE_TTL: u64 = 1800;
+const HISTORY_CACHE_KEEP: isize = 50;
+
+fn history_cache_key(session_id: i64) -> String {
+    format!("agents:history:{}", session_id)
+}
+
+/// 读缓存历史；键缺失或为空返回 None（调用方回源 DB）
+async fn history_cache_get(session_id: i64, limit: i64) -> Option<Vec<(String, String)>> {
+    let mut conn = crate::core::redis::get_connection()?;
+    let items = redis::cmd("LRANGE")
+        .arg(history_cache_key(session_id))
+        .arg(-limit)
+        .arg(-1)
+        .query_async::<Vec<String>>(&mut conn)
+        .await
+        .ok()?;
+    if items.is_empty() {
+        return None;
+    }
+    let parsed: Vec<(String, String)> = items
+        .iter()
+        .filter_map(|s| serde_json::from_str::<(String, String)>(s).ok())
+        .collect();
+    if parsed.is_empty() {
+        None
+    } else {
+        Some(parsed)
+    }
+}
+
+/// 追加一条消息到缓存并裁剪窗口、续期；失败静默忽略
+async fn history_cache_push(session_id: i64, role: &str, content: &str) {
+    let Some(mut conn) = crate::core::redis::get_connection() else {
+        return;
+    };
+    let Ok(item) = serde_json::to_string(&(role, content)) else {
+        return;
+    };
+    let key = history_cache_key(session_id);
+    let _ = redis::pipe()
+        .cmd("RPUSH")
+        .arg(&key)
+        .arg(item)
+        .ignore()
+        .cmd("LTRIM")
+        .arg(&key)
+        .arg(-HISTORY_CACHE_KEEP)
+        .arg(-1)
+        .ignore()
+        .cmd("EXPIRE")
+        .arg(&key)
+        .arg(HISTORY_CACHE_TTL)
+        .ignore()
+        .query_async::<()>(&mut conn)
+        .await;
+}
+
+/// DB 回源后回填缓存（并发双写可能产生重复条目，下一次 RPUSH 的 LTRIM 会收敛，容忍）
+async fn history_cache_warm(session_id: i64, rows: &[(String, String)]) {
+    if rows.is_empty() {
+        return;
+    }
+    let Some(mut conn) = crate::core::redis::get_connection() else {
+        return;
+    };
+    let key = history_cache_key(session_id);
+    let items: Vec<String> = rows
+        .iter()
+        .filter_map(|r| serde_json::to_string(r).ok())
+        .collect();
+    let _ = redis::pipe()
+        .cmd("DEL")
+        .arg(&key)
+        .ignore()
+        .cmd("RPUSH")
+        .arg(&key)
+        .arg(items)
+        .ignore()
+        .cmd("EXPIRE")
+        .arg(&key)
+        .arg(HISTORY_CACHE_TTL)
+        .ignore()
+        .query_async::<()>(&mut conn)
+        .await;
+}
+
 /// 查询会话最近的历史消息（用于拼接 LLM 上下文），按时间正序返回 (role, content)
 pub async fn list_history_messages(
     pool: &DbPool,
     session_id: i64,
     limit: i64,
 ) -> Result<Vec<(String, String)>, AppError> {
+    if let Some(cached) = history_cache_get(session_id, limit).await {
+        return Ok(cached);
+    }
+
     let mut rows = sqlx::query_as::<_, (String, String)>(
         r#"
         SELECT role, content FROM (
@@ -232,7 +328,9 @@ pub async fn list_history_messages(
     .await
     .map_err(|e| internal_error(format!("查询历史消息失败: {}", e)))?;
 
-    Ok(rows.drain(..).collect())
+    let result: Vec<(String, String)> = rows.drain(..).collect();
+    history_cache_warm(session_id, &result).await;
+    Ok(result)
 }
 
 pub async fn save_user_message(
@@ -255,6 +353,7 @@ pub async fn save_user_message(
     .await
     .map_err(|e| internal_error(format!("保存用户消息失败: {}", e)))?;
 
+    history_cache_push(session_id, "user", content).await;
     Ok(uuid)
 }
 
@@ -280,6 +379,7 @@ pub async fn save_assistant_message(
     .await
     .map_err(|e| internal_error(format!("保存助手消息失败: {}", e)))?;
 
+    history_cache_push(session_id, "assistant", content).await;
     Ok(uuid)
 }
 

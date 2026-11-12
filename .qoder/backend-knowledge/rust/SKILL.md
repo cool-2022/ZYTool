@@ -21,7 +21,7 @@ src/
 │   ├── tools/         #   工具路由（按工具分文件，mod.rs 挂载）
 │   └── admin.rs / auth.rs / health.rs / protected.rs   # admin.rs 为后台管理（表只读浏览 + 字根 CRUD + 服务状态）
 └── services/          # 业务逻辑
-    ├── agents/        #   AI 助手：store.rs（DB 持久化）、llm.rs（模型客户端）
+    ├── agents/        #   AI 助手：store.rs（DB 持久化）、llm.rs（模型客户端，支持 Function Call）、tools.rs（工具定义/执行：天气）
     ├── admin.rs       #   后台管理：表清单/表结构/分页行查询（sqlx json feature）、field_roots 字段字根（基础短名+长度/精度/小数位、type_expr、逐属性差异、扫描过滤超范围精度/按名关联引用/父表优先及继承列重读/按表事务手动同步）、服务状态（进程运行时长 START_TIME + DB ping）
     └── tools/         #   工具服务（map/password/regex/text/timestamp）
 ```
@@ -53,7 +53,7 @@ src/
 
 ## 工具与运行边界
 
-- 工具目录是硬编码展示数据，不等于后端能力清单；地图路线为 mock 直线插值，固定 30 km/h 估算，`waypoints` 未使用；天气配置没有业务调用
+- 工具目录是硬编码展示数据，不等于后端能力清单；地图路线为 mock 直线插值，固定 30 km/h 估算，`waypoints` 未使用；天气工具（Function Call）2026-11-10 起接入流式/同步聊天，GeoAPI 与天气共用 `QWEATHER_HOST`（{host}/geo/v2/city/lookup，旧 geoapi.qweather.com/v2 路径已下线），新控制台账号必须配专属 API Host
 - DB 只在启动时初始化一次，失败后可运行 DB 无关工具，但不会因 DB 稍后恢复而自动重连初始化
 - `start.sh` 使用 debug 二进制看门狗，只有二进制不存在才自动 `cargo build`；修改源码后需显式重新 build，不能靠看门狗重启加载新代码
 

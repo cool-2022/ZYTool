@@ -38,8 +38,16 @@
 ## Redis
 
 - 2026-11-10 起项目新增 Redis 服务（连接配置登记在 `Config/database.env`，无密码，详见 `04-env-vars.md`）
-- 双端客户端已接入（2026-11-10）：Rust `core/redis.rs` 启动时初始化多路复用连接（`redis` crate，`get_connection()` 取用）；Python `app/core/redis_client.py` 懒加载（`redis.asyncio`，`get_redis()` 取用）
-- 降级约定与 DB 一致：两端 `REDIS_HOST` 留空或连接失败均打印警告、以无 Redis 模式继续运行；**业务尚未消费 Redis**（缓存/限流/会话等场景待接入）
+- 双端客户端已接入（2026-11-10）：Rust `core/redis.rs` 启动时初始化多路复用连接（`redis` crate，`get_connection()` 取用，另有 `cache_get/cache_set/cache_del/incr_with_ttl/rate_limit_hit` 通用助手）；Python `app/core/redis_client.py` 懒加载（`redis.asyncio`，`get_redis()` 取用）
+- 降级约定与 DB 一致：两端 `REDIS_HOST` 留空或连接失败均以无 Redis 模式继续运行；所有消费点静默降级（缓存未命中回源、限流放行、黑名单不校验）
+- Rust 已消费场景（2026-11-10，Python 兜底端不校验/不共享）：
+  - 登录防爆破：`login:fail:{用户名}` 计数，默认 5 次失败锁定 600s（`LOGIN_MAX_FAILURES`/`LOGIN_LOCKOUT_SECONDS`），锁定期间 401
+  - JWT 注销黑名单：`auth:blacklist:{sha256(token)}`，TTL=token 剩余有效期，`CurrentUser` 提取器命中即 401
+  - 工具分类缓存：`tools:categories`，TTL 300s，只缓存读库结果
+  - 聊天限流：`rl:chat:{user_id}:{分钟桶}`，默认 20 次/分钟（`CHAT_RATE_LIMIT_PER_MINUTE`），超限 429
+  - 公开工具限流：`rl:tools:{IP}:{分钟桶}`，默认 60 次/分钟（`TOOLS_RATE_LIMIT_PER_MINUTE`），中间件挂在 `/tools` 路由，超限 429
+  - Agents 会话历史缓存：`agents:history:{session_id}` Redis List，RPUSH 增量追加 + LTRIM 保留 50 条，TTL 1800s，未命中回源 DB 并回填
+- Python 已消费场景：天气工具缓存（同步客户端，`weather:now:{城市}` 600s、`weather:city:{城市}` 86400s；与 Rust Function Call 天气工具共用 key，双端互享）
 
 ## API 入口
 

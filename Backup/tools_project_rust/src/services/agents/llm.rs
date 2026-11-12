@@ -1,15 +1,18 @@
 use futures::stream::{self, Stream, StreamExt};
 use once_cell::sync::Lazy;
-use serde::{Deserialize, Serialize};
+use serde::Deserialize;
+use serde_json::{json, Value};
+use std::sync::Arc;
 use std::time::{Duration, Instant};
-use tokio::sync::RwLock;
+use tokio::sync::{Mutex, RwLock};
 
 use crate::core::config::SETTINGS;
 use crate::core::db::DbPool;
 use crate::core::error::{internal_error, AppError};
 
 const SYSTEM_PROMPT: &str =
-    "你是 ZYTool 在线工具箱内置的 AI 助手，请用简洁、准确的中文回答用户的问题。";
+    "你是 ZYTool 在线工具箱内置的 AI 助手，请用简洁、准确的中文回答用户的问题。\
+     涉及天气等实时信息时，优先调用提供的工具获取最新数据，不要凭记忆回答。";
 
 /// 模型配置（来源：ai_models 表，回退 .env）
 #[derive(Debug, Clone)]
@@ -137,39 +140,43 @@ fn into_model_config(
     }
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct LlmMessage {
-    pub role: String,
-    pub content: String,
-}
+// ===================== OpenAI 兼容协议（流式增量解析） =====================
 
-#[derive(Serialize)]
-struct ChatCompletionsRequest {
-    model: String,
-    messages: Vec<LlmMessage>,
-    stream: bool,
+#[derive(Deserialize)]
+struct StreamChunk {
+    choices: Vec<StreamChoice>,
 }
 
 #[derive(Deserialize)]
-struct ChatCompletionsResponse {
-    choices: Vec<CompletionChoice>,
-    usage: Option<CompletionUsage>,
+struct StreamChoice {
+    delta: Option<StreamDelta>,
 }
 
 #[derive(Deserialize)]
-struct CompletionChoice {
-    message: Option<LlmMessage>,
-    delta: Option<CompletionDelta>,
-}
-
-#[derive(Deserialize)]
-struct CompletionDelta {
+struct StreamDelta {
     content: Option<String>,
+    tool_calls: Option<Vec<ToolCallDelta>>,
 }
 
 #[derive(Deserialize)]
-struct CompletionUsage {
-    total_tokens: i32,
+struct ToolCallDelta {
+    id: Option<String>,
+    function: Option<ToolCallFunction>,
+}
+
+#[derive(Deserialize)]
+struct ToolCallFunction {
+    name: Option<String>,
+    arguments: Option<String>,
+}
+
+/// 流式过程中累积的工具调用（参数为分片传输，需拼接）
+#[derive(Debug, Default, Clone)]
+struct ToolCallAcc {
+    seen: bool,
+    id: String,
+    name: String,
+    arguments: String,
 }
 
 fn endpoint(cfg: &ModelConfig) -> String {
@@ -179,31 +186,51 @@ fn endpoint(cfg: &ModelConfig) -> String {
     )
 }
 
-fn build_messages(history: Vec<(String, String)>) -> Vec<LlmMessage> {
-    let mut messages = vec![LlmMessage {
-        role: "system".to_string(),
-        content: SYSTEM_PROMPT.to_string(),
-    }];
-    messages.extend(history.into_iter().map(|(role, content)| LlmMessage {
-        role,
-        content,
-    }));
+/// 历史消息转 OpenAI messages 格式（system 提示词置顶）
+fn build_messages(history: &[(String, String)]) -> Vec<Value> {
+    let mut messages = vec![json!({"role": "system", "content": SYSTEM_PROMPT})];
+    messages.extend(
+        history
+            .iter()
+            .map(|(role, content)| json!({"role": role, "content": content})),
+    );
     messages
 }
 
+/// 工具结果回灌：assistant 的 tool_calls + tool 角色结果两条消息
+fn append_tool_messages(
+    messages: &mut Vec<Value>,
+    call: &ToolCallAcc,
+    result: &str,
+) {
+    messages.push(json!({
+        "role": "assistant",
+        "tool_calls": [{
+            "id": call.id,
+            "type": "function",
+            "function": {"name": call.name, "arguments": call.arguments}
+        }]
+    }));
+    messages.push(json!({"role": "tool", "tool_call_id": call.id, "content": result}));
+}
+
 async fn send_request(
+    messages: Vec<Value>,
+    tools: Option<Value>,
     stream: bool,
-    history: Vec<(String, String)>,
-    cfg: ModelConfig,
+    cfg: &ModelConfig,
 ) -> Result<reqwest::Response, AppError> {
-    let body = ChatCompletionsRequest {
-        model: cfg.model_name.clone(),
-        messages: build_messages(history),
-        stream,
-    };
+    let mut body = json!({
+        "model": cfg.model_name,
+        "messages": messages,
+        "stream": stream,
+    });
+    if let Some(tools) = tools {
+        body["tools"] = tools;
+    }
 
     let resp = reqwest::Client::new()
-        .post(endpoint(&cfg))
+        .post(endpoint(cfg))
         .bearer_auth(&cfg.api_key)
         .json(&body)
         .send()
@@ -226,40 +253,16 @@ async fn send_request(
     Ok(resp)
 }
 
-/// 非流式调用，返回 (完整回复, 消耗 tokens)
-pub async fn chat_complete(
-    history: Vec<(String, String)>,
-    cfg: ModelConfig,
-) -> Result<(String, i32), AppError> {
-    let resp = send_request(false, history, cfg).await?;
-    let parsed: ChatCompletionsResponse = resp
-        .json()
-        .await
-        .map_err(|e| internal_error(format!("解析 Kimi 响应失败: {}", e)))?;
-
-    let content = parsed
-        .choices
-        .into_iter()
-        .next()
-        .and_then(|c| c.message)
-        .map(|m| m.content)
-        .unwrap_or_default();
-    let tokens = parsed.usage.map(|u| u.total_tokens).unwrap_or(0);
-
-    Ok((content, tokens))
-}
-
-/// 流式调用，返回增量内容的流
-pub async fn chat_stream(
-    history: Vec<(String, String)>,
-    cfg: ModelConfig,
-) -> Result<impl Stream<Item = Result<String, AppError>>, AppError> {
-    let resp = send_request(true, history, cfg).await?;
+/// SSE 增量解析流：透传 content 增量；acc 为 Some 时同步累积 tool_calls 分片
+fn content_stream(
+    resp: reqwest::Response,
+    acc: Option<Arc<Mutex<ToolCallAcc>>>,
+) -> impl Stream<Item = Result<String, AppError>> + Send {
     let byte_stream = resp.bytes_stream();
 
-    let stream = stream::unfold(
-        (byte_stream, String::new()),
-        |(mut bytes, mut buf)| async move {
+    stream::unfold(
+        (byte_stream, String::new(), acc),
+        |(mut bytes, mut buf, acc)| async move {
             loop {
                 // 优先处理缓冲区中已有的完整行
                 if let Some(pos) = buf.find('\n') {
@@ -271,16 +274,31 @@ pub async fn chat_stream(
                         if data == "[DONE]" {
                             return None;
                         }
-                        if let Ok(chunk) = serde_json::from_str::<ChatCompletionsResponse>(data) {
-                            if let Some(text) = chunk
-                                .choices
-                                .into_iter()
-                                .next()
-                                .and_then(|c| c.delta)
-                                .and_then(|d| d.content)
+                        if let Ok(chunk) = serde_json::from_str::<StreamChunk>(data) {
+                            if let Some(delta) =
+                                chunk.choices.into_iter().next().and_then(|c| c.delta)
                             {
-                                if !text.is_empty() {
-                                    return Some((Ok(text), (bytes, buf)));
+                                if let (Some(acc), Some(calls)) = (&acc, delta.tool_calls) {
+                                    let mut guard = acc.lock().await;
+                                    for call in calls {
+                                        if let Some(id) = call.id {
+                                            guard.id = id;
+                                        }
+                                        if let Some(f) = call.function {
+                                            if let Some(name) = f.name {
+                                                guard.name.push_str(&name);
+                                            }
+                                            if let Some(args) = f.arguments {
+                                                guard.arguments.push_str(&args);
+                                            }
+                                        }
+                                        guard.seen = true;
+                                    }
+                                }
+                                if let Some(text) = delta.content {
+                                    if !text.is_empty() {
+                                        return Some((Ok(text), (bytes, buf, acc)));
+                                    }
                                 }
                             }
                         }
@@ -294,14 +312,107 @@ pub async fn chat_stream(
                     Some(Err(e)) => {
                         return Some((
                             Err(internal_error(format!("读取 Kimi 流式响应失败: {}", e))),
-                            (bytes, buf),
+                            (bytes, buf, acc),
                         ))
                     }
                     None => return None,
                 }
             }
         },
-    );
+    )
+}
 
-    Ok(stream)
+/// 非流式调用（带工具循环：命中 tool_calls 则执行工具后二次请求），返回 (完整回复, 消耗 tokens)
+pub async fn chat_complete(
+    history: Vec<(String, String)>,
+    cfg: ModelConfig,
+) -> Result<(String, i32), AppError> {
+    let messages = build_messages(&history);
+    let resp = send_request(
+        messages.clone(),
+        Some(crate::services::agents::tools::schemas()),
+        false,
+        &cfg,
+    )
+    .await?;
+    let parsed: Value = resp
+        .json()
+        .await
+        .map_err(|e| internal_error(format!("解析 Kimi 响应失败: {}", e)))?;
+    let tokens = parsed["usage"]["total_tokens"].as_i64().unwrap_or(0) as i32;
+    let choice = &parsed["choices"][0];
+
+    if choice["finish_reason"].as_str() == Some("tool_calls") {
+        if let Some(tc) = choice["message"]["tool_calls"].as_array().and_then(|a| a.first()) {
+            let call = ToolCallAcc {
+                seen: true,
+                id: tc["id"].as_str().unwrap_or_default().to_string(),
+                name: tc["function"]["name"].as_str().unwrap_or_default().to_string(),
+                arguments: tc["function"]["arguments"]
+                    .as_str()
+                    .unwrap_or("{}")
+                    .to_string(),
+            };
+            let result = crate::services::agents::tools::execute(&call.name, &call.arguments).await;
+
+            let mut messages = messages;
+            append_tool_messages(&mut messages, &call, &result);
+            let resp2 = send_request(messages, None, false, &cfg).await?;
+            let parsed2: Value = resp2
+                .json()
+                .await
+                .map_err(|e| internal_error(format!("解析 Kimi 响应失败: {}", e)))?;
+            let tokens2 = parsed2["usage"]["total_tokens"].as_i64().unwrap_or(0) as i32;
+            let content = parsed2["choices"][0]["message"]["content"]
+                .as_str()
+                .unwrap_or_default()
+                .to_string();
+            return Ok((content, tokens + tokens2));
+        }
+    }
+
+    let content = choice["message"]["content"]
+        .as_str()
+        .unwrap_or_default()
+        .to_string();
+    Ok((content, tokens))
+}
+
+/// 流式调用（带工具）：第一轮流式透传内容并累积 tool_calls；
+/// 若模型要求调工具，执行后把结果回灌，发起第二轮流式并衔接在同一流上
+pub async fn chat_stream_with_tools(
+    history: Vec<(String, String)>,
+    cfg: ModelConfig,
+) -> Result<impl Stream<Item = Result<String, AppError>>, AppError> {
+    let resp = send_request(
+        build_messages(&history),
+        Some(crate::services::agents::tools::schemas()),
+        true,
+        &cfg,
+    )
+    .await?;
+
+    let acc = Arc::new(Mutex::new(ToolCallAcc::default()));
+    let first = content_stream(resp, Some(acc.clone()));
+
+    let second = stream::once(async move {
+        let call = acc.lock().await.clone();
+        if !call.seen {
+            let empty: futures::stream::BoxStream<'static, Result<String, AppError>> =
+                stream::empty().boxed();
+            return empty;
+        }
+        tracing::info!("模型请求调用工具: {}({})", call.name, call.arguments);
+        let result = crate::services::agents::tools::execute(&call.name, &call.arguments).await;
+
+        let mut messages = build_messages(&history);
+        append_tool_messages(&mut messages, &call, &result);
+        match send_request(messages, None, true, &cfg).await {
+            Ok(resp) => content_stream(resp, None).boxed(),
+            Err(e) => stream::once(async move { Err::<String, AppError>(e) }).boxed(),
+        }
+    })
+    .flatten();
+
+    Ok(first.chain(second))
 }

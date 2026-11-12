@@ -5,14 +5,18 @@
 // ============================================================================
 use axum::{
     body::Body,
+    extract::ConnectInfo,
     http::{Request, StatusCode},
     middleware::Next,
-    response::Response,
+    response::{IntoResponse, Response},
+    Json,
 };
+use std::net::SocketAddr;
 use std::time::Instant;
 use tracing::{info, warn};
 
-use crate::models::BaseInfo;
+use crate::core::config::SETTINGS;
+use crate::models::{BaseInfo, BaseResponse};
 
 /// 请求日志中间件：记录方法与路径，响应头附加 X-Process-Time，错误状态用 warn 级别
 pub async fn request_logging_middleware(req: Request<Body>, next: Next) -> Response {
@@ -69,6 +73,29 @@ pub async fn base_info_middleware(mut req: Request<Body>, next: Next) -> Respons
         });
 
     req.extensions_mut().insert(base_info);
+    next.run(req).await
+}
+
+/// 公开工具接口 IP 限流：按「IP + 分钟桶」固定窗口计数，超限返回 429；
+/// 无 Redis 或 Redis 出错时放行（rate_limit_hit 内部已降级）
+pub async fn tools_rate_limit_middleware(req: Request<Body>, next: Next) -> Response {
+    let ip = req
+        .extensions()
+        .get::<ConnectInfo<SocketAddr>>()
+        .map(|c| c.0.ip().to_string())
+        .unwrap_or_else(|| "unknown".to_string());
+    let key = format!(
+        "rl:tools:{}:{}",
+        ip,
+        chrono::Utc::now().format("%Y%m%d%H%M")
+    );
+
+    if !crate::core::redis::rate_limit_hit(&key, SETTINGS.tools_rate_limit_per_minute, 70).await {
+        let body: BaseResponse<serde_json::Value> =
+            BaseResponse::err("请求过于频繁，请稍后再试", None);
+        return (StatusCode::TOO_MANY_REQUESTS, Json(body)).into_response();
+    }
+
     next.run(req).await
 }
 

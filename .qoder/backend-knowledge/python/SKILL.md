@@ -29,7 +29,7 @@ app/
 
 - 应用/JWT/CORS/天气配置由 `app/core/config.py` 的 `Settings` 从 `.env` 和环境变量读取
 - LLM 客户端另行加载 `.env.development`：`KIMI_API_KEY/KIMI_BASE_URL/KIMI_MODEL` 优先，未配置回退 `DEEPSEEK_API_KEY`；模型名统一用 `deepseek_client.model`，不要硬编码
-- Python 天气变量名为 `QWEATHER_API_KEY` / `QWEATHER_HOST`，不要与 Rust 的 `QWEATHER_KEY` 混写
+- 双端天气变量名统一为 `QWEATHER_API_KEY` / `QWEATHER_HOST`（Rust 端经 serde rename + 环境变量兜底读取）；新控制台账号 `QWEATHER_HOST` 必须配专属 API Host，否则 403 Invalid Host；天气工具结果走 Redis 缓存（同步客户端，`weather:now:{城市}` 600s、`weather:city:{城市}` 86400s，连接失败一次后不再重试）
 - `rate_limit_*`、`max_request_size` 当前未接入有效中间件；`log_dir` 未传入日志初始化，均属声明或预留配置
 - 启动：`python3 -m pip install -r requirements.txt`，然后 `python3 run.py`（端口取 .env 的 PORT=10004）
 

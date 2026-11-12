@@ -15,20 +15,38 @@ pub fn router() -> Router {
         .route("/system-info", get(system_info))
 }
 
-/// 工具分类优先读库（tool_categories/tools 表），无 DB 或查询失败回退硬编码
+/// 工具分类缓存：低频变更数据，TTL 到期自动刷新；分类通过 SQL 直接维护，无写接口，故不做主动失效
+const CATEGORIES_CACHE_KEY: &str = "tools:categories";
+const CATEGORIES_CACHE_TTL: u64 = 300;
+
+/// 工具分类优先读 Redis 缓存，其次读库（tool_categories/tools 表）并回填缓存，无 DB 或查询失败回退硬编码
 async fn get_categories(
     Extension(base): Extension<Option<BaseInfo>>,
 ) -> Json<BaseResponse<CategoriesResponse>> {
-    let categories = match db::get_pool() {
+    if let Some(cached) = crate::core::redis::cache_get(CATEGORIES_CACHE_KEY).await {
+        if let Ok(categories) = serde_json::from_str::<Vec<Category>>(&cached) {
+            return Json(BaseResponse::ok(CategoriesResponse { categories }, base));
+        }
+    }
+
+    let (categories, from_db) = match db::get_pool() {
         Some(pool) => match load_categories_from_db(pool).await {
-            Ok(c) => c,
+            Ok(c) => (c, true),
             Err(e) => {
                 warn!("工具分类读库失败，回退硬编码: {}", e);
-                fallback_categories()
+                (fallback_categories(), false)
             }
         },
-        None => fallback_categories(),
+        None => (fallback_categories(), false),
     };
+
+    // 只缓存读库结果，硬编码回退不缓存（避免掩盖 DB 恢复）
+    if from_db {
+        if let Ok(json) = serde_json::to_string(&categories) {
+            crate::core::redis::cache_set(CATEGORIES_CACHE_KEY, &json, CATEGORIES_CACHE_TTL).await;
+        }
+    }
+
     Json(BaseResponse::ok(CategoriesResponse { categories }, base))
 }
 

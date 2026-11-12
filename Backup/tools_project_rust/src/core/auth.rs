@@ -17,6 +17,7 @@ use bcrypt::{hash, verify, DEFAULT_COST};
 use chrono::{Duration, Utc};
 use jsonwebtoken::{decode, encode, Algorithm, DecodingKey, EncodingKey, Header, Validation};
 use serde::{Deserialize, Serialize};
+use sha2::{Digest, Sha256};
 
 use crate::core::config::SETTINGS;
 use crate::core::error::{unauthorized, AppError};
@@ -82,6 +83,13 @@ pub fn decode_access_token(token: &str) -> Option<Claims> {
     .ok()
 }
 
+/// 注销黑名单的 Redis key：token 原文较长且含敏感信息，存 SHA-256 摘要
+pub fn blacklist_key(token: &str) -> String {
+    let mut hasher = Sha256::new();
+    hasher.update(token.as_bytes());
+    format!("auth:blacklist:{:x}", hasher.finalize())
+}
+
 /// axum 提取器实现：从 Authorization: Bearer 头解析并校验 JWT，失败返回 401
 impl<S> FromRequestParts<S> for CurrentUser
 where
@@ -101,6 +109,14 @@ where
 
             let claims = decode_access_token(bearer.token())
                 .ok_or_else(|| unauthorized("无效或过期的 token"))?;
+
+            // 注销黑名单：logout 时写入，命中即拒绝；Redis 不可用时不校验（降级放行）
+            if crate::core::redis::cache_get(&blacklist_key(bearer.token()))
+                .await
+                .is_some()
+            {
+                return Err(unauthorized("token 已注销，请重新登录"));
+            }
 
             Ok(CurrentUser {
                 username: claims.sub,
