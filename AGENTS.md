@@ -12,28 +12,32 @@
 
 ## 知识库结构
 
-采用「公共知识库 + 各端私有知识库」混合模式：
+采用 Repo Wiki 单库模式（`.qoder/wiki/`，2026-11-18 起，取代原 common/backend/frontend 三知识库）：
 
 ```
 100_Code/
-├── .qoder/common-knowledge/           # 公共层：架构、模块地图、双后端机制、开发规范、命令、环境变量
-│   ├── SKILL.md                       #   入口：路由规则（判断问题归属）
-│   └── resources/                     #   01-architecture / 02-commands / 03-dev-conventions / 04-env-vars
-├── .qoder/backend-knowledge/          # 后端：Rust + Python 统一入口
-│   ├── SKILL.md                       #   入口：后端路由规则
-│   ├── common/                        #   双端公共：01-api-contract / 02-database-schema / 03-route-coverage
-│   ├── rust/                          #   Rust 专有（axum，主后端，端口 8000）
-│   └── python/                        #   Python 专有（FastAPI，部分兜底，部署预期 8001）
-└── .qoder/frontend-knowledge/         # 前端（Vue 3 + TS，ZYTool/，端口 5050）
+└── .qoder/wiki/                       # Repo Wiki：项目权威文档库
+    ├── README.md                      #   入口：项目简介、模块地图、文档导航、路由规则
+    ├── 01-系统概述.md                  #   总体架构、双后端机制、统一响应、认证、Redis
+    ├── 02-技术栈.md                    #   三端技术栈与依赖版本（对照 manifest 核实）
+    ├── 03-快速入门.md                  #   环境要求、启动命令、验证、常见问题
+    ├── 04-环境配置.md                  #   三端环境变量、敏感文件位置
+    ├── 05-开发规范.md                  #   新增功能流程、代码风格、提交前检查
+    ├── 06-前端架构.md                  #   前端（Vue 3 + TS，ZYTool/，端口 5050）
+    ├── 07-后端架构-Rust.md             #   Rust 专有（axum，主后端，端口 10003）
+    ├── 08-后端架构-Python.md           #   Python 专有（FastAPI，部分兜底，端口 10004）
+    ├── 09-API契约与路由.md             #   双端接口契约 + 路由覆盖矩阵
+    ├── 10-数据库设计.md                #   PostgreSQL 表结构、field_roots 数据字典
+    └── 11-UI动画设计规范/              #   UI 动画规范（摘要 + 完整版 ui-animation-skills/）
 ```
 
 ## 使用规则
 
-1. **会话开始时，或接到任何任务时，先读取 `.qoder/common-knowledge/SKILL.md`**，按其中的路由规则判断问题归属；
-2. **公共问题**（系统架构、双后端机制、统一响应结构、认证、构建命令、开发规范、环境变量）→ 读取 `common-knowledge/resources/` 下对应资源文件；
-3. **具体端问题**（Rust 路由/服务/DB、Python 兜底接口、前端页面/组件）→ 先读取对应端知识库的 `SKILL.md`；
-4. **综合需求**（如"新增一个工具"）→ 两层结合：公共层取架构与规范，模块层取业务细节；
-5. **动手改代码前**，必读公共层 `.qoder/common-knowledge/resources/03-dev-conventions.md`（开发约定与代码风格）。
+1. **会话开始时，或接到任何任务时，先读取 `.qoder/wiki/README.md`**，按其中的路由规则判断问题归属；
+2. **公共问题**（系统架构、双后端机制、统一响应结构、认证、构建命令、开发规范、环境变量）→ 读取 `01`~`05` 对应文档；
+3. **具体端问题**（Rust 路由/服务/DB、Python 兜底接口、前端页面/组件）→ 读取 `06`~`08` 对应端文档；
+4. **综合需求**（如"新增一个工具"）→ 结合使用：`01`/`05` 取架构与规范，`06`~`08` 取业务细节；
+5. **动手改代码前**，必读 `.qoder/wiki/05-开发规范.md`（开发约定与代码风格）。
 
 ## 修改履历记录
 

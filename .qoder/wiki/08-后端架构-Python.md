@@ -1,12 +1,14 @@
-# Python 后端知识库（backend-knowledge/python）
+# 08 后端架构 - Python
+
+> 迁移自原后端知识库 `backend-knowledge/python/SKILL.md`，2026-11-18 核实。
 
 位置：`Backup/tools_project_py/`（FastAPI）。当前使用 10004（`.env` 的 `PORT=10004`，2026-11-06 起）；源码 `Settings.port` 默认为 8000；`start_server.sh` 已改为调用 `python3 run.py`，端口统一由 config/.env 决定。
 
 ## 定位
 
-Rust 后端的**部分接口兜底**，不是完整等价实现。目标契约与当前差异见 `../common/01-api-contract.md`，逐路由覆盖矩阵见 `../common/03-route-coverage.md`。
+Rust 后端的**部分接口兜底**，不是完整等价实现。目标契约与当前差异、逐路由覆盖矩阵见 [09-API契约与路由](09-API契约与路由.md)。
 
-当前缺失 Rust 的 Agents 会话/模型、账号绑定/QQ 登录、DB 健康检查接口；这些功能不能依赖 Python 降级。
+当前缺失 Rust 的 Agents 会话/模型、账号绑定/QQ 登录、DB 健康检查接口；这些功能不能依赖 Python 降级。admin 后台管理接口已于 2026-11-06 全部补齐。
 
 ## 目录地图
 
@@ -14,9 +16,9 @@ Rust 后端的**部分接口兜底**，不是完整等价实现。目标契约�
 run.py               # 启动入口，uvicorn 使用 Settings.host/port
 app/
 ├── main.py            # FastAPI 实例、CORS 中间件、路由挂载
-├── core/              # config.py（Settings 读 .env）、auth.py、security.py、
-│                      # exceptions.py、middleware.py、logging_config.py
-├── api/v1/endpoints/  # agents/auth/health/map/misc/password/protected/regex/text/timestamp_router.py
+├── core/              # config.py（Settings 读 .env）、auth.py、security.py、db.py（asyncpg 懒加载池）、
+│                      # redis_client.py（懒加载）、exceptions.py、middleware.py、logging_config.py
+├── api/v1/endpoints/  # agents/auth/health/map/misc/password/protected/regex/text/timestamp/admin 等路由
 ├── schemas/           # base.py（当前 BaseResponse 仅 success/message）+ request/ + response/
 ├── services/
 │   ├── Agents/        # deepseek_client.py、generate.py、tools/（calculate/search/time/weather）
@@ -29,7 +31,7 @@ app/
 
 - 应用/JWT/CORS/天气配置由 `app/core/config.py` 的 `Settings` 从 `.env` 和环境变量读取
 - LLM 客户端另行加载 `.env.development`：`KIMI_API_KEY/KIMI_BASE_URL/KIMI_MODEL` 优先，未配置回退 `DEEPSEEK_API_KEY`；模型名统一用 `deepseek_client.model`，不要硬编码
-- 双端天气变量名统一为 `QWEATHER_API_KEY` / `QWEATHER_HOST`（Rust 端经 serde rename + 环境变量兜底读取）；新控制台账号 `QWEATHER_HOST` 必须配专属 API Host，否则 403 Invalid Host；天气工具结果走 Redis 缓存（同步客户端，`weather:now:{城市}` 600s、`weather:city:{城市}` 86400s，连接失败一次后不再重试）
+- 双端天气变量名统一为 `QWEATHER_API_KEY` / `QWEATHER_HOST`；新控制台账号 `QWEATHER_HOST` 必须配专属 API Host，否则 403 Invalid Host；天气工具结果走 Redis 缓存（同步客户端，`weather:now:{城市}` 600s、`weather:city:{城市}` 86400s，连接失败一次后不再重试）
 - `rate_limit_*`、`max_request_size` 当前未接入有效中间件；`log_dir` 未传入日志初始化，均属声明或预留配置
 - 启动：`python3 -m pip install -r requirements.txt`，然后 `python3 run.py`（端口取 .env 的 PORT=10004）
 
@@ -37,7 +39,7 @@ app/
 
 - 多数工具及认证、健康、同步聊天接口不使用 `BaseResponse.data` 包装，部分连 `success` 也没有；中间件不解析 `X-Base-Info`，错误结构与 Rust 不同
 - CORS 只放行 `127.0.0.1` 而非整个 127.*，且开启 credentials；与 Rust 并非完全一致
-- 无 PostgreSQL 接入；认证使用进程内测试用户，注册数据重启丢失，不与 Rust 用户库同步
+- 认证使用进程内测试用户，注册数据重启丢失，不与 Rust 用户库同步；PostgreSQL 接入（asyncpg 懒加载池）仅供 admin 后台管理接口
 - Agents 请求没有 `model_id`；`session_id` 虽被接收但未使用。两个聊天接口均无鉴权、无会话历史、无持久化
 - 流式 `/agents/chat` 调用 `generate_stream_no_tools`，不使用 Function Call；同步 `/agents/chat/sync` 才通过 `generate_sync` 使用工具
 - 地图与搜索工具为模拟实现；分类中展示的 SQL 检查没有 Python 后端路由，实际由前端本地执行
@@ -45,4 +47,4 @@ app/
 
 ## 维护约定
 
-目前主要维护 Rust 侧，Python 侧按需同步。新增/修改接口时必须明确是已实现兼容、部分兼容还是暂未兜底，并同步更新公共契约与路由覆盖矩阵。
+目前主要维护 Rust 侧，Python 侧按需同步。新增/修改接口时必须明确是已实现兼容、部分兼容还是暂未兜底，并同步更新 [09-API契约与路由](09-API契约与路由.md) 的契约与路由覆盖矩阵。
