@@ -26,6 +26,8 @@ dist-ssr
 .history
 .yalc
 .types-download
+# Trae IDE 浏览器工具截图临时目录
+.screenshots
 .env
 .env.*
 !.env.example
