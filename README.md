@@ -176,20 +176,20 @@ cd ZYTool
 2. 安装依赖：
 
 ```bash
-npm install
-# 或 yarn install
+yarn install
+# 或 npm install
 ```
 
 3. 启动开发服务器：
 
 ```bash
-npm run dev
+yarn run dev
 ```
 
 或指定端口：
 
 ```bash
-npm run dev -- --port 5050
+yarn run dev -- --port 5050
 ```
 
 前端服务将在 `http://localhost:5050` 启动
